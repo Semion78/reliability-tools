@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Friday Sketches · Reliability Engineers Joking</title>
+<meta name="description" content="Every Friday sketch by Semion Gengrinovich: one-slide jokes about reliability testing, sample sizes, schedules and the people who sign off on them.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,wght@0,600;1,400&display=swap">
+<style>
+/* Layout: header with three numbers, a toolbar (search, sort), then a masonry-like grid of sketch cards; click opens a lightbox. */
+:root{
+  --bg:#0f1a2b; --panel:#162540; --panel2:#1c2e4d; --line:#2b4166;
+  --fg:#e8edf5; --muted:#93a3bf; --amber:#e7b04a; --teal:#2ec4a6;
+  --display:"Source Serif 4",Georgia,serif; --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root{--bg:#f3f5f9;--panel:#ffffff;--panel2:#eef2f8;--line:#d3dbe8;--fg:#13213a;--muted:#5a6a86;--amber:#9c6c10;--teal:#11806c;color-scheme:light}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 var(--body)}
+.wrap{max-width:1240px;margin:0 auto;padding-block:36px 56px;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
+nav.crumb{font-size:14px;margin-bottom:18px}
+nav.crumb a{color:var(--teal);text-decoration:none}
+.eyebrow{font:500 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--teal);margin:0 0 8px}
+h1{font:600 clamp(30px,4.6vw,44px)/1.1 var(--display);margin:0;text-wrap:balance}
+.lede{font-size:17px;color:var(--muted);max-width:66ch;margin:12px 0 0}
+.nums{display:flex;flex-wrap:wrap;gap:12px 32px;margin:22px 0 6px}
+.nums div b{display:block;font:500 28px/1.1 var(--mono);color:var(--amber);font-variant-numeric:tabular-nums}
+.nums div span{font-size:13px;color:var(--muted)}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:24px 0 18px;border-top:1px solid var(--line);padding-top:18px}
+input[type=search]{font:inherit;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-width:min(100%,280px)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{font:500 14px var(--body);background:transparent;color:var(--muted);border:0;padding:8px 14px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--panel2);color:var(--fg)}
+.count{color:var(--muted);font-size:14px;margin-left:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.card:hover{border-color:var(--amber)}
+.thumb{all:unset;cursor:zoom-in;display:block;background:var(--panel2);aspect-ratio:4/5;position:relative}
+.thumb img{width:100%;height:100%;object-fit:contain;display:block}
+.thumb .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;text-align:center;font:italic 400 17px/1.4 var(--display);color:var(--muted)}
+.body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:8px;flex:1}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.no{font:500 13px var(--mono);color:var(--amber)}
+.date{font:400 12.5px var(--mono);color:var(--muted)}
+.cap{margin:0;font:italic 400 16px/1.4 var(--display)}
+.stats{display:flex;flex-wrap:wrap;gap:12px;font:13px var(--mono);color:var(--muted);margin-top:auto}
+.stats a{color:var(--teal);text-decoration:none;margin-left:auto;font-family:var(--body)}
+.stats a:hover{text-decoration:underline}
+.top3{font:500 11px var(--mono);background:var(--amber);color:var(--bg);border-radius:999px;padding:1px 8px}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+dialog{border:0;padding:0;background:transparent;max-width:min(92vw,900px);max-height:92vh}
+dialog::backdrop{background:rgba(5,10,20,.82)}
+dialog figure{margin:0;background:var(--panel);border-radius:12px;overflow:hidden}
+dialog img{display:block;max-width:100%;max-height:78vh;margin:0 auto;background:#fff}
+dialog figcaption{padding:12px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;color:var(--fg)}
+dialog figcaption span{flex:1;font:italic 400 17px/1.4 var(--display);min-width:200px}
+dialog button{font:500 14px var(--body);background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer}
+footer{margin-top:40px;border-top:1px solid var(--line);padding-top:16px;color:var(--muted);font-size:13.5px}
+footer a{color:var(--amber)}
+@media (prefers-reduced-motion:no-preference){.card{transition:border-color .15s}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="crumb"><a href="../">← Reliability engineering tools</a></nav>
+  <p class="eyebrow">Happy Friday! Reliability engineers joking</p>
+  <h1>Friday Sketches</h1>
+  <p class="lede">One slide every Friday about sample sizes, frozen schedules, skipped tests and the people who sign off on them. Click a sketch to see it full size.</p>
+  <div class="nums" id="nums"></div>
+
+  <div class="bar">
+    <input type="search" id="q" placeholder="Search the jokes" aria-label="Search the jokes">
+    <div class="seg" role="group" aria-label="Sort">
+      <button type="button" data-s="new" aria-pressed="true">Newest</button>
+      <button type="button" data-s="old" aria-pressed="false">Oldest</button>
+      <button type="button" data-s="liked" aria-pressed="false">Most liked</button>
+    </div>
+    <span class="count" id="count"></span>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <footer>
+    <p>New sketch every Friday on <a href="https://www.linkedin.com/in/semion-gengrinovich-19235243/" target="_blank" rel="noopener">LinkedIn</a>. Reaction counts as of November 2026.</p>
+  </footer>
+</div>
+
+<dialog id="lb" aria-label="Sketch">
+  <figure><img id="lbImg" alt=""><figcaption><span id="lbCap"></span><a id="lbLink" target="_blank" rel="noopener" style="color:var(--teal)">Open post</a><button type="button" id="lbClose">Close</button></figcaption></figure>
+</dialog>
+
+<script>
+const DATA = [{"n": 1, "date": "2026-01-09", "urn": "7415440991442112512", "text": "When is the highest level of reliability achieved? At time zero", "imp": 1600, "re": 19, "co": 2, "rp": 1}, {"n": null, "date": "2026-01-12", "urn": "7416655674090147841", "text": "In reliability, ‘later’ is always more expensive than ‘right now’.", "imp": 530, "re": 13, "co": 0, "rp": 1}, {"n": 2, "date": "2026-01-16", "urn": "7417973926514962432", "text": "Please see future reliability engineers, Neo", "imp": 1179, "re": 14, "co": 0, "rp": 1}, {"n": 3, "date": "2026-01-23", "urn": "7420495598379823104", "text": "And then we released design to production Without reliability test", "imp": 2114, "re": 36, "co": 5, "rp": 0}, {"n": 4, "date": "2026-01-30", "urn": "7423032345756213248", "text": "2 month of testing We used 2 prototypes", "imp": 1539, "re": 21, "co": 4, "rp": 0}, {"n": 5, "date": "2026-02-06", "urn": "7425569029525815296", "text": "You know, there is small nuances between us and them", "imp": 1939, "re": 26, "co": 1, "rp": 0}, {"n": 6, "date": "2026-02-13", "urn": "7428105790634254336", "text": "How did you cheat on the Reliability exam in ASQ?", "imp": 1658, "re": 19, "co": 6, "rp": 0}, {"n": 7, "date": "2026-02-20", "urn": "7430642417248321536", "text": "This is how the process is built: How did nobody see that coming?", "imp": 1677, "re": 22, "co": 0, "rp": 0}, {"n": 8, "date": "2026-02-27", "urn": "7433179137646919680", "text": "We are failing all our tests due to supplier defects.", "imp": 1153, "re": 10, "co": 0, "rp": 0}, {"n": 9, "date": "2026-03-06", "urn": "7435715842400534528", "text": "What is your test plan? Run To Failure!", "imp": 1347, "re": 25, "co": 0, "rp": 0}, {"n": 10, "date": "2026-03-13", "urn": "7438237451288006656", "text": "Sell me this pen! DV test results completed", "imp": 1658, "re": 21, "co": 0, "rp": 0}, {"n": 11, "date": "2026-03-20", "urn": "7440774237348597761", "text": "So how do you know everything so well here?", "imp": 749, "re": 8, "co": 0, "rp": 0}, {"n": 12, "date": "2026-03-27", "urn": "7443310889673318400", "text": "What is the plan? Mama always said the best way to beat competition is", "imp": 967, "re": 4, "co": 0, "rp": 0}, {"n": 13, "date": "2026-04-03", "urn": "7445847601327030272", "text": "Any volunteers to run test? On average, this is only mildly painful.", "imp": 643, "re": 4, "co": 0, "rp": 0}, {"n": 14, "date": "2026-04-10", "urn": "7448384386997129216", "text": "You don’t even know the test objectives or the components.", "imp": 894, "re": 9, "co": 0, "rp": 0}, {"n": 15, "date": "2026-04-17", "urn": "7450921047350239233", "text": "Prepare ship for Accelerated Life Test", "imp": 1180, "re": 11, "co": 1, "rp": 0}, {"n": 16, "date": "2026-04-24", "urn": "7453457729681088512", "text": "Kids?! What are you doing? Are we ready?", "imp": 835, "re": 7, "co": 2, "rp": 0}, {"n": 17, "date": "2026-05-01", "urn": "7455994504026923008", "text": "It’s always a reliability issue during SW updates", "imp": 571, "re": 8, "co": 0, "rp": 0}, {"n": 18, "date": "2026-05-08", "urn": "7458531186395480064", "text": "Reliability 90%, that’s great for customers, isn’t it?", "imp": 1982, "re": 30, "co": 0, "rp": 1}, {"n": 19, "date": "2026-05-15", "urn": "7461067970023202816", "text": "Paper jam again?! Time for destructive testing.", "imp": 617, "re": 10, "co": 0, "rp": 0}, {"n": 20, "date": "2026-05-22", "urn": "7463604608209424384", "text": "Simplicity is key! We’ll skip the reliability test!", "imp": 1045, "re": 14, "co": 0, "rp": 0}, {"n": 21, "date": "2026-05-29", "urn": "7466141361499471872", "text": "They’re running a hypothesis test! What are we going to do?", "imp": 408, "re": 2, "co": 0, "rp": 0}, {"n": 22, "date": "2026-06-05", "urn": "7468678028005416960", "text": "Did you identify all failure modes?", "imp": 935, "re": 8, "co": 0, "rp": 1}, {"n": 23, "date": "2026-06-12", "urn": "7471214758403141634", "text": "Which one is it going to be? 8D? RCA? 5 Whys", "imp": 809, "re": 16, "co": 0, "rp": 0}, {"n": 24, "date": "2026-06-19", "urn": "7473751449500426240", "text": "Did you approve the PO for reliability testing?", "imp": 725, "re": 7, "co": 0, "rp": 0}, {"n": 25, "date": "2026-06-26", "urn": "7476288219874107392", "text": "What do you need, Bruce? Minimum sample size? Seven", "imp": 1094, "re": 10, "co": 1, "rp": 0}, {"n": 26, "date": "2026-07-03", "urn": "7478824898677796864", "text": "Is this your test results, Larry?", "imp": 644, "re": 7, "co": 0, "rp": 0}, {"n": 27, "date": "2026-07-10", "urn": "7481361654761299970", "text": "You’re under arrest for using the wrong powder lubricant", "imp": 852, "re": 4, "co": 0, "rp": 0}, {"n": 28, "date": "2026-07-17", "urn": "7483898343295709184", "text": "Boss, we’ve got a few failures. We need more samples. Zero failures allowed", "imp": 892, "re": 15, "co": 0, "rp": 0}, {"n": 29, "date": "2026-07-24", "urn": "7486435090806386689", "text": "Ultimate Question of Life, the Universe, and the minimum sample size: 42", "imp": 1309, "re": 16, "co": 3, "rp": 1}, {"n": 30, "date": "2026-07-31", "urn": "7488971859682791424", "text": "So, the test failed. And the sample? The sample is destroyed", "imp": 900, "re": 15, "co": 2, "rp": 0}, {"n": 31, "date": "2026-08-07", "urn": "7491508543771004930", "text": "Study statistics Neo, not SW", "imp": 847, "re": 16, "co": 0, "rp": 0}, {"n": 32, "date": "2026-08-14", "urn": "7494045179847512064", "text": "The ALT approach will make you all rich.", "imp": 1091, "re": 17, "co": 2, "rp": 0}, {"n": 33, "date": "2026-08-21", "urn": "7496581912405381121", "text": "We need to run a test. What test? GR&R", "imp": 723, "re": 6, "co": 1, "rp": 0}, {"n": 34, "date": "2026-08-28", "urn": "7499118943614160898", "text": "How many SW engineers does it take to change a light bulb?", "imp": 948, "re": 11, "co": 0, "rp": 0}, {"n": 35, "date": "2026-09-04", "urn": "7501655574925725696", "text": "A sample size of one is a bad strategy.", "imp": 1104, "re": 11, "co": 0, "rp": 0}, {"n": 36, "date": "2026-09-11", "urn": "7504193662474526723", "text": "They wouldn’t let me be in Titanic.", "imp": 543, "re": 6, "co": 0, "rp": 0}, {"n": 37, "date": "2026-09-18", "urn": "7506729451897077760", "text": "Is it a bomb? It’s impossible to measure exactly 4 gallons", "imp": 598, "re": 9, "co": 0, "rp": 0}, {"n": 38, "date": "2026-09-25", "urn": "7509266500482961408", "text": "What are you studying? Reliability engineering", "imp": 3156, "re": 71, "co": 2, "rp": 3}, {"n": 39, "date": "2026-10-02", "urn": "7511802989087444994", "text": "Here’s a proposal for extra test time. The schedule is frozen.", "imp": 514, "re": 10, "co": 0, "rp": 0}, {"n": 40, "date": "2026-10-09", "urn": "7514339802121695232", "text": "You can’t run only a feasibility test and then release to production!", "imp": 542, "re": 12, "co": 0, "rp": 0}, {"n": 41, "date": "2026-10-16", "urn": "7516876856588070912", "text": "What makes reliability testing so difficult? People", "imp": 1337, "re": 44, "co": 2, "rp": 0}, {"n": 42, "date": "2026-10-23", "urn": "7519413277165056000", "text": "Preliminary design Final design Critical design", "imp": 496, "re": 7, "co": 1, "rp": 0}, {"n": 43, "date": "2026-10-30", "urn": "7521951079870427136", "text": "We passed functional testing And then it was reliability portion", "imp": 487, "re": 11, "co": 0, "rp": 0}, {"n": 44, "date": "2026-11-06", "urn": "7524501950026088448", "text": "Reliability is like a box of chocolates. Why? You never know…", "imp": 970, "re": 20, "co": 1, "rp": 1}];
+const fmt = n => n.toLocaleString('en-US');
+const fdate = d => new Date(d + 'T12:00:00Z').toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric', timeZone:'UTC'});
+const postUrl = u => 'https://www.linkedin.com/feed/update/urn:li:activity:' + u + '/';
+const top3 = new Set(DATA.slice().sort((a, b) => b.re - a.re).slice(0, 3).map(d => d.urn));
+const S = {q:'', s:'new'};
+
+(function nums(){
+  const best = DATA.slice().sort((a, b) => b.re - a.re)[0];
+  const items = [[DATA.length, 'sketches'], [fmt(DATA.reduce((s, d) => s + d.re, 0)), 'reactions'], [fmt(DATA.reduce((s, d) => s + d.imp, 0)), 'impressions'], [fmt(best.re), 'reactions on the favourite (#' + best.n + ')']];
+  const box = document.getElementById('nums');
+  items.forEach(([v, l]) => { const d = document.createElement('div'); const b = document.createElement('b'); b.textContent = v; const s = document.createElement('span'); s.textContent = l; d.append(b, s); box.append(d); });
+})();
+
+function render(){
+  let rows = DATA.filter(d => !S.q || d.text.toLowerCase().includes(S.q));
+  rows.sort((a, b) => S.s === 'liked' ? b.re - a.re : S.s === 'old' ? a.date.localeCompare(b.date) : b.date.localeCompare(a.date));
+  document.getElementById('count').textContent = rows.length + ' of ' + DATA.length;
+  const grid = document.getElementById('grid'); grid.replaceChildren();
+  rows.forEach(d => {
+    const card = document.createElement('article'); card.className = 'card';
+    const th = document.createElement('button'); th.type = 'button'; th.className = 'thumb'; th.setAttribute('aria-label', 'Open sketch: ' + d.text);
+    const ph = document.createElement('div'); ph.className = 'ph'; ph.textContent = d.text;
+    const img = document.createElement('img'); img.loading = 'lazy'; img.alt = d.text; img.src = 'img/' + d.urn + '.jpg';
+    img.onload = () => ph.remove(); img.onerror = () => img.remove();
+    th.append(ph, img); th.onclick = () => openLb(d);
+    const body = document.createElement('div'); body.className = 'body';
+    const top = document.createElement('div'); top.className = 'top';
+    const no = document.createElement('span'); no.className = 'no'; no.textContent = d.n ? 'Sketch #' + d.n : 'Bonus sketch';
+    if (top3.has(d.urn)) { const t = document.createElement('span'); t.className = 'top3'; t.textContent = 'top 3'; no.append(' ', t); }
+    const dt = document.createElement('span'); dt.className = 'date'; dt.textContent = fdate(d.date);
+    top.append(no, dt);
+    const cap = document.createElement('p'); cap.className = 'cap'; cap.textContent = d.text;
+    const st = document.createElement('div'); st.className = 'stats';
+    [['♥ ', d.re], ['💬 ', d.co], ['👁 ', d.imp]].forEach(([k, v]) => { const s = document.createElement('span'); s.textContent = k + fmt(v); st.append(s); });
+    const a = document.createElement('a'); a.href = postUrl(d.urn); a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'View post';
+    st.append(a);
+    body.append(top, cap, st); card.append(th, body); grid.append(card);
+  });
+}
+const lb = document.getElementById('lb');
+function openLb(d){
+  document.getElementById('lbImg').src = 'img/' + d.urn + '.jpg'; document.getElementById('lbImg').alt = d.text;
+  document.getElementById('lbCap').textContent = (d.n ? '#' + d.n + ' · ' : '') + d.text;
+  document.getElementById('lbLink').href = postUrl(d.urn);
+  if (lb.showModal) lb.showModal(); else lb.setAttribute('open', '');
+}
+document.getElementById('lbClose').onclick = () => lb.close();
+lb.addEventListener('click', e => { if (e.target === lb) lb.close(); });
+document.getElementById('q').addEventListener('input', e => { S.q = e.target.value.toLowerCase(); render(); });
+document.querySelectorAll('.seg button').forEach(b => b.onclick = () => { S.s = b.dataset.s; document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', x === b)); render(); });
+render();
+</script>
+</body>
+</html>
