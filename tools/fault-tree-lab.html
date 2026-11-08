@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fault Tree Lab</title>
+<style>
+:root{--bg:#0b1f3a;--panel:#12305a;--panel2:#0f284c;--amber:#f5a623;--teal:#2ec4b6;--txt:#e8eef7;--muted:#9fb3cc;--grid:#2a4a78;--red:#ff6b6b}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+.wrap{max-width:1500px;margin:0 auto;padding:22px 22px 40px}
+header{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:flex-end;justify-content:space-between;margin-bottom:16px}
+h1{margin:0;font-size:26px;letter-spacing:-.2px}
+.sub{color:var(--muted);margin-top:2px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+select,input[type=text],input[type=number]{background:var(--panel2);color:var(--txt);border:1px solid var(--grid);border-radius:8px;padding:8px 10px;font:inherit;min-width:0}
+select:focus,input:focus,button:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
+button{background:var(--panel);color:var(--txt);border:1px solid var(--grid);border-radius:8px;padding:8px 12px;font:inherit;cursor:pointer}
+button:hover{border-color:var(--teal)}
+button.primary{background:var(--amber);color:var(--bg);border-color:var(--amber);font-weight:700}
+button.danger:hover{border-color:var(--red);color:var(--red)}
+button:disabled{opacity:.4;cursor:not-allowed}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:10px}
+.kpi{background:var(--panel);border:1px solid var(--grid);border-radius:12px;padding:12px 14px}
+.kpi .l{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.kpi .v{font-size:28px;font-weight:700;margin-top:2px}
+.kpi .s{color:var(--muted);font-size:12px}
+.kpi.top .v{color:var(--amber)}
+.insight{background:var(--panel2);border-left:4px solid var(--teal);border-radius:8px;padding:10px 14px;margin:0 0 14px;color:var(--txt)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;margin-bottom:14px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px}
+.card{background:var(--panel);border:1px solid var(--grid);border-radius:14px;padding:14px}
+.card h2{margin:0 0 10px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--amber)}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+.hint{color:var(--muted);font-size:12px;margin-left:auto}
+#treeWrap{background:var(--bg);border:1px solid var(--grid);border-radius:10px;height:600px;overflow:hidden;position:relative}
+#tree{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#tree.panning{cursor:grabbing}
+label.f{display:block;color:var(--muted);font-size:12px;margin:10px 0 4px}
+.seg{display:flex;border:1px solid var(--grid);border-radius:8px;overflow:hidden}
+.seg button{flex:1;border:0;border-radius:0;background:var(--panel2)}
+.seg button.on{background:var(--teal);color:var(--bg);font-weight:700}
+.row{display:flex;gap:8px;align-items:center}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.badge{display:inline-block;border:1px solid var(--teal);color:var(--teal);border-radius:20px;padding:2px 10px;font-size:12px}
+input[type=range]{width:100%;accent-color:var(--amber)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{color:var(--muted);text-align:left;font-weight:600;font-size:12px;padding:6px 8px;border-bottom:1px solid var(--grid)}
+td{padding:7px 8px;border-bottom:1px solid #1d4272;vertical-align:middle}
+tr[data-cs]{cursor:pointer}
+tr[data-cs]:hover td{background:var(--panel2)}
+tr.on td{background:#3b2a12}
+.ord{display:inline-block;min-width:22px;text-align:center;border-radius:6px;padding:1px 6px;font-weight:700;color:var(--bg)}
+.o1{background:var(--teal)}.o2{background:var(--amber)}.o3{background:var(--red)}
+.meter{height:8px;background:var(--panel2);border-radius:6px;overflow:hidden;min-width:70px}
+.meter i{display:block;height:100%}
+.res{display:grid;grid-template-columns:1fr auto;gap:6px 12px;margin-top:10px}
+.res b{font-variant-numeric:tabular-nums}
+.and{color:var(--amber)}.or{color:var(--teal)}.naive{color:var(--red)}
+.legend{display:grid;gap:6px;margin-top:14px;color:var(--muted);font-size:12.5px}
+footer{color:var(--muted);font-size:12px;margin-top:16px}
+@media(max-width:1100px){.grid,.grid2{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}#treeWrap{height:480px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <h1>Fault Tree Lab</h1>
+    <div class="sub">Build the logic, attach probabilities, see which combinations of failures actually drive the top event.</div>
+  </div>
+  <div class="tools">
+    <select id="preset" aria-label="Example tree">
+      <option value="fuel">Fuel cell vehicle: no traction power</option>
+      <option value="bushing">Plastic bushing: sliding mechanism</option>
+      <option value="blank">Blank tree</option>
+      <option value="custom" hidden>Custom (your edits)</option>
+    </select>
+    <button id="exPng" class="primary">Export PNG</button>
+    <button id="exSvg">SVG</button>
+    <button id="exJson">Save JSON</button>
+    <button id="imJson">Load JSON</button>
+    <input id="file" type="file" accept="application/json,.json" hidden>
+  </div>
+</header>
+
+<section class="kpis">
+  <div class="kpi top"><div class="l">Top event probability</div><div class="v" id="kTop">-</div><div class="s" id="kTopS">exact, independent events</div></div>
+  <div class="kpi"><div class="l">Rare-event approximation</div><div class="v" id="kRare">-</div><div class="s">sum of cut-set probabilities</div></div>
+  <div class="kpi"><div class="l">Minimal cut sets</div><div class="v" id="kCs">-</div><div class="s" id="kCsS"></div></div>
+  <div class="kpi"><div class="l">Single-point failures</div><div class="v" id="kSpf">-</div><div class="s" id="kSpfS"></div></div>
+</section>
+<p class="insight" id="insight"></p>
+
+<section class="grid">
+  <div class="card">
+    <h2>Fault tree</h2>
+    <div class="bar">
+      <button id="bFit">Fit</button><button id="bIn">Zoom +</button><button id="bOut">Zoom −</button>
+      <button id="bExpand">Expand all</button><button id="bCollapse">Collapse branches</button>
+      <span class="hint">Click a node to edit · double-click to collapse · click a gate to flip AND/OR · drag to pan · scroll to zoom</span>
+    </div>
+    <div id="treeWrap"><svg id="tree" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fault tree diagram"></svg></div>
+  </div>
+
+  <aside class="card" id="editor">
+    <h2>Selected event</h2>
+    <label class="f" for="edLabel">Name</label>
+    <input type="text" id="edLabel" style="width:100%">
+    <div id="edGateBox">
+      <label class="f">Gate under this event</label>
+      <div class="seg"><button data-g="OR" id="gOR">OR: any one</button><button data-g="AND" id="gAND">AND: all together</button></div>
+    </div>
+    <div id="edLeafBox">
+      <label class="f" for="edP">Probability of this basic event (%)</label>
+      <div class="row"><input type="number" id="edP" min="0" max="100" step="any" style="width:110px"><span class="badge">basic event</span></div>
+      <input type="range" id="edS" min="0" max="1000" step="1" style="margin-top:10px" aria-label="Probability slider, logarithmic">
+      <div style="color:var(--muted);font-size:12px">Log slider: 0.001% to 100%</div>
+    </div>
+    <div id="edCalcBox">
+      <label class="f">Computed probability</label>
+      <div style="font-size:22px;font-weight:700" id="edCalc">-</div>
+    </div>
+    <div class="btns">
+      <button id="bAddChild">+ Add child</button>
+      <button id="bAddSib">+ Add sibling</button>
+      <button id="bToggle">Collapse</button>
+      <button id="bDel" class="danger">Delete</button>
+    </div>
+    <div class="legend">
+      <div><b class="or">OR gate</b>: any one input causes the output. P = 1 − Π(1 − pᵢ)</div>
+      <div><b class="and">AND gate</b>: all inputs must occur. P = Π pᵢ</div>
+      <div>Leaves are basic events and carry the probabilities.</div>
+    </div>
+  </aside>
+</section>
+
+<section class="grid2">
+  <div class="card">
+    <h2>Minimal cut sets</h2>
+    <div style="color:var(--muted);font-size:12.5px;margin:-4px 0 8px">The smallest combinations of basic events that cause the top event. Click a row to highlight it in the tree.</div>
+    <table>
+      <thead><tr><th>#</th><th>Events that must all occur</th><th>Order</th><th>P</th><th style="width:150px">Share</th></tr></thead>
+      <tbody id="csBody"></tbody>
+    </table>
+    <div style="margin-top:10px"><button id="csMore" hidden>Show all</button></div>
+  </div>
+  <div class="card">
+    <h2>Gate calculator</h2>
+    <div class="row">
+      <div style="flex:1"><label class="f" for="gA">Event A (%)</label><input type="number" id="gA" value="10" min="0" max="100" step="any" style="width:100%"></div>
+      <div style="flex:1"><label class="f" for="gB">Event B (%)</label><input type="number" id="gB" value="10" min="0" max="100" step="any" style="width:100%"></div>
+    </div>
+    <div class="res">
+      <span class="and">AND: P(A) × P(B)</span><b class="and" id="rAnd">-</b>
+      <span class="or">OR: 1 − (1−P(A))(1−P(B))</span><b class="or" id="rOr">-</b>
+      <span class="naive">Naive sum P(A) + P(B)</span><b class="naive" id="rSum">-</b>
+    </div>
+    <div style="color:var(--muted);font-size:12.5px;margin-top:10px" id="rNote"></div>
+  </div>
+</section>
+
+<footer>
+  Assumes independent basic events. Each event is a separate leaf, so a cause shared by several branches (common cause) is not modelled as one event. The example probabilities are illustrative, not field data: replace them with your own. The article-style trees are examples of the method, not a safety analysis.
+</footer>
+</div>
+
+<script>
+//#ENGINE-START
+let uid = 0;
+const nid = () => 'n' + (++uid);
+const clamp01 = x => (isFinite(x) ? Math.min(1, Math.max(0, x)) : 0);
+function L(label, p){ return {id:nid(), label, p, gate:'OR', children:[], collapsed:false}; }
+function G(label, gate, children){ return {id:nid(), label, p:0, gate, children, collapsed:false}; }
+const isLeaf = n => n.children.length === 0;
+
+function prob(n){
+  if (isLeaf(n)) return clamp01(n.p);
+  const ps = n.children.map(prob);
+  return n.gate === 'AND' ? ps.reduce((a,b)=>a*b,1) : 1 - ps.reduce((a,b)=>a*(1-b),1);
+}
+function probMap(n, m = new Map()){
+  if (isLeaf(n)) m.set(n.id, clamp01(n.p));
+  else { n.children.forEach(c => probMap(c, m)); m.set(n.id, prob(n)); }
+  return m;
+}
+function unionSorted(a, b){ return Array.from(new Set(a.concat(b))).sort(); }
+function minimize(sets){
+  const uniq = new Map();
+  for (const s of sets) uniq.set(s.join('|'), s);
+  const arr = Array.from(uniq.values()).sort((x, y) => x.length - y.length);
+  const kept = [];
+  for (const s of arr){
+    const set = new Set(s);
+    if (!kept.some(k => k.every(e => set.has(e)))) kept.push(s);
+  }
+  return kept;
+}
+function cutsets(n){
+  if (isLeaf(n)) return [[n.id]];
+  const subs = n.children.map(cutsets);
+  if (n.gate === 'OR') return minimize(subs.flat());
+  let acc = [[]];
+  for (const s of subs){
+    const next = [];
+    for (const a of acc) for (const b of s) next.push(unionSorted(a, b));
+    acc = minimize(next);
+    if (acc.length > 20000) break;
+  }
+  return acc;
+}
+function buildFuel(){
+  return G('No traction power available','OR',[
+    G('Fuel cell stack unavailable','OR',[
+      G('Hydrogen supply interrupted','AND',[L('Isolation valve closed',0.02), L('Valve position sensor failed',0.05)]),
+      G('Coolant flow lost','OR',[L('Coolant pump failed',0.01), L('Coolant line blocked',0.005), L('Controller command error',0.003)]),
+      L('Air supply restricted',0.008),
+      L('Stack control fault',0.004)]),
+    L('High-voltage battery unavailable',0.01),
+    L('Power control system unavailable',0.006)]);
+}
+function buildBushing(){
+  const r = G('Sliding mechanism cannot move smoothly','OR',[
+    G('Bushing worn or cracked','OR',[
+      L('Abrasive dust enters the interface',0.03), L('Steel surface too rough',0.02),
+      L('Excessive load / contact pressure',0.02), L('Poor alignment (edge loading)',0.015),
+      L('Polymer unsuited for pressure, velocity and temperature',0.01)]),
+    G('Bushing softens or deforms','OR',[
+      L('High ambient temperature',0.02), L('Frictional heat from high sliding speed',0.015),
+      L('Excessive load (heat)',0.02), L('Insufficient clearance',0.02),
+      L('Material with a low temperature limit',0.01)]),
+    G('Bushing binds in housing','AND',[
+      L('Temperature rises above expected limit',0.10), L('Initial clearance too small',0.05)]),
+    G('Steel surface becomes damaged','OR',[
+      L('Rough shaft finish',0.02), L('Corrosion',0.01), L('Scoring from trapped debris',0.015),
+      L('Incorrect hardness',0.005), L('Prior metal-to-metal contact after bushing wore through',0.01)])]);
+  [0, 1, 3].forEach(i => r.children[i].collapsed = true);
+  return r;
+}
+function buildBlank(){
+  return G('Top event','OR',[L('Cause A',0.02), L('Cause B',0.01)]);
+}
+const PRESETS = {fuel:buildFuel, bushing:buildBushing, blank:buildBlank};
+//#ENGINE-END
+
+const NS = 'http://www.w3.org/2000/svg';
+const BW = 160, BH = 62, GAPX = 14, LEVEL = 150;
+const FONT = 'Helvetica, Arial, sans-serif';
+const C = {bg:'#0b1f3a', panel:'#12305a', amber:'#f5a623', teal:'#2ec4b6', txt:'#e8eef7', muted:'#9fb3cc', red:'#ff6b6b'};
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const state = {root:null, sel:null, hl:new Set(), view:null, bounds:null, inner:'', presetKey:'fuel', showAll:false, cs:[], pm:null};
+
+function findNode(id, n = state.root){
+  if (n.id === id) return n;
+  for (const c of n.children){ const r = findNode(id, c); if (r) return r; }
+  return null;
+}
+function findParent(id, n = state.root){
+  for (const c of n.children){ if (c.id === id) return n; const r = findParent(id, c); if (r) return r; }
+  return null;
+}
+function reid(n){ n.id = nid(); n.children.forEach(reid); }
+function sanitize(n, depth = 0){
+  if (!n || typeof n !== 'object' || depth > 40) throw new Error('bad node');
+  const kids = Array.isArray(n.children) ? n.children.map(c => sanitize(c, depth + 1)) : [];
+  return {id:'', label:String(n.label == null ? 'Event' : n.label).slice(0, 120), p:clamp01(Number(n.p)),
+          gate:n.gate === 'AND' ? 'AND' : 'OR', children:kids, collapsed:!!n.collapsed};
+}
+
+function fmtPct(p){
+  const v = p * 100;
+  if (v === 0) return '0%';
+  if (v >= 10) return v.toFixed(1) + '%';
+  if (v >= 1) return v.toFixed(2) + '%';
+  if (v >= 0.01) return v.toFixed(3) + '%';
+  return v.toExponential(1) + '%';
+}
+
+/* ---------- layout & drawing ---------- */
+function span(n){
+  if (isLeaf(n) || n.collapsed) return BW + GAPX;
+  return Math.max(BW + GAPX, n.children.reduce((s, c) => s + span(c), 0));
+}
+function place(n, x0, depth, out){
+  const s = span(n), rec = {n, depth, y:depth * LEVEL, kids:[]};
+  out.push(rec);
+  if (isLeaf(n) || n.collapsed){ rec.cx = x0 + s / 2; return rec; }
+  const total = n.children.reduce((a, c) => a + span(c), 0);
+  let x = x0 + (s - total) / 2;
+  for (const c of n.children){ rec.kids.push(place(c, x, depth + 1, out)); x += span(c); }
+  rec.cx = (rec.kids[0].cx + rec.kids[rec.kids.length - 1].cx) / 2;
+  return rec;
+}
+function wrapLabel(t, max = 25, lines = 3){
+  const out = []; let cur = '';
+  for (const w of String(t).split(/\s+/)){
+    const cand = (cur + ' ' + w).trim();
+    if (cand.length <= max) cur = cand; else { if (cur) out.push(cur); cur = w; }
+  }
+  if (cur) out.push(cur);
+  if (out.length > lines){ out.length = lines; out[lines - 1] = out[lines - 1].slice(0, max - 1) + '…'; }
+  return out.map(l => l.length > max + 4 ? l.slice(0, max + 3) + '…' : l);
+}
+function gatePath(kind, cx, yBase, w, h){
+  const yt = yBase - h;
+  if (kind === 'AND')
+    return `M${cx - w},${yBase} L${cx + w},${yBase} L${cx + w},${yt + w} A${w},${w} 0 0 0 ${cx - w},${yt + w} Z`;
+  return `M${cx - w},${yBase} Q${cx},${yBase - h * 0.35} ${cx + w},${yBase} Q${cx + w * 0.9},${yBase - h * 0.7} ${cx},${yt} Q${cx - w * 0.9},${yBase - h * 0.7} ${cx - w},${yBase} Z`;
+}
+function draw(){
+  const out = [];
+  const root = place(state.root, 0, 0, out);
+  const pm = state.pm;
+  let edges = '', gates = '', nodes = '';
+  const gw = 16, gh = 24;
+  for (const r of out){
+    const n = r.n, cx = r.cx, y = r.y;
+    if (r.kids.length){
+      const gTop = y + BH + 10, gBase = gTop + gh, busY = y + LEVEL - 26;
+      const ln = (x1, y1, x2, y2) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${C.muted}" stroke-width="1.6" stroke-linecap="round"/>`;
+      edges += ln(cx, y + BH, cx, gTop) + ln(cx, gBase, cx, busY);
+      const xs = r.kids.map(k => k.cx);
+      if (xs.length > 1) edges += ln(Math.min(...xs), busY, Math.max(...xs), busY);
+      for (const k of r.kids) edges += ln(k.cx, busY, k.cx, k.y);
+      const fill = n.gate === 'AND' ? C.amber : C.teal;
+      gates += `<g data-gate="${n.id}" style="cursor:pointer"><title>${n.gate} gate. Click to flip.</title>` +
+        `<path d="${gatePath(n.gate, cx, gBase, gw, gh)}" fill="${fill}" stroke="#fff" stroke-width="1.5"/>` +
+        `<text x="${cx}" y="${gBase - 5}" text-anchor="middle" font-family="${FONT}" font-size="8.5" font-weight="700" fill="${C.bg}">${n.gate}</text></g>`;
+    }
+    const isTop = n === state.root, leaf = isLeaf(n);
+    const fill = isTop ? C.amber : C.panel;
+    const stroke = isTop ? '#fff' : (leaf ? C.teal : '#fff');
+    const tc = isTop ? C.bg : C.txt;
+    const lines = wrapLabel(n.label);
+    const k = lines.length + 1, lh = 14;
+    let ty = (BH - lh * k) / 2 + 11 + y;
+    let tx = '';
+    for (const l of lines){ tx += `<text x="${cx}" y="${ty}" text-anchor="middle" font-family="${FONT}" font-size="11.5" font-weight="700" fill="${tc}">${esc(l)}</text>`; ty += lh; }
+    tx += `<text x="${cx}" y="${ty}" text-anchor="middle" font-family="${FONT}" font-size="10.5" fill="${tc}" opacity=".9">${isTop ? 'TOP · ' : ''}P = ${fmtPct(pm.get(n.id))}</text>`;
+    let extra = '';
+    if (state.hl.has(n.id)) extra += `<rect x="${cx - BW / 2 - 4}" y="${y - 4}" width="${BW + 8}" height="${BH + 8}" rx="12" fill="none" stroke="${C.red}" stroke-width="3.5"/>`;
+    if (state.sel === n.id) extra += `<rect x="${cx - BW / 2 - 7}" y="${y - 7}" width="${BW + 14}" height="${BH + 14}" rx="14" fill="none" stroke="${isTop ? '#fff' : C.amber}" stroke-width="2.5" stroke-dasharray="6 4"/>`;
+    let badge = '';
+    if (!leaf && n.collapsed){
+      const cnt = countLeaves(n);
+      badge = `<text x="${cx}" y="${y + BH + 16}" text-anchor="middle" font-family="${FONT}" font-size="11" fill="${C.muted}">▸ ${cnt} hidden event${cnt === 1 ? '' : 's'}</text>`;
+    }
+    nodes += `<g data-node="${n.id}" style="cursor:pointer">${extra}<rect x="${cx - BW / 2}" y="${y}" width="${BW}" height="${BH}" rx="10" fill="${fill}" stroke="${stroke}" stroke-width="1.8"${n.collapsed && !leaf ? ' stroke-dasharray="5 3"' : ''}/>${tx}${badge}</g>`;
+  }
+  const xs = out.map(r => r.cx);
+  state.bounds = {minX:Math.min(...xs) - BW / 2 - 8, maxX:Math.max(...xs) + BW / 2 + 8, minY:-10, maxY:Math.max(...out.map(r => r.y)) + BH + 26, rootCx:root.cx};
+  state.inner = edges + gates + nodes;
+  $('tree').innerHTML = state.inner;
+  if (!state.view) fit();
+}
+function countLeaves(n){ return isLeaf(n) ? 1 : n.children.reduce((a, c) => a + countLeaves(c), 0); }
+
+/* ---------- view ---------- */
+function setView(v){ state.view = v; $('tree').setAttribute('viewBox', `${v.x} ${v.y} ${v.w} ${v.h}`); }
+function fit(){
+  const svg = $('tree'), cw = svg.clientWidth || 900, ch = svg.clientHeight || 600, b = state.bounds, pad = 30;
+  const W = b.maxX - b.minX + pad * 2, H = b.maxY - b.minY + pad * 2;
+  const scale = Math.max(Math.min(cw / W, ch / H), 0.3);
+  const w = cw / scale, h = ch / scale;
+  const x = W <= w ? (b.minX + b.maxX) / 2 - w / 2 : b.rootCx - w / 2;
+  const y = H <= h ? (b.minY + b.maxY) / 2 - h / 2 : b.minY - pad;
+  setView({x, y, w, h});
+}
+function zoom(f, mx, my){
+  const svg = $('tree'), v = state.view, cw = svg.clientWidth, ch = svg.clientHeight;
+  if (mx == null){ mx = cw / 2; my = ch / 2; }
+  const px = v.x + mx / cw * v.w, py = v.y + my / ch * v.h;
+  const w = Math.min(Math.max(v.w / f, 200), 20000), h = w * ch / cw;
+  setView({x:px - mx / cw * w, y:py - my / ch * h, w, h});
+}
+(function wirePan(){
+  const svg = $('tree'); let drag = null, moved = false;
+  svg.addEventListener('wheel', e => { e.preventDefault(); const r = svg.getBoundingClientRect(); zoom(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX - r.left, e.clientY - r.top); }, {passive:false});
+  svg.addEventListener('pointerdown', e => { drag = {x:e.clientX, y:e.clientY, v:{...state.view}, id:e.pointerId}; moved = false; });
+  svg.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (!moved && Math.abs(dx) + Math.abs(dy) > 4){ moved = true; svg.classList.add('panning'); try { svg.setPointerCapture(drag.id); } catch (err) {} }
+    if (moved) setView({x:drag.v.x - dx * drag.v.w / svg.clientWidth, y:drag.v.y - dy * drag.v.h / svg.clientHeight, w:drag.v.w, h:drag.v.h});
+  });
+  const end = () => { drag = null; svg.classList.remove('panning'); setTimeout(() => moved = false, 0); };
+  svg.addEventListener('pointerup', end); svg.addEventListener('pointercancel', end);
+  svg.addEventListener('click', e => {
+    if (moved) return;
+    const g = e.target.closest('[data-gate]');
+    if (g){ const n = findNode(g.dataset.gate); n.gate = n.gate === 'AND' ? 'OR' : 'AND'; edited(); return; }
+    const nd = e.target.closest('[data-node]');
+    if (nd){ state.sel = nd.dataset.node; refresh(); }
+  });
+  svg.addEventListener('dblclick', e => {
+    const nd = e.target.closest('[data-node]');
+    if (nd){ const n = findNode(nd.dataset.node); if (!isLeaf(n)){ n.collapsed = !n.collapsed; state.sel = n.id; edited(); } }
+  });
+})();
+
+/* ---------- panels ---------- */
+function names(ids){ return ids.map(id => esc(findNode(id).label)).join(' <b style="color:var(--amber)">AND</b> '); }
+function computeCs(){
+  state.pm = probMap(state.root);
+  const sets = minimize(cutsets(state.root)).map(ids => ({ids, p:ids.reduce((a, id) => a * state.pm.get(id), 1)}));
+  sets.sort((a, b) => b.p - a.p || a.ids.length - b.ids.length);
+  state.cs = sets;
+}
+function renderKpis(){
+  const cs = state.cs, top = state.pm.get(state.root.id), rare = cs.reduce((a, s) => a + s.p, 0);
+  const spf = cs.filter(s => s.ids.length === 1), multi = cs.length - spf.length;
+  $('kTop').textContent = fmtPct(top);
+  $('kRare').textContent = fmtPct(Math.min(rare, 1));
+  $('kCs').textContent = cs.length;
+  $('kCsS').textContent = multi ? `${spf.length} of order 1, ${multi} of order 2 or more` : 'all of order 1';
+  $('kSpf').textContent = spf.length;
+  const spfP = spf.reduce((a, s) => a + s.p, 0);
+  $('kSpfS').textContent = rare > 0 ? `${(spfP / rare * 100).toFixed(0)}% of cut-set probability` : '';
+  if (!cs.length || rare === 0){ $('insight').textContent = 'Give the basic events some probability to see which cut sets dominate.'; return; }
+  const t = cs[0];
+  let msg = `The biggest single contributor is ${t.ids.map(id => findNode(id).label).join(' + ')} (${(t.p / rare * 100).toFixed(0)}% of the cut-set probability). `;
+  msg += `${spf.length} cut set${spf.length === 1 ? ' is a' : 's are'} single-point failure${spf.length === 1 ? '' : 's'}`;
+  if (multi){
+    const mp = cs.filter(s => s.ids.length > 1).reduce((a, s) => a + s.p, 0);
+    msg += multi === 1
+      ? `; the one combination of several events adds only ${(mp / rare * 100).toFixed(1)}%, because AND gates multiply small probabilities.`
+      : `; the ${multi} combinations of several events add only ${(mp / rare * 100).toFixed(1)}%, because AND gates multiply small probabilities.`;
+  } else msg += '.';
+  $('insight').textContent = msg;
+}
+function renderCs(){
+  const cs = state.cs, rare = cs.reduce((a, s) => a + s.p, 0) || 1, lim = state.showAll ? cs.length : 12;
+  const key = new Set([...state.hl].sort()).size ? [...state.hl].sort().join('|') : '';
+  $('csBody').innerHTML = cs.slice(0, lim).map((s, i) => {
+    const sh = s.p / rare * 100, o = s.ids.length, oc = o === 1 ? 'o1' : o === 2 ? 'o2' : 'o3';
+    const on = key && [...s.ids].sort().join('|') === key;
+    return `<tr data-cs="${i}" class="${on ? 'on' : ''}"><td>${i + 1}</td><td>${names(s.ids)}</td><td><span class="ord ${oc}">${o}</span></td><td>${fmtPct(s.p)}</td>` +
+      `<td><div class="meter"><i style="width:${Math.max(sh, 1.5)}%;background:${o === 1 ? 'var(--teal)' : o === 2 ? 'var(--amber)' : 'var(--red)'}"></i></div><span style="font-size:11px;color:var(--muted)">${sh.toFixed(1)}%</span></td></tr>`;
+  }).join('') || '<tr><td colspan="5" style="color:var(--muted)">No cut sets</td></tr>';
+  const more = $('csMore');
+  more.hidden = cs.length <= 12;
+  more.textContent = state.showAll ? 'Show top 12' : `Show all ${cs.length}`;
+}
+const pctToS = pct => pct <= 0.001 ? 0 : Math.round((Math.log10(pct) + 3) / 5 * 1000);
+const sToPct = s => s <= 0 ? 0 : Math.pow(10, -3 + 5 * s / 1000);
+function renderEditor(){
+  const n = findNode(state.sel) || state.root;
+  state.sel = n.id;
+  const leaf = isLeaf(n);
+  if (document.activeElement !== $('edLabel')) $('edLabel').value = n.label;
+  $('edGateBox').hidden = leaf; $('edLeafBox').hidden = !leaf; $('edCalcBox').hidden = leaf;
+  $('gOR').classList.toggle('on', n.gate === 'OR'); $('gAND').classList.toggle('on', n.gate === 'AND');
+  if (leaf){ $('edP').value = +(n.p * 100).toPrecision(4); $('edS').value = pctToS(n.p * 100); }
+  else $('edCalc').textContent = fmtPct(state.pm.get(n.id));
+  $('bAddSib').disabled = n === state.root;
+  $('bDel').disabled = n === state.root;
+  $('bToggle').disabled = leaf;
+  $('bToggle').textContent = n.collapsed ? 'Expand' : 'Collapse';
+}
+function renderLab(){
+  const a = clamp01(parseFloat($('gA').value) / 100), b = clamp01(parseFloat($('gB').value) / 100);
+  $('rAnd').textContent = fmtPct(a * b); $('rOr').textContent = fmtPct(1 - (1 - a) * (1 - b)); $('rSum').textContent = fmtPct(a + b);
+  $('rNote').textContent = `The naive sum overstates the OR result by ${fmtPct(a * b)}: the case where both occur is counted twice.`;
+}
+function save(){ try { localStorage.setItem('ftl-v1', JSON.stringify({root:state.root, key:state.presetKey})); } catch (e) {} }
+function refresh(opts = {}){
+  computeCs(); draw(); renderKpis(); renderCs();
+  if (!opts.skipEditor) renderEditor();
+}
+function edited(opts){
+  state.presetKey = 'custom'; $('preset').value = 'custom';
+  refresh(opts); save();
+}
+function loadModel(root, key, doFit = true){
+  uid = 0; reid(root);
+  state.root = root; state.sel = root.id; state.hl = new Set(); state.presetKey = key; state.showAll = false;
+  $('preset').value = key; state.view = null;
+  refresh(); save();
+}
+
+/* ---------- editor events ---------- */
+$('edLabel').addEventListener('input', e => { findNode(state.sel).label = e.target.value || 'Event'; edited({skipEditor:true}); });
+$('edP').addEventListener('input', e => {
+  const v = parseFloat(e.target.value); if (!isFinite(v)) return;
+  findNode(state.sel).p = clamp01(v / 100); $('edS').value = pctToS(Math.min(100, Math.max(0, v))); edited({skipEditor:true});
+});
+$('edS').addEventListener('input', e => {
+  const pct = sToPct(+e.target.value); findNode(state.sel).p = clamp01(pct / 100);
+  $('edP').value = +pct.toPrecision(3); edited({skipEditor:true});
+});
+for (const b of [$('gOR'), $('gAND')]) b.addEventListener('click', () => { findNode(state.sel).gate = b.dataset.g; edited(); });
+$('bAddChild').addEventListener('click', () => {
+  const n = findNode(state.sel), c = L('New event', 0.01);
+  n.children.push(c); n.collapsed = false; c.id = nid(); state.sel = c.id; edited();
+});
+$('bAddSib').addEventListener('click', () => {
+  const p = findParent(state.sel); if (!p) return;
+  const c = L('New event', 0.01); c.id = nid(); p.children.push(c); state.sel = c.id; edited();
+});
+$('bToggle').addEventListener('click', () => { const n = findNode(state.sel); if (!isLeaf(n)){ n.collapsed = !n.collapsed; edited(); } });
+$('bDel').addEventListener('click', () => {
+  const p = findParent(state.sel); if (!p) return;
+  const n = findNode(state.sel);
+  if (!isLeaf(n) && !confirm(`Delete "${n.label}" and everything under it?`)) return;
+  p.children = p.children.filter(c => c.id !== n.id); state.sel = p.id; edited();
+});
+$('bFit').addEventListener('click', fit);
+$('bIn').addEventListener('click', () => zoom(1.25));
+$('bOut').addEventListener('click', () => zoom(1 / 1.25));
+function setAll(n, v, depth = 0, minDepth = 0){ if (!isLeaf(n) && depth >= minDepth) n.collapsed = v; n.children.forEach(c => setAll(c, v, depth + 1, minDepth)); }
+$('bExpand').addEventListener('click', () => { setAll(state.root, false); edited(); fit(); });
+$('bCollapse').addEventListener('click', () => { setAll(state.root, true, 0, 1); edited(); fit(); });
+$('csBody').addEventListener('click', e => {
+  const tr = e.target.closest('tr[data-cs]'); if (!tr) return;
+  const s = state.cs[+tr.dataset.cs], key = [...s.ids].sort().join('|');
+  const cur = [...state.hl].sort().join('|');
+  state.hl = cur === key ? new Set() : new Set(s.ids);
+  // expand ancestors so highlighted events are visible
+  if (state.hl.size) for (const id of s.ids){ let p = findParent(id); while (p){ p.collapsed = false; p = findParent(p.id); } }
+  refresh({skipEditor:true});
+});
+$('csMore').addEventListener('click', () => { state.showAll = !state.showAll; renderCs(); });
+$('gA').addEventListener('input', renderLab); $('gB').addEventListener('input', renderLab);
+$('preset').addEventListener('change', e => {
+  const k = e.target.value;
+  if (k === 'custom' || !PRESETS[k]) return;
+  if (state.presetKey === 'custom' && !confirm('Replace your edited tree with this example?')){ e.target.value = 'custom'; return; }
+  loadModel(PRESETS[k](), k);
+});
+
+/* ---------- export / import ---------- */
+function download(blob, name){
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+function svgString(){
+  const b = state.bounds, pad = 30, W = b.maxX - b.minX + pad * 2, H = b.maxY - b.minY + pad * 2;
+  const inner = state.inner.replace(/ data-(node|gate)="[^"]*"/g, '').replace(/ style="cursor:pointer"/g, '');
+  return `<svg xmlns="${NS}" width="${W}" height="${H}" viewBox="${b.minX - pad} ${b.minY - pad} ${W} ${H}"><rect x="${b.minX - pad}" y="${b.minY - pad}" width="${W}" height="${H}" fill="${C.bg}"/>${inner}</svg>`;
+}
+$('exSvg').addEventListener('click', () => download(new Blob([svgString()], {type:'image/svg+xml'}), 'fault-tree.svg'));
+$('exPng').addEventListener('click', () => {
+  const s = svgString(), b = state.bounds, W = b.maxX - b.minX + 60, H = b.maxY - b.minY + 60;
+  const k = Math.min(2, 8000 / Math.max(W, H)), img = new Image();
+  img.onload = () => {
+    const cv = document.createElement('canvas'); cv.width = Math.round(W * k); cv.height = Math.round(H * k);
+    const ctx = cv.getContext('2d'); ctx.drawImage(img, 0, 0, cv.width, cv.height);
+    cv.toBlob(bl => bl && download(bl, 'fault-tree.png'), 'image/png');
+  };
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s);
+});
+$('exJson').addEventListener('click', () => download(new Blob([JSON.stringify({version:1, root:state.root}, null, 2)], {type:'application/json'}), 'fault-tree.json'));
+$('imJson').addEventListener('click', () => $('file').click());
+$('file').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try { const j = JSON.parse(r.result); loadModel(sanitize(j.root || j), 'custom'); }
+    catch (err) { alert('Could not read that file as a fault tree.'); }
+  };
+  r.readAsText(f); e.target.value = '';
+});
+window.addEventListener('resize', () => { if (state.view) fit(); });
+
+/* ---------- init ---------- */
+(function init(){
+  let root = null, key = 'fuel';
+  try {
+    const s = JSON.parse(localStorage.getItem('ftl-v1') || 'null');
+    if (s && s.root){ root = sanitize(s.root); key = s.key || 'custom'; }
+  } catch (e) { root = null; }
+  if (!root) root = buildFuel();
+  renderLab();
+  loadModel(root, PRESETS[key] || key === 'custom' ? key : 'fuel');
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,418 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ALT Miner's Rule Workbench</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#f3f5f8; --panel:#ffffff; --panel2:#eaeef4; --line:#cfd6e0; --line2:#dfe4ec;
+  --ink:#14203a; --ink2:#4a5670; --mute:#7a869c;
+  --amber:#c47a00; --amber2:#e5951a; --teal:#0f8a80; --teal2:#12a396;
+  --rc:#d63d63; --lvl1:#2f7fd1; --lvl2:#c47a00; --lvl3:#8b5fd8;
+  --ok:#1f8a4c; --warn:#c47a00; --bad:#c92a2a;
+  --grid:#e2e7ef; --shadow:0 1px 2px rgba(20,32,58,.06);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0b1220; --panel:#111a2c; --panel2:#182338; --line:#263248; --line2:#1f2a3f;
+    --ink:#e8edf6; --ink2:#b3bdd0; --mute:#7d8aa5;
+    --amber:#f2b23a; --amber2:#ffc857; --teal:#3dd6c3; --teal2:#6ee7d8;
+    --rc:#ff5c7a; --lvl1:#6ec3f5; --lvl2:#f2b23a; --lvl3:#c3a2ff;
+    --ok:#4ade80; --warn:#f2b23a; --bad:#ff6b6b;
+    --grid:#1c2740; --shadow:0 1px 2px rgba(0,0,0,.4);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0b1220; --panel:#111a2c; --panel2:#182338; --line:#263248; --line2:#1f2a3f;
+  --ink:#e8edf6; --ink2:#b3bdd0; --mute:#7d8aa5;
+  --amber:#f2b23a; --amber2:#ffc857; --teal:#3dd6c3; --teal2:#6ee7d8;
+  --rc:#ff5c7a; --lvl1:#6ec3f5; --lvl2:#f2b23a; --lvl3:#c3a2ff;
+  --ok:#4ade80; --warn:#f2b23a; --bad:#ff6b6b;
+  --grid:#1c2740; --shadow:0 1px 2px rgba(0,0,0,.4);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Manrope,"Segoe UI",system-ui,sans-serif;font-size:14px;line-height:1.45}
+.mono{font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+.wrap{max-width:1240px;margin:0 auto;padding:24px 20px 60px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;border-bottom:2px solid var(--amber);padding-bottom:14px;margin-bottom:22px}
+header h1{margin:0;font-size:26px;font-weight:800;letter-spacing:-.01em;text-wrap:balance}
+header h1 span{color:var(--amber)}
+header p{margin:4px 0 0;color:var(--ink2);max-width:60ch}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap}
+button{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 13px;border-radius:6px;cursor:pointer}
+button:hover{border-color:var(--amber)}
+button.primary{background:var(--amber);border-color:var(--amber);color:#14203a}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--teal);outline-offset:1px}
+.eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:700;margin:0 0 8px}
+section{margin-bottom:26px}
+h2{font-size:17px;margin:0 0 10px;font-weight:700}
+.grid-settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 14px;background:var(--panel);border:1px solid var(--line2);border-radius:8px;padding:14px 16px;box-shadow:var(--shadow)}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink2);font-weight:600}
+input,select{font:inherit;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:5px;padding:6px 8px;width:100%;font-variant-numeric:tabular-nums}
+input[type=number]{font-family:"JetBrains Mono",monospace;font-size:13px}
+.levels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:760px){.levels{grid-template-columns:1fr}}
+.level{background:var(--panel);border:1px solid var(--line2);border-radius:8px;padding:12px 14px;border-top:3px solid var(--lc);box-shadow:var(--shadow)}
+.level .head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.level .head .dot{width:10px;height:10px;border-radius:50%;background:var(--lc)}
+.level .head input{width:110px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cols h4{margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--mute)}
+.cols input{margin-bottom:4px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--line2);white-space:nowrap}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mute);font-weight:700}
+td:first-child,th:first-child{text-align:left}
+td.num{font-family:"JetBrains Mono",monospace;font-size:13px}
+td.rc{color:var(--rc);font-weight:600}
+td.r50{color:var(--teal)}
+.tablewrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line2);border-radius:8px;box-shadow:var(--shadow)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.two{grid-template-columns:1fr}}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:10px 0}
+.stat{background:var(--panel2);border-radius:6px;padding:10px 12px}
+.stat .k{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mute);font-weight:700}
+.stat .v{font-family:"JetBrains Mono",monospace;font-size:20px;font-weight:600;margin-top:2px}
+.stat .v.ok{color:var(--ok)}.stat .v.warn{color:var(--warn)}.stat .v.bad{color:var(--bad)}
+.stat .s{font-size:11px;color:var(--ink2)}
+.duty{display:grid;grid-template-columns:32px 1fr 1fr;gap:6px 8px;align-items:center}
+.duty .h{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mute);font-weight:700}
+.duty .i{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--mute);text-align:right}
+.chart{background:var(--panel);border:1px solid var(--line2);border-radius:8px;padding:8px;box-shadow:var(--shadow);overflow-x:auto}
+svg{display:block;width:100%;height:auto;font-family:"JetBrains Mono",monospace}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--ink2);padding:6px 8px 2px}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.legend i.dash{background:repeating-linear-gradient(90deg,var(--ink2) 0 4px,transparent 4px 7px)}
+.bar{height:8px;border-radius:4px;background:var(--rc);min-width:2px}
+.msg{color:var(--bad);font-size:13px;margin:6px 0}
+.note{color:var(--ink2);font-size:12.5px;max-width:78ch}
+.hint{font-size:12px;color:var(--mute)}
+details{margin-top:10px;color:var(--ink2);font-size:13px}
+details summary{cursor:pointer;font-weight:600;color:var(--ink)}
+.eq{font-family:"JetBrains Mono",monospace;font-size:12.5px;background:var(--panel2);padding:8px 10px;border-radius:6px;margin:6px 0;overflow-x:auto}
+</style>
+
+<div class="wrap">
+<header>
+  <div>
+    <p class="eyebrow">Accelerated life testing · Weibull · Life–stress · Cumulative damage</p>
+    <h1>ALT Analysis &amp; Damage Estimate by <span>Miner's Rule</span></h1>
+    <p>Enter up to 5 failures and 5 right-censored (suspended) units per stress level, fit Weibull per level, project the R<sub>50</sub> and R<sub>x</sub>C<sub>y</sub> life–stress lines, then accumulate damage over a duty cycle.</p>
+  </div>
+  <div class="toolbar">
+    <button id="btnExample">Load example</button>
+    <button id="btnClear">Clear data</button>
+    <button class="primary" id="btnCalc">Recalculate</button>
+  </div>
+</header>
+
+<section>
+  <p class="eyebrow">1 · Analysis settings</p>
+  <div class="grid-settings">
+    <label class="f">Stress unit<input id="stressUnit" value="RPM"></label>
+    <label class="f">Time unit<input id="timeUnit" value="h"></label>
+    <label class="f">Life–stress model
+      <select id="model">
+        <option value="power">Inverse power law (fatigue, RPM, load, voltage)</option>
+        <option value="arrhenius">Arrhenius (temperature in °C → activation energy)</option>
+        <option value="exponential">Exponential (ln t linear in stress)</option>
+      </select></label>
+    <label class="f">Reliability R (%)<input id="R" type="number" value="90" min="1" max="99.99" step="1"></label>
+    <label class="f">Confidence C (%)<input id="C" type="number" value="90" min="50" max="99.9" step="1"></label>
+    <label class="f">Lower bound method
+      <select id="bound">
+        <option value="fisher">Fisher matrix (MLE, one-sided)</option>
+        <option value="chi2">Chi-square on η (β held fixed)</option>
+      </select></label>
+    <label class="f">Weibull shape β
+      <select id="commonBeta">
+        <option value="0">Separate β per stress level</option>
+        <option value="1">Common β (pooled MLE)</option>
+      </select></label>
+    <label class="f">Max application stress (dashed line)<input id="maxApp" type="number" value="6000" step="any"></label>
+    <label class="f">Damage counted against
+      <select id="dutyLine">
+        <option value="rc">R·C lower-bound line (conservative)</option>
+        <option value="r50">R50 median line</option>
+        <option value="rr">R line without confidence</option>
+      </select></label>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">2 · Test data — times to failure and suspensions</p>
+  <div class="levels" id="levels"></div>
+  <p class="hint" style="margin-top:6px">Leave cells empty when you have fewer samples. At least two failures per level are needed for a Weibull fit; suspensions extend the fit through the likelihood.</p>
+</section>
+
+<section>
+  <p class="eyebrow">3 · Weibull results per stress level</p>
+  <div class="tablewrap"><table id="resTable"></table></div>
+  <div id="msgs"></div>
+</section>
+
+<section>
+  <div class="two">
+    <div>
+      <p class="eyebrow">4 · Life–stress model fit</p>
+      <div class="tablewrap"><table id="modelTable"></table></div>
+      <div id="modelEq"></div>
+    </div>
+    <div>
+      <p class="eyebrow">5 · Duty cycle (up to 10 steps)</p>
+      <div class="tablewrap" style="padding:10px 12px">
+        <div class="duty" id="duty"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">6 · Damage by Miner's rule</p>
+  <div class="stats" id="stats"></div>
+  <div class="tablewrap"><table id="dutyTable"></table></div>
+</section>
+
+<section>
+  <p class="eyebrow">7 · Life–stress plot with duty staircase</p>
+  <div class="chart">
+    <div class="legend" id="legend1"></div>
+    <div id="chart1"></div>
+  </div>
+</section>
+
+<section>
+  <p class="eyebrow">8 · Weibull probability plot</p>
+  <div class="chart">
+    <div class="legend" id="legend2"></div>
+    <div id="chart2"></div>
+  </div>
+  <details>
+    <summary>Method notes</summary>
+    <p>Weibull parameters are maximum-likelihood estimates with right censoring. R<sub>50</sub> = η(ln 2)<sup>1/β</sup>; the R-life is t<sub>R</sub> = η(−ln R)<sup>1/β</sup>. The Fisher-matrix bound uses the observed information matrix and the delta method on ln t<sub>R</sub> (one-sided lower limit at confidence C). The chi-square option holds β at its estimate and bounds η with χ²(2r+2) when suspensions are present, χ²(2r) otherwise. The life–stress line is a least-squares fit of ln(life) against the model's stress transform (ln S, 1/kT, or S) through the three levels, separately for the R<sub>50</sub> points and for the lower-bound points, so both lines carry the fit through to the application stresses. Damage D = Σ n<sub>i</sub>/N<sub>i</sub>, with N<sub>i</sub> read from the selected line at each duty stress. Plotting positions use Johnson's adjusted ranks with Bernard's approximation.</p>
+  </details>
+</section>
+</div>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const LVL=['--lvl1','--lvl2','--lvl3'];
+const kB=8.617333e-5;
+
+/* ---------- numerics ---------- */
+function normInv(p){const a=[-3.969683028665376e1,2.209460984245205e2,-2.759285104469687e2,1.383577518672690e2,-3.066479806614716e1,2.506628277459239],b=[-5.447609879822406e1,1.615858368580409e2,-1.556989798598866e2,6.680131188771972e1,-1.328068155288572e1],c=[-7.784894002430293e-3,-3.223964580411365e-1,-2.400758277161838,-2.549732539343734,4.374664141464968,2.938163982698783],d=[7.784695709041462e-3,3.224671290700398e-1,2.445134137142996,3.754408661907416];const pl=0.02425,ph=1-pl;let q,r;if(p<pl){q=Math.sqrt(-2*Math.log(p));return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}if(p<=ph){q=p-.5;r=q*q;return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);}q=Math.sqrt(-2*Math.log(1-p));return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+function lnGamma(x){const g=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];let y=x,t=x+5.5;t-=(x+.5)*Math.log(t);let s=1.000000000190015;for(let j=0;j<6;j++)s+=g[j]/++y;return -t+Math.log(2.5066282746310005*s/x);}
+function gammaP(a,x){if(x<=0)return 0;if(x<a+1){let ap=a,sum=1/a,del=sum;for(let n=0;n<500;n++){ap++;del*=x/ap;sum+=del;if(Math.abs(del)<Math.abs(sum)*1e-14)break;}return sum*Math.exp(-x+a*Math.log(x)-lnGamma(a));}let b=x+1-a,c=1/1e-300,d=1/b,h=d;for(let i=1;i<500;i++){const an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<1e-300)d=1e-300;c=b+an/c;if(Math.abs(c)<1e-300)c=1e-300;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<1e-14)break;}return 1-Math.exp(-x+a*Math.log(x)-lnGamma(a))*h;}
+function chi2inv(p,k){let lo=0,hi=Math.max(10,k*5);while(gammaP(k/2,hi/2)<p)hi*=2;for(let i=0;i<200;i++){const m=(lo+hi)/2;if(gammaP(k/2,m/2)<p)lo=m;else hi=m;}return (lo+hi)/2;}
+function invert(M){const n=M.length,A=M.map((r,i)=>[...r,...Array.from({length:n},(_,j)=>i===j?1:0)]);for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(Math.abs(A[r][c])>Math.abs(A[p][c]))p=r;[A[c],A[p]]=[A[p],A[c]];const pv=A[c][c];if(Math.abs(pv)<1e-300)return null;for(let j=0;j<2*n;j++)A[c][j]/=pv;for(let r=0;r<n;r++){if(r===c)continue;const f=A[r][c];if(!f)continue;for(let j=0;j<2*n;j++)A[r][j]-=f*A[c][j];}}return A.map(r=>r.slice(n));}
+
+/* ---------- Weibull MLE ---------- */
+// score in beta for a set of levels with eta profiled out
+function scoreBeta(beta,levels){let g=0;for(const L of levels){const all=[...L.f,...L.c],r=L.f.length;let S=0,Sl=0;for(const t of all){const p=Math.pow(t,beta);S+=p;Sl+=p*Math.log(t);}let sl=0;for(const t of L.f)sl+=Math.log(t);g+=r/beta+sl-r*Sl/S;}return g;}
+function solveBeta(levels){let lo=0.02,hi=200;if(scoreBeta(hi,levels)>0)return hi;for(let i=0;i<200;i++){const m=Math.sqrt(lo*hi);if(scoreBeta(m,levels)>0)lo=m;else hi=m;}return Math.sqrt(lo*hi);}
+function etaFor(beta,L){const all=[...L.f,...L.c];let S=0;for(const t of all)S+=Math.pow(t,beta);return Math.pow(S/L.f.length,1/beta);}
+function loglik(beta,etas,levels){let ll=0;levels.forEach((L,j)=>{const eta=etas[j];for(const t of L.f){ll+=Math.log(beta)-Math.log(eta)+(beta-1)*Math.log(t/eta)-Math.pow(t/eta,beta);}for(const t of L.c)ll-=Math.pow(t/eta,beta);});return ll;}
+function hessian(fn,th){const n=th.length,H=[];for(let i=0;i<n;i++){H.push([]);for(let j=0;j<n;j++){const hi=1e-3*Math.abs(th[i]),hj=1e-3*Math.abs(th[j]);const p=(di,dj)=>{const t=th.slice();t[i]+=di*hi;t[j]+=dj*hj;return fn(t);};H[i][j]=(p(1,1)-p(1,-1)-p(-1,1)+p(-1,-1))/(4*hi*hj);}}return H;}
+
+/* ---------- Johnson adjusted ranks ---------- */
+function plotPositions(L){const items=[...L.f.map(t=>({t,f:1})),...L.c.map(t=>({t,f:0}))].sort((a,b)=>a.t-b.t||b.f-a.f);const N=items.length;let prev=0;const out=[];items.forEach((it,idx)=>{if(!it.f)return;const inc=(N+1-prev)/(1+(N-(idx+1)+1));prev+=inc;out.push({t:it.t,F:(prev-0.3)/(N+0.4)});});return out;}
+
+/* ---------- state / UI build ---------- */
+const EX={stressUnit:'RPM',timeUnit:'h',model:'power',R:90,C:90,bound:'fisher',commonBeta:'0',maxApp:6000,dutyLine:'rc',
+  levels:[{s:7000,f:[3100,4300,5200,6100,7400],c:[7500,7500,'','','']},{s:8000,f:[1500,2000,2500,3000,3600],c:[3700,3700,'','','']},{s:9000,f:[650,900,1100,1350,1600],c:[1650,'','','','']}],
+  duty:[[4500,4000],[5000,2500],[5500,1200],[6000,500],[6500,150],[7000,40],['',''],['',''],['',''],['','']]};
+
+function buildInputs(){
+  const lv=$('levels');lv.innerHTML='';
+  for(let i=0;i<3;i++){
+    const d=document.createElement('div');d.className='level';d.style.setProperty('--lc',`var(${LVL[i]})`);
+    let h=`<div class="head"><span class="dot"></span><strong>Level ${i+1}</strong><input type="number" step="any" id="s${i}" placeholder="stress"><span class="hint" id="su${i}"></span></div><div class="cols"><div><h4>Failures</h4>`;
+    for(let k=0;k<5;k++)h+=`<input type="number" step="any" min="0" id="f${i}_${k}" placeholder="—">`;
+    h+=`</div><div><h4>Suspended</h4>`;
+    for(let k=0;k<5;k++)h+=`<input type="number" step="any" min="0" id="c${i}_${k}" placeholder="—">`;
+    h+=`</div></div>`;d.innerHTML=h;lv.appendChild(d);
+  }
+  const du=$('duty');du.innerHTML=`<div class="h">#</div><div class="h">Stress <span id="dsu"></span></div><div class="h">Duration <span id="dtu"></span></div>`;
+  for(let i=0;i<10;i++)du.innerHTML+=`<div class="i">${i+1}</div><input type="number" step="any" id="ds${i}" placeholder="—"><input type="number" step="any" min="0" id="dd${i}" placeholder="—">`;
+}
+function setState(st){
+  ['stressUnit','timeUnit','model','bound','commonBeta','dutyLine'].forEach(k=>$(k).value=st[k]);
+  $('R').value=st.R;$('C').value=st.C;$('maxApp').value=st.maxApp;
+  st.levels.forEach((L,i)=>{$('s'+i).value=L.s;for(let k=0;k<5;k++){$(`f${i}_${k}`).value=L.f[k]??'';$(`c${i}_${k}`).value=L.c[k]??'';}});
+  st.duty.forEach((d,i)=>{$('ds'+i).value=d[0];$('dd'+i).value=d[1];});
+}
+function getState(){
+  const num=v=>{const x=parseFloat(v);return isFinite(x)?x:null;};
+  const st={stressUnit:$('stressUnit').value||'stress',timeUnit:$('timeUnit').value||'t',model:$('model').value,R:num($('R').value)||90,C:num($('C').value)||90,bound:$('bound').value,commonBeta:$('commonBeta').value,maxApp:num($('maxApp').value),dutyLine:$('dutyLine').value,levels:[],duty:[]};
+  for(let i=0;i<3;i++){const L={s:num($('s'+i).value),f:[],c:[],raw:{f:[],c:[]}};for(let k=0;k<5;k++){const f=num($(`f${i}_${k}`).value),c=num($(`c${i}_${k}`).value);L.raw.f.push($(`f${i}_${k}`).value);L.raw.c.push($(`c${i}_${k}`).value);if(f>0)L.f.push(f);if(c>0)L.c.push(c);}st.levels.push(L);}
+  for(let i=0;i<10;i++){st.duty.push([$('ds'+i).value,$('dd'+i).value]);}
+  return st;
+}
+function save(st){try{localStorage.setItem('altMiner',JSON.stringify({...st,levels:st.levels.map(L=>({s:L.s,f:L.raw.f,c:L.raw.c}))}));}catch(e){}}
+function load(){try{const s=localStorage.getItem('altMiner');return s?JSON.parse(s):null;}catch(e){return null;}}
+
+/* ---------- formatting ---------- */
+const fmt=(x,d)=>x==null||!isFinite(x)?'—':(d!=null?x.toFixed(d):(Math.abs(x)>=100?Math.round(x).toLocaleString():Math.abs(x)>=10?x.toFixed(1):x.toPrecision(3)));
+const fmtE=x=>x==null||!isFinite(x)?'—':(Math.abs(x)>=1e6||Math.abs(x)<1e-3?x.toExponential(3):fmt(x));
+
+/* ---------- main compute ---------- */
+function compute(){
+  const st=getState();save(st);
+  const R=st.R/100,C=st.C/100,z=normInv(C),lnR=Math.log(-Math.log(R));
+  const rcLabel=`R${fmt(st.R,0)}C${fmt(st.C,0)}`,rLabel=`R${fmt(st.R,0)}`;
+  for(let i=0;i<3;i++)$('su'+i).textContent=st.stressUnit;$('dsu').textContent=`(${st.stressUnit})`;$('dtu').textContent=`(${st.timeUnit})`;
+  const msgs=[];
+  const valid=st.levels.map((L,i)=>({...L,i})).filter(L=>L.s!=null&&L.f.length>=2);
+  st.levels.forEach((L,i)=>{if(L.s!=null&&L.f.length<2&&(L.f.length||L.c.length))msgs.push(`Level ${i+1}: need at least 2 failures to fit Weibull.`);});
+  // fit
+  let beta_c=null;if(st.commonBeta==='1'&&valid.length){beta_c=solveBeta(valid);}
+  const res=[];
+  valid.forEach(L=>{
+    const beta=beta_c??solveBeta([L]);const eta=etaFor(beta,L);const r=L.f.length;
+    const r50=eta*Math.pow(Math.LN2,1/beta),tR=eta*Math.pow(-Math.log(R),1/beta);
+    res.push({...L,beta,eta,r50,tR,r});
+  });
+  // bounds
+  if(res.length){
+    if(st.bound==='fisher'){
+      if(beta_c!=null){
+        const th=[beta_c,...res.map(x=>x.eta)];
+        const H=hessian(t=>loglik(t[0],t.slice(1),res),th);const cov=invert(H.map(r=>r.map(v=>-v)));
+        res.forEach((x,j)=>{if(!cov){x.tRC=NaN;return;}const g=Array(th.length).fill(0);g[0]=-lnR/(x.beta*x.beta);g[j+1]=1/x.eta;let v=0;for(let a=0;a<g.length;a++)for(let b=0;b<g.length;b++)v+=g[a]*cov[a][b]*g[b];x.tRC=v>0?x.tR*Math.exp(-z*Math.sqrt(v)):NaN;x.sdBeta=cov[0][0]>0?Math.sqrt(cov[0][0]):NaN;});
+      }else{
+        res.forEach(x=>{const H=hessian(t=>loglik(t[0],[t[1]],[x]),[x.beta,x.eta]);const cov=invert(H.map(r=>r.map(v=>-v)));if(!cov){x.tRC=NaN;return;}const g=[-lnR/(x.beta*x.beta),1/x.eta];let v=0;for(let a=0;a<2;a++)for(let b=0;b<2;b++)v+=g[a]*cov[a][b]*g[b];x.tRC=v>0?x.tR*Math.exp(-z*Math.sqrt(v)):NaN;x.sdBeta=cov[0][0]>0?Math.sqrt(cov[0][0]):NaN;});
+      }
+      if(res.some(x=>!isFinite(x.tRC)))msgs.push('Fisher-matrix bound could not be evaluated for one or more levels (information matrix singular). Try the chi-square method.');
+    }else{
+      res.forEach(x=>{const dof=x.c.length?2*x.r+2:2*x.r;const etaL=x.eta*Math.pow(2*x.r/chi2inv(C,dof),1/x.beta);x.tRC=etaL*Math.pow(-Math.log(R),1/x.beta);x.etaL=etaL;});
+    }
+  }
+  // results table
+  let h=`<tr><th>Stress (${st.stressUnit})</th><th>fail / susp</th><th>β</th><th>η (${st.timeUnit})</th><th>R50</th><th>${rLabel}</th><th>${rcLabel}</th><th>Weibull eq.</th></tr>`;
+  res.forEach(x=>{h+=`<tr><td style="color:var(${LVL[x.i]});font-weight:700">${fmt(x.s)} <span class="hint">L${x.i+1}</span></td><td class="num">${x.r} / ${x.c.length}</td><td class="num">${x.beta.toFixed(2)}${isFinite(x.sdBeta)?`<span class="hint"> ±${x.sdBeta.toFixed(2)}</span>`:''}</td><td class="num">${fmt(x.eta)}</td><td class="num r50">${fmt(x.r50)}</td><td class="num">${fmt(x.tR)}</td><td class="num rc">${fmt(x.tRC)}</td><td class="num" style="text-align:left;font-size:12px">R(t)=exp[−(t/${fmt(x.eta)})^${x.beta.toFixed(2)}]</td></tr>`;});
+  if(!res.length)h+=`<tr><td colspan="8" style="text-align:center;color:var(--mute)">No level has enough failures yet.</td></tr>`;
+  $('resTable').innerHTML=h;
+
+  // life-stress fit
+  const xf=s=>st.model==='power'?Math.log(s):st.model==='arrhenius'?1/(kB*(s+273.15)):s;
+  function linfit(pts){const n=pts.length;if(n<2)return null;let sx=0,sy=0,sxx=0,sxy=0,syy=0;pts.forEach(p=>{sx+=p.x;sy+=p.y;sxx+=p.x*p.x;sxy+=p.x*p.y;syy+=p.y*p.y;});const den=n*sxx-sx*sx;if(Math.abs(den)<1e-300)return null;const b=(n*sxy-sx*sy)/den,a=(sy-b*sx)/n;let ssr=0,sst=0;const ym=sy/n;pts.forEach(p=>{ssr+=Math.pow(p.y-(a+b*p.x),2);sst+=Math.pow(p.y-ym,2);});return{a,b,r2:sst>0?1-ssr/sst:1,n};}
+  const fitOf=key=>linfit(res.filter(x=>isFinite(x[key])&&x[key]>0).map(x=>({x:xf(x.s),y:Math.log(x[key])})));
+  const fits={r50:fitOf('r50'),rr:fitOf('tR'),rc:fitOf('tRC'),eta:fitOf('eta')};
+  const lifeAt=(fit,s)=>fit?Math.exp(fit.a+fit.b*xf(s)):NaN;
+  const pname=st.model==='power'?'exponent n':st.model==='arrhenius'?'activation energy Ea (eV)':'slope b';
+  const pval=f=>st.model==='power'?-f.b:f.b;
+  let mh=`<tr><th>Line</th><th>${pname}</th><th>constant A</th><th>R²</th><th>life @ max app (${fmt(st.maxApp)})</th></tr>`;
+  [['r50','R50 median','r50'],['rr',rLabel,''],['rc',rcLabel+' lower bound','rc'],['eta','η characteristic','']].forEach(([k,n,cls])=>{const f=fits[k];mh+=`<tr><td class="${cls}">${n}</td><td class="num">${f?f.b!=null&&fmt(pval(f),3):'—'}</td><td class="num">${f?fmtE(Math.exp(f.a)):'—'}</td><td class="num">${f?f.r2.toFixed(4):'—'}</td><td class="num ${cls}">${st.maxApp!=null?fmt(lifeAt(f,st.maxApp)):'—'}</td></tr>`;});
+  $('modelTable').innerHTML=mh;
+  let eq='';if(fits.rc){const f=fits.rc;eq=st.model==='power'?`t = ${fmtE(Math.exp(f.a))} · S^(−${fmt(-f.b,3)})`:st.model==='arrhenius'?`t = ${fmtE(Math.exp(f.a))} · exp(${fmt(f.b,3)} eV / kT)`:`t = ${fmtE(Math.exp(f.a))} · exp(${fmt(f.b,5)} · S)`;
+    let af='';if(st.maxApp!=null&&res.length){af=' &nbsp;·&nbsp; AF vs max app: '+res.map(x=>`L${x.i+1} ×${fmt(lifeAt(f,st.maxApp)/lifeAt(f,x.s))}`).join(', ');}
+    $('modelEq').innerHTML=`<div class="eq">${rcLabel} line: ${eq}${af}</div>`;}
+  else $('modelEq').innerHTML=`<p class="note">Need two or more fitted levels to fit a life–stress line.</p>`;
+  if(fits.r50&&fits.r50.n<3)msgs.push('Only two levels fitted — the life–stress line is a two-point fit (R² is not informative).');
+
+  // duty cycle
+  const lineKey=st.dutyLine,line=fits[lineKey];
+  const dutyRows=[];st.duty.forEach((d,i)=>{const s=parseFloat(d[0]),n=parseFloat(d[1]);if(isFinite(s)&&isFinite(n)&&n>0){const N=lifeAt(line,s);dutyRows.push({i,s,n,N,d:N>0?n/N:NaN});}});
+  const D=dutyRows.reduce((a,r)=>a+(isFinite(r.d)?r.d:0),0),T=dutyRows.reduce((a,r)=>a+r.n,0);
+  const lineName=lineKey==='rc'?rcLabel:lineKey==='r50'?'R50':rLabel;
+  let sh='';if(dutyRows.length&&line){const cls=D<0.5?'ok':D<1?'warn':'bad';
+    sh=`<div class="stat"><div class="k">Total damage D</div><div class="v ${cls}">${D.toFixed(3)}</div><div class="s">Σ nᵢ/Nᵢ against ${lineName} line</div></div>
+    <div class="stat"><div class="k">Life consumed</div><div class="v ${cls}">${(D*100).toFixed(1)}%</div><div class="s">${D>=1?'exceeds Miner failure criterion':'of Miner allowance (D = 1)'}</div></div>
+    <div class="stat"><div class="k">Duty block</div><div class="v">${fmt(T)} ${st.timeUnit}</div><div class="s">${dutyRows.length} steps summed</div></div>
+    <div class="stat"><div class="k">Equivalent life at ${lineName}</div><div class="v">${fmt(T/D)} ${st.timeUnit}</div><div class="s">= ${(1/D).toFixed(2)} duty blocks to D = 1</div></div>`;
+    if(st.maxApp!=null){const eqS=st.model==='power'?Math.pow(dutyRows.reduce((a,r)=>a+r.n*Math.pow(r.s,-line.b),0)/T,-1/line.b):null;if(eqS)sh+=`<div class="stat"><div class="k">Equivalent constant stress</div><div class="v">${fmt(eqS)} ${st.stressUnit}</div><div class="s">same damage over the block</div></div>`;}
+  }
+  $('stats').innerHTML=sh||`<div class="stat"><div class="k">Damage</div><div class="v">—</div><div class="s">enter duty steps and fit at least two levels</div></div>`;
+  let dh=`<tr><th>#</th><th>Stress (${st.stressUnit})</th><th>nᵢ (${st.timeUnit})</th><th>Nᵢ from ${lineName} (${st.timeUnit})</th><th>nᵢ/Nᵢ</th><th>share of D</th><th style="text-align:left">·</th></tr>`;
+  dutyRows.forEach(r=>{const sh=D>0?r.d/D:0;dh+=`<tr><td>${r.i+1}</td><td class="num">${fmt(r.s)}</td><td class="num">${fmt(r.n)}</td><td class="num rc">${fmt(r.N)}</td><td class="num">${isFinite(r.d)?r.d.toFixed(4):'—'}</td><td class="num">${(sh*100).toFixed(1)}%</td><td style="width:160px;text-align:left"><div class="bar" style="width:${Math.max(2,sh*100)}%"></div></td></tr>`;});
+  dh+=`<tr><td colspan="4" style="text-align:right;font-weight:700">Σ</td><td class="num" style="font-weight:700">${dutyRows.length?D.toFixed(4):'—'}</td><td class="num">100%</td><td></td></tr>`;
+  $('dutyTable').innerHTML=dh;
+  $('msgs').innerHTML=msgs.map(m=>`<p class="msg">${m}</p>`).join('');
+
+  drawLifeStress(st,res,fits,dutyRows,{rcLabel,rLabel,lineKey,lineName});
+  drawWeibull(st,res);
+}
+
+/* ---------- SVG helpers ---------- */
+const ns='http://www.w3.org/2000/svg';
+function el(t,a,txt){const e=document.createElementNS(ns,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;return e;}
+function logTicks(lo,hi){const t=[];const a=Math.floor(Math.log10(lo)),b=Math.ceil(Math.log10(hi));for(let e=a;e<=b;e++)for(const m of [1,2,5]){const v=m*Math.pow(10,e);if(v>=lo&&v<=hi)t.push({v,major:m===1});}return t;}
+function niceStep(range,n){const raw=range/n,p=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/p;return (f<1.5?1:f<3.5?2:f<7.5?5:10)*p;}
+
+function drawLifeStress(st,res,fits,duty,lab){
+  const W=980,H=520,m={l:78,r:30,t:24,b:54};const box=$('chart1');box.innerHTML='';
+  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`});
+  const times=[],stresses=[];res.forEach(x=>{times.push(...x.f,...x.c,x.r50,x.tRC,x.tR);stresses.push(x.s);});duty.forEach(r=>{times.push(r.N,r.n);stresses.push(r.s);});if(st.maxApp!=null)stresses.push(st.maxApp);
+  const tv=times.filter(v=>isFinite(v)&&v>0),sv=stresses.filter(v=>isFinite(v));
+  if(!tv.length||!sv.length){box.innerHTML='<p class="note" style="padding:10px">Nothing to plot yet.</p>';return;}
+  let cum=0;duty.slice().sort((a,b)=>b.s-a.s).forEach(r=>{cum+=r.n;tv.push(cum);});
+  const xlo=Math.pow(10,Math.floor(Math.log10(Math.min(...tv)*0.7))),xhi=Math.pow(10,Math.ceil(Math.log10(Math.max(...tv)*1.4)));
+  const sr=Math.max(...sv)-Math.min(...sv)||Math.max(...sv)*0.2;const ylo=Math.min(...sv)-sr*0.15,yhi=Math.max(...sv)+sr*0.12;
+  const X=v=>m.l+(Math.log10(v)-Math.log10(xlo))/(Math.log10(xhi)-Math.log10(xlo))*(W-m.l-m.r);
+  const Y=v=>H-m.b-(v-ylo)/(yhi-ylo)*(H-m.t-m.b);
+  const g=el('g',{});svg.appendChild(g);
+  logTicks(xlo,xhi).forEach(t=>{g.appendChild(el('line',{x1:X(t.v),x2:X(t.v),y1:m.t,y2:H-m.b,stroke:'var(--grid)','stroke-width':t.major?1.2:0.6}));if(t.major||t.v/Math.pow(10,Math.floor(Math.log10(t.v)))===2)g.appendChild(el('text',{x:X(t.v),y:H-m.b+16,'text-anchor':'middle','font-size':11,fill:'var(--ink2)'},t.v.toLocaleString()));});
+  const ys=niceStep(yhi-ylo,7);for(let v=Math.ceil(ylo/ys)*ys;v<=yhi;v+=ys){g.appendChild(el('line',{x1:m.l,x2:W-m.r,y1:Y(v),y2:Y(v),stroke:'var(--grid)','stroke-width':0.8}));g.appendChild(el('text',{x:m.l-8,y:Y(v)+4,'text-anchor':'end','font-size':11,fill:'var(--ink2)'},v.toLocaleString()));}
+  g.appendChild(el('rect',{x:m.l,y:m.t,width:W-m.l-m.r,height:H-m.t-m.b,fill:'none',stroke:'var(--line)'}));
+  g.appendChild(el('text',{x:(m.l+W-m.r)/2,y:H-8,'text-anchor':'middle','font-size':12,fill:'var(--ink)'},`Time to failure (${st.timeUnit}) — log scale`));
+  g.appendChild(el('text',{x:16,y:(m.t+H-m.b)/2,'text-anchor':'middle','font-size':12,fill:'var(--ink)',transform:`rotate(-90 16 ${(m.t+H-m.b)/2})`},`Stress (${st.stressUnit})`));
+  // model lines
+  const xf=s=>st.model==='power'?Math.log(s):st.model==='arrhenius'?1/(kB*(s+273.15)):s;
+  const lineOf=(f,color,dash,label)=>{if(!f)return;let d='';const n=80;for(let i=0;i<=n;i++){const s=ylo+(yhi-ylo)*i/n;const t=Math.exp(f.a+f.b*xf(s));if(!(t>0))continue;const x=Math.min(Math.max(X(t),m.l),W-m.r);d+=(d?'L':'M')+x.toFixed(1)+' '+Y(s).toFixed(1);}
+    g.appendChild(el('path',{d,fill:'none',stroke:color,'stroke-width':2.2,'stroke-dasharray':dash||'none'}));
+    const s0=yhi-(yhi-ylo)*0.03,t0=Math.exp(f.a+f.b*xf(s0));if(t0>xlo&&t0<xhi)g.appendChild(el('text',{x:X(t0)+6,y:Y(s0)+4,'font-size':12,'font-weight':600,fill:color},label));};
+  lineOf(fits.r50,'var(--teal)',null,'R50');lineOf(fits.rc,'var(--rc)',null,lab.rcLabel);
+  // max app line
+  if(st.maxApp!=null&&st.maxApp>ylo&&st.maxApp<yhi){g.appendChild(el('line',{x1:m.l,x2:W-m.r,y1:Y(st.maxApp),y2:Y(st.maxApp),stroke:'var(--ink2)','stroke-dasharray':'7 5','stroke-width':1.2}));g.appendChild(el('text',{x:m.l+6,y:Y(st.maxApp)-5,'font-size':11,fill:'var(--ink2)'},`Max application value ${fmt(st.maxApp)} ${st.stressUnit}`));}
+  // data points
+  res.forEach(x=>{const c=`var(${LVL[x.i]})`;x.f.forEach(t=>g.appendChild(el('circle',{cx:X(t),cy:Y(x.s),r:4,fill:c,stroke:'var(--panel)','stroke-width':1})));x.c.forEach(t=>{g.appendChild(el('circle',{cx:X(t),cy:Y(x.s),r:4,fill:'var(--panel)',stroke:c,'stroke-width':1.6}));g.appendChild(el('line',{x1:X(t)+5,x2:X(t)+12,y1:Y(x.s),y2:Y(x.s),stroke:c,'stroke-width':1.4}));});
+    g.appendChild(el('rect',{x:X(x.r50)-4,y:Y(x.s)-4,width:8,height:8,fill:'var(--teal)',transform:`rotate(45 ${X(x.r50)} ${Y(x.s)})`}));
+    if(isFinite(x.tRC))g.appendChild(el('rect',{x:X(x.tRC)-4,y:Y(x.s)-4,width:8,height:8,fill:'var(--rc)',transform:`rotate(45 ${X(x.tRC)} ${Y(x.s)})`}));
+    g.appendChild(el('text',{x:W-m.r-6,y:Y(x.s)-6,'text-anchor':'end','font-size':11,fill:c,'font-weight':600},`L${x.i+1}  β=${x.beta.toFixed(2)}  η=${fmt(x.eta)}`));});
+  // duty staircase
+  if(duty.length&&fits[lab.lineKey]){const sorted=duty.slice().sort((a,b)=>b.s-a.s);let cum=0,d='';const col=lab.lineKey==='rc'?'var(--rc)':lab.lineKey==='r50'?'var(--teal)':'var(--amber)';
+    sorted.forEach((r,i)=>{const x0=i===0?m.l:X(cum);cum+=r.n;const x1=X(cum),y=Y(r.s);d+=(i===0?'M':'L')+x0+' '+y+'L'+x1+' '+y;
+      if(isFinite(r.N)&&r.N>0){g.appendChild(el('line',{x1:x1,x2:X(r.N),y1:y,y2:y,stroke:col,'stroke-dasharray':'2 4','stroke-width':1}));g.appendChild(el('circle',{cx:X(r.N),cy:y,r:3.5,fill:col}));g.appendChild(el('text',{x:X(r.N)+7,y:y-4,'font-size':10.5,fill:col},`N${i+1}=${fmt(r.N)}`));}
+      g.appendChild(el('text',{x:(x0+x1)/2,y:y-6,'font-size':10.5,'text-anchor':'middle',fill:'var(--ink)'},`n${i+1}=${fmt(r.n)}`));});
+    g.appendChild(el('path',{d,fill:'none',stroke:'var(--ink)','stroke-width':2.4,'stroke-linejoin':'miter'}));}
+  box.appendChild(svg);
+  $('legend1').innerHTML=`<span><i style="background:var(--teal)"></i>R50 line / ◆ R50 per level</span><span><i style="background:var(--rc)"></i>${lab.rcLabel} line / ◆ per level</span><span><i class="dash"></i>Max application stress</span><span><i style="background:var(--ink)"></i>Duty staircase (cumulative nᵢ, sorted by stress) → Nᵢ on ${lab.lineName} line</span><span>● failure &nbsp; ○→ suspension</span>`;
+}
+
+function drawWeibull(st,res){
+  const W=980,H=460,m={l:64,r:24,t:20,b:54};const box=$('chart2');box.innerHTML='';
+  if(!res.length){box.innerHTML='<p class="note" style="padding:10px">Nothing to plot yet.</p>';$('legend2').innerHTML='';return;}
+  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`});const g=el('g',{});svg.appendChild(g);
+  const tv=[];res.forEach(x=>tv.push(...x.f,...x.c));
+  const xlo=Math.pow(10,Math.floor(Math.log10(Math.min(...tv)*0.5))),xhi=Math.pow(10,Math.ceil(Math.log10(Math.max(...tv)*2)));
+  const yv=F=>Math.log(-Math.log(1-F));const Fl=0.005,Fh=0.995;
+  const X=v=>m.l+(Math.log10(v)-Math.log10(xlo))/(Math.log10(xhi)-Math.log10(xlo))*(W-m.l-m.r);
+  const Y=F=>H-m.b-(yv(F)-yv(Fl))/(yv(Fh)-yv(Fl))*(H-m.t-m.b);
+  logTicks(xlo,xhi).forEach(t=>{g.appendChild(el('line',{x1:X(t.v),x2:X(t.v),y1:m.t,y2:H-m.b,stroke:'var(--grid)','stroke-width':t.major?1.2:0.6}));if(t.major||t.v/Math.pow(10,Math.floor(Math.log10(t.v)))===2)g.appendChild(el('text',{x:X(t.v),y:H-m.b+16,'text-anchor':'middle','font-size':11,fill:'var(--ink2)'},t.v.toLocaleString()));});
+  [1,2,5,10,20,30,50,63.2,80,90,95,99].forEach(p=>{const F=p/100;g.appendChild(el('line',{x1:m.l,x2:W-m.r,y1:Y(F),y2:Y(F),stroke:'var(--grid)','stroke-width':p===63.2?1.4:0.8,'stroke-dasharray':p===63.2?'4 3':'none'}));g.appendChild(el('text',{x:m.l-8,y:Y(F)+4,'text-anchor':'end','font-size':11,fill:'var(--ink2)'},p+'%'));});
+  g.appendChild(el('rect',{x:m.l,y:m.t,width:W-m.l-m.r,height:H-m.t-m.b,fill:'none',stroke:'var(--line)'}));
+  g.appendChild(el('text',{x:(m.l+W-m.r)/2,y:H-8,'text-anchor':'middle','font-size':12,fill:'var(--ink)'},`Time (${st.timeUnit}) — log scale`));
+  g.appendChild(el('text',{x:14,y:(m.t+H-m.b)/2,'text-anchor':'middle','font-size':12,fill:'var(--ink)',transform:`rotate(-90 14 ${(m.t+H-m.b)/2})`},'Unreliability F(t)'));
+  res.forEach(x=>{const c=`var(${LVL[x.i]})`;
+    // fitted line: F = 1-exp(-(t/eta)^beta) → ln(-ln(1-F)) = beta ln t - beta ln eta
+    const tAt=F=>x.eta*Math.pow(-Math.log(1-F),1/x.beta);const t1=Math.max(tAt(Fl),xlo),t2=Math.min(tAt(Fh),xhi);const F1=1-Math.exp(-Math.pow(t1/x.eta,x.beta)),F2=1-Math.exp(-Math.pow(t2/x.eta,x.beta));
+    g.appendChild(el('line',{x1:X(t1),y1:Y(F1),x2:X(t2),y2:Y(F2),stroke:c,'stroke-width':1.8}));
+    plotPositions(x).forEach(p=>g.appendChild(el('circle',{cx:X(p.t),cy:Y(p.F),r:4.5,fill:c,stroke:'var(--panel)','stroke-width':1})));
+    x.c.forEach(t=>g.appendChild(el('path',{d:`M${X(t)-4} ${H-m.b-6}L${X(t)} ${H-m.b-13}L${X(t)+4} ${H-m.b-6}Z`,fill:'none',stroke:c,'stroke-width':1.3})));});
+  box.appendChild(svg);
+  $('legend2').innerHTML=res.map(x=>`<span><i style="background:var(${LVL[x.i]})"></i>L${x.i+1} ${fmt(x.s)} ${st.stressUnit} · β ${x.beta.toFixed(2)}, η ${fmt(x.eta)}</span>`).join('')+'<span>▲ suspension time · dashed = 63.2 % (η)</span>';
+}
+
+/* ---------- wiring ---------- */
+buildInputs();
+const saved=load();setState(saved&&saved.levels?{...EX,...saved}:EX);
+let timer;document.querySelector('.wrap').addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(compute,250);});
+$('btnCalc').addEventListener('click',compute);
+$('btnExample').addEventListener('click',()=>{setState(EX);compute();});
+$('btnClear').addEventListener('click',()=>{setState({...EX,levels:EX.levels.map(()=>({s:'',f:['','','','',''],c:['','','','','']})),duty:EX.duty.map(()=>['','']),maxApp:''});compute();});
+compute();
+})();
+</script>
+</html>

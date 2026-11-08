@@ -1,0 +1,961 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0}[hidden]{display:none!important}</style></head><body>
+<title>DOE & GR&R Workbench</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600&display=swap">
+<style>
+/* layout: a lab worksheet read top to bottom in the order the study is run: template, definition, matrix, results, analysis, conclusions */
+:root{
+  color-scheme:dark;
+  --bg:#0b1524; --surface:#132238; --surface2:#1a2d48; --line:#284262; --line2:#1d3350;
+  --ink:#e7eef8; --ink2:#aebccf; --ink3:#8496ad;
+  --amber:#f0a93a; --amber-ink:#1b1403; --teal:#3cc9b3;
+  --s1:#1fa391; --s2:#c2831a; --s3:#7783e6;
+  --good:#4cc38a; --warn:#e3b341; --bad:#f07a6c;
+  --display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;margin:0}
+.wrap{max-width:1160px;margin:0 auto;padding-inline:18px;padding-block:22px 60px;display:flex;flex-direction:column;gap:26px}
+h1,h2,h3{font-family:var(--display);font-weight:600;margin:0;text-wrap:balance;letter-spacing:.01em}
+h1{font-size:30px;line-height:1.1}
+h2{font-size:21px;display:flex;align-items:baseline;gap:10px}
+h2 .n{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--amber)}
+h3{font-size:16px;color:var(--ink)}
+p{margin:0}
+.lede{color:var(--ink2);max-width:68ch}
+.muted{color:var(--ink3)} .small{font-size:13px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+header.top{display:flex;flex-direction:column;gap:8px}
+nav.steps{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line2);margin-inline:-18px;padding:8px 18px;display:flex;gap:6px;overflow-x:auto}
+nav.steps a{color:var(--ink2);text-decoration:none;font-size:13px;padding:5px 10px;border-radius:5px;white-space:nowrap;border:1px solid transparent}
+nav.steps a b{font-family:var(--mono);font-weight:500;color:var(--amber);margin-right:6px}
+nav.steps a:hover{border-color:var(--line);color:var(--ink)}
+section{display:flex;flex-direction:column;gap:14px;scroll-margin-top:60px}
+.panel{background:var(--surface);border:1px solid var(--line2);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.grid{display:grid;gap:12px}
+.tpl{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.tcard{text-align:left;background:var(--surface);border:1px solid var(--line2);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.tcard:hover{border-color:var(--line)}
+.tcard[aria-pressed="true"]{border-color:var(--amber);background:var(--surface2)}
+.tcard .tag{font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--teal)}
+.tcard strong{font-family:var(--display);font-size:17px;font-weight:600}
+.tcard span.d{font-size:13px;color:var(--ink2)}
+.tcard .src{font-size:12px;color:var(--ink3)}
+.row{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field>label,.lab{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+input[type=text],input[type=number],select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:6px 8px;min-width:0}
+input[type=text]{width:150px} input.sm{width:92px} input.lv{width:104px}
+textarea{width:100%;min-height:110px;font-family:var(--mono);font-size:13px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:5px;overflow:hidden}
+.seg button{background:var(--bg);border:0;padding:6px 12px;color:var(--ink2);border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--amber);color:var(--amber-ink);font-weight:600}
+.seg button:disabled{opacity:.4;cursor:not-allowed}
+.btn{background:var(--surface2);border:1px solid var(--line);border-radius:5px;padding:6px 12px;color:var(--ink)}
+.btn:hover{border-color:var(--ink3)}
+.btn.pri{background:var(--amber);border-color:var(--amber);color:var(--amber-ink);font-weight:600}
+.btn.ghost{background:transparent}
+.frow{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:flex-end;padding-block:10px;border-top:1px solid var(--line2)}
+.frow .let{font-family:var(--mono);color:var(--amber);width:18px;padding-bottom:7px}
+.mx{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.mcard{background:var(--surface);border:1px solid var(--line2);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.mcard.sel{border-color:var(--amber);background:var(--surface2)}
+.mcard h3{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{font-family:var(--mono);font-size:11px;padding:2px 7px;border-radius:99px;border:1px solid var(--line);color:var(--ink2);white-space:nowrap;font-weight:400;letter-spacing:0}
+.chip.rec{border-color:var(--teal);color:var(--teal)}
+.chip.strong{border-color:var(--amber);color:var(--amber)}
+.chip.moderate{border-color:var(--teal);color:var(--teal)}
+.chip.good{border-color:var(--good);color:var(--good)} .chip.warnc{border-color:var(--warn);color:var(--warn)} .chip.bad{border-color:var(--bad);color:var(--bad)}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 12px}
+.stats div{display:flex;flex-direction:column}
+.stats b{font-family:var(--mono);font-weight:500;font-size:17px}
+.mcard p{font-size:13.5px;color:var(--ink2)}
+.mcard p b{color:var(--ink);font-weight:600}
+.mcard .btn{align-self:flex-start;margin-top:auto}
+.scroll{overflow-x:auto;max-width:100%}
+.tall{max-height:520px;overflow-y:auto}
+table{border-collapse:collapse;font-size:13.5px;width:100%}
+th,td{padding:6px 10px;text-align:left;border-bottom:1px solid var(--line2);white-space:nowrap}
+th{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);font-weight:500;position:sticky;top:0;background:var(--surface)}
+td.r,th.r{text-align:right} td.num,td .num{font-family:var(--mono)}
+td input{width:86px;text-align:right;font-family:var(--mono);padding:4px 6px}
+tr.best td{color:var(--amber)}
+.plots{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px}
+.plot{display:flex;flex-direction:column;gap:6px;min-width:0}
+.plot h4{font-family:var(--body);font-size:13.5px;font-weight:600;margin:0;display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:24px}
+.plot svg{width:100%;height:auto;display:block;max-width:340px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:18px;height:0;border-top:2px solid;vertical-align:middle;margin-right:5px}
+.cap{font-size:13px;color:var(--ink2)}
+.bars{display:grid;grid-template-columns:minmax(90px,max-content) 1fr max-content;gap:7px 10px;align-items:center;font-size:13.5px}
+.bars .trk{height:12px;background:var(--bg);border-radius:3px;overflow:hidden}
+.bars .trk i{display:block;height:100%;border-radius:0 3px 3px 0;background:var(--s1)}
+.bars .trk i.int{background:var(--s3)} .bars .trk i.err{background:var(--ink3)} .bars .trk i.part{background:var(--s2)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;align-items:start}
+.two>*{min-width:0}
+.two.anova{grid-template-columns:minmax(0,3fr) minmax(0,2fr)}
+@media (max-width:860px){.two.anova{grid-template-columns:minmax(0,1fr)}}
+.plot.ip h4{min-height:46px;align-content:flex-start}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.tile{border:1px solid var(--line2);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:2px;background:var(--surface)}
+.tile b{font-family:var(--mono);font-size:24px;font-weight:500}
+.note{border-left:2px solid var(--line);padding-left:12px;color:var(--ink2);font-size:13.5px}
+.note.w{border-color:var(--warn)}
+ol.concl{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:12px;max-width:80ch}
+ol.concl li::marker{font-family:var(--mono);color:var(--amber)}
+ol.concl b{font-weight:600}
+.ex{font-size:12px;color:var(--warn);border:1px solid var(--warn);border-radius:4px;padding:1px 6px;font-family:var(--mono)}
+.status{font-size:13px} .status.ok{color:var(--good)} .status.err{color:var(--bad)}
+label.rad{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;color:var(--ink2)}
+@media (max-width:520px){h1{font-size:25px} input[type=text]{width:128px} input.lv{width:92px}}
+@media (prefers-reduced-motion:no-preference){.tcard,.btn,.mcard{transition:border-color .15s}}
+</style>
+<div class="wrap">
+  <header class="top">
+    <h1>DOE &amp; GR&amp;R Workbench</h1>
+    <p class="lede">Plan a Taguchi or full-factorial experiment for up to five factors at two or three levels, enter or upload the results, and read main effects, graded interactions and conclusions. The same engine runs a gauge R&amp;R study framed as an orthogonal experiment.</p>
+    <nav class="steps" aria-label="Steps">
+      <a href="#templates"><b>1</b>Template</a><a href="#setup"><b>2</b>Study</a><a href="#matrix"><b>3</b>Matrix</a><a href="#data"><b>4</b>Results</a><a href="#analysis"><b>5</b>Analysis</a><a href="#conclusions"><b>6</b>Conclusions</a>
+    </nav>
+  </header>
+  <section id="templates"><h2><span class="n">1</span>Start from a template</h2><div class="grid tpl" id="tplGrid"></div></section>
+  <section id="setup"><h2><span class="n">2</span>Define the study</h2><div class="panel" id="setupBox"></div></section>
+  <section id="matrix"><h2><span class="n">3</span>Choose the matrix</h2><div id="matrixBox" style="display:flex;flex-direction:column;gap:14px"></div></section>
+  <section id="data"><h2><span class="n">4</span>Enter results</h2><div class="panel" id="dataBox"></div></section>
+  <section id="analysis"><h2><span class="n">5</span>Analysis</h2><div id="analysisBox" style="display:flex;flex-direction:column;gap:14px"></div></section>
+  <section id="conclusions"><h2><span class="n">6</span>Conclusions</h2><div class="panel" id="conclBox"></div></section>
+</div>
+<script>
+/* ===== statistics engine: orthogonal arrays, alias checks, ANOVA, S/N, GR&R ===== */
+var DOE = (function () {
+  "use strict";
+  var mean = function (a) { var s = 0; for (var i = 0; i < a.length; i++) s += a[i]; return a.length ? s / a.length : NaN; };
+  var sdev = function (a) { if (a.length < 2) return NaN; var m = mean(a), s = 0; a.forEach(function (x) { s += (x - m) * (x - m); }); return Math.sqrt(s / (a.length - 1)); };
+
+  function xorArr(nb) {
+    var n = 1 << nb, rows = [];
+    for (var r = 0; r < n; r++) {
+      var row = [];
+      for (var c = 1; c < n; c++) { var p = 0; for (var b = 0; b < nb; b++) if ((c >> b) & 1) p ^= (r >> (nb - 1 - b)) & 1; row.push(p); }
+      rows.push(row);
+    }
+    return rows;
+  }
+  function mod3Arr(coefs) {
+    var nb = coefs[0].length, n = Math.pow(3, nb), rows = [];
+    for (var r = 0; r < n; r++) {
+      var d = [], x = r;
+      for (var b = nb - 1; b >= 0; b--) { d[b] = x % 3; x = Math.floor(x / 3); }
+      rows.push(coefs.map(function (c) { var s = 0; c.forEach(function (ci, i) { s += ci * d[i]; }); return s % 3; }));
+    }
+    return rows;
+  }
+  var OA = {
+    L4: xorArr(2), L8: xorArr(3), L16: xorArr(4),
+    L9: mod3Arr([[1, 0], [0, 1], [1, 1], [1, 2]]),
+    L18: ["11111111", "11222222", "11333333", "12112233", "12223311", "12331122", "13121323", "13232131", "13313212",
+      "21133221", "21211332", "21322113", "22123132", "22231213", "22312321", "23132312", "23213123", "23321231"]
+      .map(function (s) { return s.split("").map(function (ch) { return +ch - 1; }); }),
+    L27: mod3Arr([[1, 0, 0], [0, 1, 0], [1, 1, 0], [1, 2, 0], [0, 0, 1], [1, 0, 1], [1, 0, 2], [0, 1, 1], [1, 1, 1], [1, 2, 2], [0, 1, 2], [1, 2, 1], [1, 1, 2]])
+  };
+  var OA_NOTATION = { L4: "L4 (2³)", L8: "L8 (2⁷)", L16: "L16 (2¹⁵)", L9: "L9 (3⁴)", L18: "L18 (2¹×3⁷)", L27: "L27 (3¹³)" };
+
+  function fullFactorial(nl) {
+    var N = nl.reduce(function (a, b) { return a * b; }, 1), rows = [];
+    for (var r = 0; r < N; r++) { var row = [], div = 1; for (var f = 0; f < nl.length; f++) { row.push(Math.floor(r / div) % nl[f]); div *= nl[f]; } rows.push(row); }
+    return rows;
+  }
+
+  /* fraction of the variance of v that lies in the i×j interaction space of design D */
+  function cellsFrac(v, D, i, j) {
+    var m = mean(v), sst = 0; v.forEach(function (x) { sst += (x - m) * (x - m); });
+    if (sst < 1e-12) return 0;
+    var ssb = function (keyf) {
+      var g = {}; v.forEach(function (x, r) { var k = keyf(r); (g[k] = g[k] || []).push(x); });
+      var s = 0; for (var k in g) { var mm = mean(g[k]); s += g[k].length * (mm - m) * (mm - m); } return s;
+    };
+    var c = ssb(function (r) { return D[r][i] * 3 + D[r][j]; }), a = ssb(function (r) { return D[r][i]; }), b = ssb(function (r) { return D[r][j]; });
+    return Math.max(0, (c - a - b) / sst);
+  }
+  function groupMeanBy(v, D, f) { var g = {}; v.forEach(function (x, r) { (g[D[r][f]] = g[D[r][f]] || []).push(x); }); var o = {}; for (var k in g) o[k] = mean(g[k]); return o; }
+
+  function aliasInfo(D, nl) {
+    var k = nl.length, pairs = [], i, j;
+    for (i = 0; i < k; i++) for (j = i + 1; j < k; j++) {
+      var worst = { frac: 0, f: -1 }, complete = true, seen = {};
+      D.forEach(function (r) { seen[r[i] * 3 + r[j]] = 1; });
+      if (Object.keys(seen).length < nl[i] * nl[j]) complete = false;
+      for (var f = 0; f < k; f++) {
+        if (f === i || f === j) continue;
+        for (var l = 0; l < nl[f]; l++) {
+          var fr = cellsFrac(D.map(function (r) { return r[f] === l ? 1 : 0; }), D, i, j);
+          if (fr > worst.frac) worst = { frac: fr, f: f };
+        }
+      }
+      pairs.push({ i: i, j: j, main: worst, pp: [], complete: complete });
+    }
+    pairs.forEach(function (p, pi) {
+      pairs.forEach(function (q, qi) {
+        if (qi === pi) return;
+        var best = 0;
+        for (var a = 0; a < nl[q.i]; a++) for (var b = 0; b < nl[q.j]; b++) {
+          var ind = D.map(function (r) { return r[q.i] === a && r[q.j] === b ? 1 : 0; });
+          var mi = groupMeanBy(ind, D, q.i), mj = groupMeanBy(ind, D, q.j), mm = mean(ind);
+          var w = ind.map(function (x, r) { return x - mi[D[r][q.i]] - mj[D[r][q.j]] + mm; });
+          best = Math.max(best, cellsFrac(w, D, p.i, p.j));
+        }
+        if (best > 0.01) p.pp.push({ q: qi, frac: best });
+      });
+    });
+    return pairs;
+  }
+  function isOrthogonal(D, nl) {
+    var k = nl.length, n = D.length;
+    for (var i = 0; i < k; i++) for (var j = i + 1; j < k; j++) {
+      var c = {}, a = {}, b = {};
+      D.forEach(function (r) { var key = r[i] + "_" + r[j]; c[key] = (c[key] || 0) + 1; a[r[i]] = (a[r[i]] || 0) + 1; b[r[j]] = (b[r[j]] || 0) + 1; });
+      for (var x = 0; x < nl[i]; x++) for (var y = 0; y < nl[j]; y++) {
+        if (Math.abs((c[x + "_" + y] || 0) - (a[x] || 0) * (b[y] || 0) / n) > 1e-9) return false;
+      }
+    }
+    return true;
+  }
+
+  /* candidate matrices for a set of factors */
+  function candidates(F) {
+    var k = F.length, nl = F.map(function (f) { return f.levels.length; });
+    var all2 = nl.every(function (n) { return n === 2; }), any3 = nl.some(function (n) { return n === 3; });
+    var fullRuns = nl.reduce(function (a, b) { return a * b; }, 1), out = [];
+    function add(id, cols) {
+      var arr = OA[id]; if (arr.length >= fullRuns) return;
+      var colLv = function (c) { return (id === "L18" ? (c === 0 ? 2 : 3) : (id === "L9" || id === "L27") ? 3 : 2); };
+      var dummy = [];
+      var D = arr.map(function (row) { return cols.map(function (c, fi) { var v = row[c]; return v >= nl[fi] ? 0 : v; }); });
+      cols.forEach(function (c, fi) { if (colLv(c) > nl[fi]) dummy.push(fi); });
+      out.push({ id: id, name: OA_NOTATION[id], runs: arr.length, D: D, cols: cols.map(function (c) { return c + 1; }), dummy: dummy, full: false });
+    }
+    if (all2) {
+      if (k === 3) add("L4", [0, 1, 2]);
+      if (k >= 4 && k <= 5) add("L8", k === 4 ? [0, 1, 3, 6] : [0, 1, 3, 6, 2]);
+      if (k === 5) add("L16", [0, 1, 3, 7, 14]);
+    }
+    if (any3) {
+      if (k <= 4) add("L9", [0, 1, 2, 3].slice(0, k));
+      var cols18 = [], first2 = nl.indexOf(2), next = 1;
+      for (var f = 0; f < k; f++) cols18.push(f === first2 ? 0 : next++);
+      add("L18", cols18);
+      add("L27", [0, 1, 4, 8, 9].slice(0, k));
+    }
+    if (fullRuns <= 81) {
+      var eq = all2 ? { 4: "L4", 8: "L8", 16: "L16" }[fullRuns] : (!nl.some(function (n) { return n === 2; }) ? { 9: "L9", 27: "L27" }[fullRuns] : null);
+      out.push({ id: "full", name: "Full factorial " + nl.join("×") + (eq ? " (= " + eq + ")" : ""), runs: fullRuns, D: fullFactorial(nl), cols: null, dummy: [], full: true });
+    }
+    out.forEach(function (c) {
+      var al = aliasInfo(c.D, nl);
+      c.alias = al; c.nPairs = al.length;
+      c.cleanPairs = al.filter(function (p) { return p.complete && p.main.frac < 0.01; }).length;
+      c.sepPairs = al.filter(function (p) { return p.complete && p.main.frac < 0.01 && !p.pp.length; }).length;
+      c.dfMain = nl.reduce(function (a, b) { return a + b - 1; }, 0);
+      c.dfLeft = c.runs - 1 - c.dfMain;
+    });
+    out.sort(function (a, b) { return a.runs - b.runs; });
+    return { list: out, fullRuns: fullRuns, fullOffered: fullRuns <= 81 };
+  }
+  function recommend(cands, planGoal) {
+    var L = cands.list; if (!L.length) return null;
+    if (planGoal === "screen") return L[0].id;
+    var allClean = L.filter(function (c) { return c.sepPairs === c.nPairs; });
+    if (planGoal === "robust") { var l18 = L.filter(function (c) { return c.id === "L18"; })[0]; if (l18) return l18.id; }
+    if (allClean.length) return allClean[0].id;
+    var best = L[0]; L.forEach(function (c) { if (c.cleanPairs > best.cleanPairs) best = c; });
+    return best.id;
+  }
+
+  /* ---- F distribution ---- */
+  function lgamma(x) {
+    var c = [76.18009172947146, -86.50532032941677, 24.01409824083091, -1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5];
+    var y = x, t = x + 5.5; t -= (x + 0.5) * Math.log(t); var s = 1.000000000190015;
+    for (var j = 0; j < 6; j++) s += c[j] / ++y;
+    return -t + Math.log(2.5066282746310005 * s / x);
+  }
+  function betacf(a, b, x) {
+    var qab = a + b, qap = a + 1, qam = a - 1, c = 1, d = 1 - qab * x / qap, FP = 1e-30;
+    if (Math.abs(d) < FP) d = FP; d = 1 / d; var h = d;
+    for (var m = 1; m <= 200; m++) {
+      var m2 = 2 * m, aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FP) d = FP; c = 1 + aa / c; if (Math.abs(c) < FP) c = FP; d = 1 / d; h *= d * c;
+      aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FP) d = FP; c = 1 + aa / c; if (Math.abs(c) < FP) c = FP; d = 1 / d;
+      var del = d * c; h *= del; if (Math.abs(del - 1) < 3e-9) break;
+    }
+    return h;
+  }
+  function ibeta(a, b, x) {
+    if (x <= 0) return 0; if (x >= 1) return 1;
+    var bt = Math.exp(lgamma(a + b) - lgamma(a) - lgamma(b) + a * Math.log(x) + b * Math.log(1 - x));
+    return x < (a + 1) / (a + b + 2) ? bt * betacf(a, b, x) / a : 1 - bt * betacf(b, a, 1 - x) / b;
+  }
+  function pF(F, d1, d2) { if (!(F > 0) || d1 <= 0 || d2 <= 0) return NaN; return ibeta(d2 / 2, d1 / 2, d2 / (d2 + d1 * F)); }
+
+  /* ---- per-run statistics ---- */
+  function runStats(row, goal) {
+    var v = (row || []).filter(function (x) { return typeof x === "number" && isFinite(x); });
+    var o = { n: v.length, mean: mean(v), sd: sdev(v), sn: NaN };
+    if (!v.length) return o;
+    if (goal === "min") o.sn = -10 * Math.log10(mean(v.map(function (x) { return x * x; })));
+    else if (goal === "max") o.sn = v.every(function (x) { return x > 0; }) ? -10 * Math.log10(mean(v.map(function (x) { return 1 / (x * x); }))) : NaN;
+    else if (v.length >= 2) o.sn = 10 * Math.log10(o.mean * o.mean / Math.max(o.sd * o.sd, 1e-12));
+    if (!isFinite(o.sn)) o.sn = NaN;
+    return o;
+  }
+
+  /* ---- main analysis ----
+     S: {factors, D, data, reps, goal, target, mode}; kind: 'mean' | 'sd' | 'sn' */
+  function analyze(S, kind) {
+    var D = S.D, F = S.factors, k = F.length, nl = F.map(function (f) { return f.levels.length; }), nRuns = D.length;
+    var rs = D.map(function (_, r) { return runStats(S.data[r], S.goal); });
+    var obs = [], missing = 0, r;
+    for (r = 0; r < nRuns; r++) {
+      if (kind === "mean") { if (!rs[r].n) missing++; else S.data[r].forEach(function (x) { if (typeof x === "number" && isFinite(x)) obs.push({ r: r, v: x }); }); }
+      else { var val = rs[r][kind]; if (!isFinite(val)) missing++; else obs.push({ r: r, v: val }); }
+    }
+    if (missing) return { ok: false, missing: missing, kind: kind };
+    var N = obs.length, grand = mean(obs.map(function (o) { return o.v; })), sst = 0;
+    obs.forEach(function (o) { sst += (o.v - grand) * (o.v - grand); });
+    function grp(keyf) {
+      var g = {}; obs.forEach(function (o) { var key = keyf(o.r); var e = g[key] || (g[key] = { n: 0, s: 0 }); e.n++; e.s += o.v; });
+      var ss = 0; for (var key in g) { g[key].mean = g[key].s / g[key].n; ss += g[key].n * Math.pow(g[key].mean - grand, 2); }
+      return { g: g, ss: ss };
+    }
+    var dir = kind === "sd" ? -1 : kind === "sn" ? 1 : S.goal === "min" ? -1 : S.goal === "max" ? 1 : 0;
+    var better = function (a, b) { return dir === 0 ? Math.abs(a - S.target) < Math.abs(b - S.target) : dir * (a - b) > 0; };
+    var facs = F.map(function (f, fi) {
+      var G = grp(function (r) { return D[r][fi]; }), means = [], ns = [];
+      for (var l = 0; l < nl[fi]; l++) { means.push(G.g[l] ? G.g[l].mean : NaN); ns.push(G.g[l] ? G.g[l].n : 0); }
+      var best = 0; means.forEach(function (m, l) { if (better(m, means[best])) best = l; });
+      var mx = Math.max.apply(null, means), mn = Math.min.apply(null, means);
+      return { means: means, n: ns, ss: G.ss, df: nl[fi] - 1, delta: mx - mn, effect: means[nl[fi] - 1] - means[0], best: best };
+    });
+    var order = facs.map(function (_, i) { return i; }).sort(function (a, b) { return facs[b].delta - facs[a].delta; });
+    order.forEach(function (fi, rk) { facs[fi].rank = rk + 1; });
+    var runG = grp(function (r) { return r; }), ssRuns = runG.ss, ssWithin = Math.max(0, sst - ssRuns), dfWithin = N - nRuns;
+    var al = aliasInfo(D, nl), orth = isOrthogonal(D, nl);
+    obs.forEach(function (o) { var e = o.v - grand; facs.forEach(function (f, fi) { e -= f.means[D[o.r][fi]] - grand; }); o.e = e; });
+    var pairs = al.map(function (a) {
+      /* interaction read on residuals from the main-effects fit, so other factors' main effects cannot leak in */
+      var g = {}; obs.forEach(function (o) { var key = D[o.r][a.i] * 3 + D[o.r][a.j]; var c = g[key] || (g[key] = { n: 0, s: 0 }); c.n++; c.s += o.e; });
+      var cells = [], ss = 0, x, y;
+      for (x = 0; x < nl[a.i]; x++) { cells.push([]); for (y = 0; y < nl[a.j]; y++) { var c = g[x * 3 + y]; if (c) ss += c.s * c.s / c.n; cells[x].push(c ? facs[a.i].means[x] + facs[a.j].means[y] - grand + c.s / c.n : NaN); } }
+      var bc = [0, 0];
+      for (x = 0; x < nl[a.i]; x++) for (y = 0; y < nl[a.j]; y++) if (isFinite(cells[x][y]) && better(cells[x][y], cells[bc[0]][bc[1]])) bc = [x, y];
+      var cross = false;
+      for (var y1 = 0; y1 < nl[a.j]; y1++) for (var y2 = y1 + 1; y2 < nl[a.j]; y2++) {
+        var sg = 0; for (x = 0; x < nl[a.i]; x++) { var d = cells[x][y1] - cells[x][y2]; if (Math.abs(d) > 1e-12) { if (sg && Math.sign(d) !== sg) cross = true; sg = Math.sign(d); } }
+      }
+      var status = !a.complete ? "incomplete" : a.main.frac >= 0.99 ? "aliased" : a.main.frac > 0.01 ? "partial" : "clean";
+      return { i: a.i, j: a.j, cells: cells, ss: ss, df: (nl[a.i] - 1) * (nl[a.j] - 1), pct: sst > 0 ? 100 * ss / sst : 0, status: status, aliasF: a.main.f, aliasFrac: a.main.frac, pp: a.pp, bestCell: bc, cross: cross, included: false, same: [] };
+    });
+    /* which interactions enter the ANOVA model */
+    var dfModel = facs.reduce(function (s, f) { return s + f.df; }, 0), ssModel = facs.reduce(function (s, f) { return s + f.ss; }, 0);
+    if (S.mode !== "grr") pairs.forEach(function (p, pi) {
+      if (p.status !== "clean") return;
+      var blocked = false;
+      p.pp.forEach(function (x) { var q = pairs[x.q]; if (q.included) { blocked = true; if (x.frac >= 0.99) q.same.push(pi); else p.status = "partial2"; } });
+      if (!blocked) p.pp.forEach(function (x) { if (x.frac < 0.99 && pairs[x.q].status === "clean" && x.q > pi) { /* partial overlap with a later pair: keep first, later one is flagged when reached */ } });
+      if (blocked) { if (p.status === "clean") p.status = "twin"; return; }
+      if (dfModel + p.df > nRuns - 1) return;
+      p.included = true; dfModel += p.df; ssModel += p.ss;
+    });
+    var ssResB = Math.max(0, ssRuns - ssModel), dfResB = nRuns - 1 - dfModel;
+    if (dfResB <= 0) { dfResB = 0; ssResB = 0; }
+    var dfE = dfResB + dfWithin, ssE = ssResB + ssWithin, Ve = dfE > 0 ? ssE / dfE : NaN;
+    var sumRho = 0;
+    function fin(t) {
+      t.ms = t.ss / t.df;
+      if (dfE > 0 && Ve > 0) { t.F = t.ms / Ve; t.p = pF(t.F, t.df, dfE); t.rho = Math.max(0, t.ss - t.df * Ve) / sst * 100; }
+      else { t.F = NaN; t.p = NaN; t.rho = sst > 0 ? t.ss / sst * 100 : 0; }
+      sumRho += t.rho;
+    }
+    facs.forEach(fin); pairs.forEach(function (p) { if (p.included) fin(p); });
+    pairs.forEach(function (p) {
+      var x = p.included ? p.rho : (dfE > 0 && Ve > 0 && sst > 0 ? Math.max(0, p.ss - p.df * Ve) / sst * 100 : p.pct);
+      p.grade = (p.status === "aliased" || p.status === "incomplete") ? "na" : x >= 10 ? "strong" : x >= 4 ? "moderate" : x >= 1 ? "weak" : "none";
+      p.score = x;
+    });
+    var A = { ok: true, kind: kind, N: N, nRuns: nRuns, grand: grand, sst: sst, facs: facs, pairs: pairs, runStats: rs, dir: dir, orth: orth,
+      resB: { ss: ssResB, df: dfResB }, within: { ss: ssWithin, df: dfWithin }, err: { ss: ssE, df: dfE, ms: Ve, rho: Math.max(0, 100 - sumRho) }, nl: nl };
+    A.opt = optimum(A, S, {});
+    return A;
+  }
+
+  function predict(A, lv) {
+    var y = A.grand;
+    A.facs.forEach(function (f, i) { y += f.means[lv[i]] - A.grand; });
+    A.pairs.forEach(function (p) {
+      if (!p.included || p.score < 3) return;
+      y += p.cells[lv[p.i]][lv[p.j]] - A.facs[p.i].means[lv[p.i]] - A.facs[p.j].means[lv[p.j]] + A.grand;
+    });
+    return y;
+  }
+  function optimum(A, S, fixed) {
+    var nl = A.nl, k = nl.length, total = nl.reduce(function (a, b) { return a * b; }, 1), best = null;
+    for (var c = 0; c < total; c++) {
+      var lv = [], div = 1, ok = true;
+      for (var f = 0; f < k; f++) { lv.push(Math.floor(c / div) % nl[f]); div *= nl[f]; if (fixed[f] != null && fixed[f] !== lv[f]) ok = false; }
+      if (!ok) continue;
+      var y = predict(A, lv), sc = A.dir === 0 ? -Math.abs(y - S.target) : A.dir * y;
+      if (!best || sc > best.sc + 1e-12) best = { sc: sc, levels: lv, pred: y };
+    }
+    best.run = -1;
+    S.D.forEach(function (row, r) { if (row.every(function (v, i) { return v === best.levels[i]; })) best.run = r; });
+    best.observed = best.run >= 0 ? A.runStats[best.run][A.kind] : NaN;
+    return best;
+  }
+
+  /* ---- GR&R: variance components from the main-effects ANOVA ---- */
+  function grr(S) {
+    var A = analyze(S, "mean"); if (!A.ok) return A;
+    var reps = A.N / A.nRuns, msW = A.within.df > 0 ? A.within.ss / A.within.df : NaN, msB = A.resB.df > 0 ? A.resB.ss / A.resB.df : NaN, Ve = A.err.ms;
+    var comp = [], tot = 0;
+    A.facs.forEach(function (f, i) {
+      var perLevel = A.N / A.nl[i], v = isFinite(Ve) ? Math.max(0, (f.ms - Ve) / perLevel) : 0;
+      comp.push({ type: "factor", fi: i, role: S.factors[i].role || "ms", v: v }); tot += v;
+    });
+    var vRep, vUn = 0, sepRep = A.within.df > 0;
+    if (sepRep) { vRep = msW; if (A.resB.df > 0) vUn = Math.max(0, (msB - msW) / reps); }
+    else vRep = isFinite(Ve) ? Ve : 0;
+    comp.push({ type: "unassigned", v: vUn }); comp.push({ type: "repeat", v: vRep }); tot += vUn + vRep;
+    comp.forEach(function (c) { c.pct = tot > 0 ? 100 * c.v / tot : 0; c.sd = Math.sqrt(c.v); c.sv = tot > 0 ? 100 * Math.sqrt(c.v / tot) : 0; });
+    var vPart = 0, vMs = vUn + vRep, hasPart = false;
+    comp.forEach(function (c) { if (c.type === "factor") { if (c.role === "part") { vPart += c.v; hasPart = true; } else vMs += c.v; } });
+    var G = { ok: true, A: A, comp: comp, total: tot, vGrr: vMs, vPart: vPart, hasPart: hasPart, sepRep: sepRep,
+      grrPct: tot > 0 ? 100 * vMs / tot : 0, grrSv: tot > 0 ? 100 * Math.sqrt(vMs / tot) : 0,
+      ndc: hasPart && vMs > 0 ? Math.floor(1.41 * Math.sqrt(vPart / vMs)) : NaN,
+      pt: S.tol > 0 ? 100 * 6 * Math.sqrt(vMs) / S.tol : NaN };
+    return G;
+  }
+
+  return { OA: OA, candidates: candidates, recommend: recommend, aliasInfo: aliasInfo, isOrthogonal: isOrthogonal, fullFactorial: fullFactorial,
+    analyze: analyze, grr: grr, runStats: runStats, predict: predict, optimum: optimum, mean: mean, sdev: sdev, pF: pF };
+})();
+if (typeof module !== "undefined") module.exports = DOE;
+</script><script>
+var TEMPLATES = [{"id":"battery","mode":"doe","tag":"3 factors × 2 levels","title":"EV battery pack cooling","blurb":"Your 2³ worksheet: flow, inlet temperature and TIM thickness against peak cell temperature.","src":"yours","resp":{"name":"Max cell temp","unit":"°C"},"goal":"min","reps":1,"planGoal":"interact","designId":"full","factors":[{"name":"Coolant flow","levels":["Low","High"]},{"name":"Inlet temp","levels":["Cold","Warm"]},{"name":"TIM thickness","levels":["Thin","Thick"]}],"data":[[44],[36],[47],[43.5],[46],[37.5],[48.5],[45]]},{"id":"weld","mode":"doe","tag":"3 factors × 2 levels","title":"Spot weld strength","blurb":"The course case study: weld time, electrode force and current against joint strength.","src":"course","resp":{"name":"Weld strength","unit":""},"goal":"max","reps":1,"planGoal":"interact","designId":"full","factors":[{"name":"Time","levels":["10 cycles","16 cycles"]},{"name":"Force","levels":["2 kN","4 kN"]},{"name":"Current","levels":["9 kA","11 kA"]}],"data":[[187],[318],[245],[362],[279],[445],[343],[513]]},{"id":"bearing","mode":"doe","tag":"4 factors · 2 and 3 levels","title":"Bearing vibration, L18","blurb":"One 2-level and three 3-level factors, three repeats per test, so variability and S/N can be read before the mean.","src":"example","resp":{"name":"Vibration","unit":"mm/s"},"goal":"min","reps":3,"planGoal":"robust","factors":[{"name":"Lubricant","levels":["Mineral","Synthetic"]},{"name":"Temperature","levels":["40 °C","70 °C","100 °C"]},{"name":"Load","levels":["2 kN","4 kN","6 kN"]},{"name":"Speed","levels":["1500 rpm","3000 rpm","4500 rpm"]}],"designId":"L18","data":[[1.91,1.93,1.96],[2.77,2.87,3],[4.05,4.14,4.08],[2.37,2.68,2.39],[3.63,3.51,3.3],[4.93,4.79,4.82],[3.9,3.67,4.26],[5.26,5.76,5.7],[3.78,3.57,4.6],[2.97,2.83,2.89],[1.89,1.93,1.96],[2.88,3.06,3.11],[2.29,2.23,2.47],[3.37,3.5,3.31],[2.41,2.75,2.43],[3.42,3.11,3.31],[2.16,2.31,2.15],[3.17,3.15,3.41]]},{"id":"pressfit","mode":"doe","tag":"4 factors · 2 and 3 levels","title":"Press-fit pull-out force","blurb":"Full factorial 2×2×3×3 with two repeats: every two-factor interaction can be separated and graded.","src":"example","resp":{"name":"Pull-out force","unit":"kN"},"goal":"max","reps":2,"planGoal":"interact","factors":[{"name":"Interference","levels":["20 µm","40 µm"]},{"name":"Surface finish","levels":["Ra 0.8","Ra 1.6"]},{"name":"Lubricant","levels":["Dry","Oil","Paste"]},{"name":"Insertion speed","levels":["5 mm/s","20 mm/s","50 mm/s"]}],"designId":"full","data":[[6.5,5.92],[10.48,10.68],[6.65,6.55],[11.45,10.75],[5.28,4.92],[7.51,7.52],[5.69,5.5],[7.65,8.01],[5.7,5.69],[8.44,8.02],[6.21,6],[9.22,8.55],[5.89,5.97],[10.38,9.94],[6.18,6.67],[10.92,10.9],[5.14,4.99],[7.25,7.2],[5.68,5.5],[8.01,7.55],[5.45,5.42],[7.8,8.23],[5.69,6.41],[8.59,8.71],[5.55,5.63],[9.69,9.84],[5.79,5.97],[10.84,10.57],[5.04,4.15],[6.93,7.37],[5.09,5.32],[7.54,7.74],[4.8,4.86],[8.44,7.69],[5.31,5.82],[8.4,8.23]]},{"id":"grr-line","mode":"grr","tag":"GR&R · 3 sources × 3 levels","title":"Line × Operator × Shift","blurb":"The multi-line study from your article on an L9 with triplicate readings.","src":"example","resp":{"name":"Diameter","unit":"mm"},"goal":"target","target":25,"reps":3,"planGoal":"screen","tol":0.3,"factors":[{"name":"Line","levels":["Line 1","Line 2","Line 3"],"role":"part"},{"name":"Operator","levels":["A","B","C"],"role":"ms"},{"name":"Shift","levels":["Morning","Afternoon","Night"],"role":"ms"}],"designId":"L9","data":[[25.006,24.995,24.99],[24.994,25,25],[25.002,24.992,24.994],[24.999,25.013,25.001],[24.989,24.99,24.992],[25.018,25.031,25.01],[25.04,25.035,25.033],[25.06,25.048,25.057],[25.073,25.063,25.073]]},{"id":"grr-part","mode":"grr","tag":"GR&R · 4 sources × 3 levels","title":"Part × Operator × Gauge × Shift","blurb":"Parts included as a source, so %GR&R and the number of distinct categories are reported.","src":"example","resp":{"name":"Diameter","unit":"mm"},"goal":"target","target":25,"reps":3,"planGoal":"screen","tol":0.3,"factors":[{"name":"Part","levels":["Part 1","Part 2","Part 3"],"role":"part"},{"name":"Operator","levels":["A","B","C"],"role":"ms"},{"name":"Gauge","levels":["G1","G2","G3"],"role":"ms"},{"name":"Shift","levels":["Morning","Afternoon","Night"],"role":"ms"}],"designId":"L9","data":[[24.956,24.955,24.948],[24.962,24.945,24.949],[24.965,24.955,24.952],[25.008,25,25.004],[25.013,25.027,25.005],[24.996,24.989,25],[25.065,25.067,25.074],[25.067,25.061,25.066],[25.052,25.053,25.06]]},{"id":"grr-5","mode":"grr","tag":"GR&R · 5 sources, 2 and 3 levels","title":"Five-source study, L18","blurb":"Part, operator, gauge, shift and fixture in 18 set-ups with two readings each.","src":"example","resp":{"name":"Bore diameter","unit":"mm"},"goal":"target","target":12,"reps":2,"planGoal":"screen","tol":0.12,"factors":[{"name":"Part","levels":["Part 1","Part 2","Part 3"],"role":"part"},{"name":"Operator","levels":["A","B","C"],"role":"ms"},{"name":"Gauge","levels":["G1","G2","G3"],"role":"ms"},{"name":"Shift","levels":["Morning","Afternoon","Night"],"role":"ms"},{"name":"Fixture","levels":["F1","F2"],"role":"ms"}],"designId":"L18","data":[[11.982,11.983],[11.977,11.988],[11.987,11.987],[11.997,12.004],[11.997,11.997],[12.011,12.011],[12.026,12.031],[12.042,12.038],[12.029,12.036],[11.993,11.991],[11.986,11.995],[11.98,11.981],[12.005,12.005],[12.013,12.024],[12.016,12.013],[12.043,12.046],[12.036,12.042],[12.04,12.041]]},{"id":"blank-doe","mode":"doe","tag":"Blank","title":"Blank DOE","blurb":"Start empty: name your factors, pick a matrix, then type or upload results.","src":"blank","resp":{"name":"Response","unit":""},"goal":"max","reps":1,"planGoal":"interact","designId":null,"factors":[{"name":"Factor A","levels":["Low","High"]},{"name":"Factor B","levels":["Low","High"]},{"name":"Factor C","levels":["Low","High"]}],"data":null},{"id":"blank-grr","mode":"grr","tag":"Blank","title":"Blank GR&R","blurb":"Start empty with part, operator and gauge as sources and three readings per set-up.","src":"blank","resp":{"name":"Measurement","unit":""},"goal":"target","target":0,"reps":3,"planGoal":"screen","tol":0,"designId":null,"factors":[{"name":"Part","levels":["Part 1","Part 2","Part 3"],"role":"part"},{"name":"Operator","levels":["A","B","C"],"role":"ms"},{"name":"Gauge","levels":["G1","G2","G3"],"role":"ms"}],"data":null}];
+</script><script>
+/* ===== interface ===== */
+(function () {
+  "use strict";
+  var S, CANDS, AN = {}, importOpen = false, importMsg = null, KEY = "doe-grr-workbench-v1";
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+  var nf = function (x, d) { return isFinite(x) ? x.toFixed(d).replace("-", "−") : "–"; };
+  var sg = function (x, d) { return (x >= 0 ? "+" : "") + nf(x, d); };
+  var pc = function (x) { return nf(x, x < 10 ? 1 : 0) + "%"; };
+  var g3 = function (x) { return isFinite(x) ? String(+x.toPrecision(3)).replace("-", "−") : "–"; };
+  var pv = function (p) { return !isFinite(p) ? "–" : p < 0.001 ? "<0.001" : p.toFixed(3); };
+  var decFor = function (sp) { return sp >= 100 ? 0 : sp >= 10 ? 1 : sp >= 1 ? 2 : sp >= 0.1 ? 3 : 4; };
+  var LET = "ABCDE", GR = { strong: "Strong", moderate: "Moderate", weak: "Weak", none: "None", na: "Not readable" };
+  var isG = function () { return S.mode === "grr"; };
+  var fname = function (i) { return S.factors[i].name || "Factor " + LET[i]; };
+  var lname = function (i, l) { return S.factors[i].levels[l] || "Level " + (l + 1); };
+  var pname = function (p) { return fname(p.i) + " × " + fname(p.j); };
+  var cut = function (s, n) { s = String(s); return s.length > n ? s.slice(0, n - 1) + "…" : s; };
+  function kinfo(kind) {
+    var u = S.resp.unit ? " " + S.resp.unit : "";
+    if (kind === "sd") return { label: "Std dev of " + (S.resp.name || "response").toLowerCase(), short: "std dev", unit: u };
+    if (kind === "sn") return { label: "S/N ratio", short: "S/N", unit: " dB" };
+    return { label: S.resp.name || "Response", short: (S.resp.name || "response").toLowerCase(), unit: u };
+  }
+  function adec(A) { var v = []; A.facs.forEach(function (f) { v = v.concat(f.means); }); A.runStats.forEach(function (r) { if (isFinite(r[A.kind])) v.push(r[A.kind]); }); return Math.min(4, decFor(Math.max.apply(null, v) - Math.min.apply(null, v)) + 0); }
+
+  /* ---------- state ---------- */
+  function shuffle() { var n = S.D.length, a = []; for (var i = 0; i < n; i++) a.push(i + 1); for (i = n - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } S.order = a; }
+  function rebuild(keep) {
+    CANDS = DOE.candidates(S.factors);
+    S.rec = DOE.recommend(CANDS, isG() ? "screen" : S.planGoal);
+    if (S.custom) { S.D = S.custom.D; S.designId = "custom"; }
+    else {
+      if (!CANDS.list.some(function (c) { return c.id === S.designId; })) S.designId = S.rec;
+      S.D = CANDS.list.filter(function (c) { return c.id === S.designId; })[0].D;
+    }
+    if (!keep || !S.data || S.data.length !== S.D.length) S.data = S.D.map(function () { return []; });
+    S.data = S.data.map(function (row) { var r = (row || []).slice(0, S.reps); while (r.length < S.reps) r.push(null); return r; });
+    if (!S.order || S.order.length !== S.D.length) shuffle();
+    if (S.view === "sd" && S.reps < 2) S.view = "mean";
+  }
+  function compute() {
+    AN = {};
+    if (isG()) { AN.grr = DOE.grr(S); AN.mean = AN.grr.ok ? AN.grr.A : AN.grr; return; }
+    AN.mean = DOE.analyze(S, "mean"); AN.sd = S.reps >= 2 ? DOE.analyze(S, "sd") : null; AN.sn = DOE.analyze(S, "sn");
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { } }
+  function loadTemplate(id) {
+    var t = TEMPLATES.filter(function (x) { return x.id === id; })[0];
+    S = JSON.parse(JSON.stringify(t)); S.tpl = id; S.view = "mean"; S.custom = null; S.tol = S.tol || 0; S.target = S.target || 0;
+    S.factors.forEach(function (f) { f.role = f.role || "ms"; });
+    rebuild(true); renderAll();
+  }
+  function struct(keep) { S.custom = keep ? S.custom : null; S.tpl = null; rebuild(keep); renderAll(); }
+
+  /* ---------- 1 templates ---------- */
+  function renderTemplates() {
+    var src = { yours: "Your data", course: "Course slide data", example: "Illustrative data", blank: "No data" };
+    $("tplGrid").innerHTML = TEMPLATES.map(function (t) {
+      return '<button class="tcard" data-act="tpl" data-id="' + t.id + '" aria-pressed="' + (S.tpl === t.id) + '"><span class="tag">' + esc(t.tag) + "</span><strong>" + esc(t.title) + '</strong><span class="d">' + esc(t.blurb) + '</span><span class="src">' + src[t.src] + "</span></button>";
+    }).join("");
+  }
+
+  /* ---------- 2 setup ---------- */
+  function seg(act, opts, cur) { return '<span class="seg">' + opts.map(function (o) { return '<button data-act="' + act + '" data-v="' + o[0] + '" aria-pressed="' + (String(cur) === String(o[0])) + '">' + o[1] + "</button>"; }).join("") + "</span>"; }
+  function renderSetup() {
+    var g = isG(), h = '<div class="row">';
+    h += '<div class="field"><span class="lab">Study type</span>' + seg("mode", [["doe", "DOE optimisation"], ["grr", "GR&amp;R study"]], S.mode) + "</div>";
+    h += '<div class="field"><label for="respName">' + (g ? "Measured characteristic" : "Response") + '</label><input type="text" id="respName" data-in="respName" value="' + esc(S.resp.name) + '"></div>';
+    h += '<div class="field"><label for="respUnit">Unit</label><input type="text" class="sm" id="respUnit" data-in="respUnit" value="' + esc(S.resp.unit) + '"></div>';
+    if (!g) {
+      h += '<div class="field"><label for="goal">Goal</label><select id="goal" data-ch="goal"><option value="min"' + (S.goal === "min" ? " selected" : "") + '>Smaller is better</option><option value="max"' + (S.goal === "max" ? " selected" : "") + '>Larger is better</option><option value="target"' + (S.goal === "target" ? " selected" : "") + ">Nominal is best</option></select></div>";
+      if (S.goal === "target") h += '<div class="field"><label for="target">Target</label><input type="number" class="sm" id="target" data-in="target" step="any" value="' + S.target + '"></div>';
+    } else h += '<div class="field"><label for="tol">Tolerance width (optional)</label><input type="number" class="sm" id="tol" data-in="tol" step="any" min="0" value="' + (S.tol || "") + '"></div>';
+    h += '<div class="field"><span class="lab">' + (g ? "Readings per set-up" : "Runs per test") + "</span>" + seg("reps", [[1, "1"], [2, "2"], [3, "3"]], S.reps) + "</div>";
+    if (!g) h += '<div class="field"><label for="plan">What matters most</label><select id="plan" data-ch="plan"><option value="screen"' + (S.planGoal === "screen" ? " selected" : "") + '>Fewest runs (screening)</option><option value="interact"' + (S.planGoal === "interact" ? " selected" : "") + '>Main effects and interactions</option><option value="robust"' + (S.planGoal === "robust" ? " selected" : "") + ">Robustness (variability, S/N)</option></select></div>";
+    h += "</div>";
+    if (!g && S.reps === 1) h += '<p class="note">With one run per test only the mean can be analysed. Two or three runs per test add standard deviation and a full S/N ratio, so variability can be read before the mean.</p>';
+    if (g && S.reps === 1) h += '<p class="note w">A GR&amp;R needs at least two readings per set-up to separate repeatability from everything else.</p>';
+    h += "<div>";
+    S.factors.forEach(function (f, i) {
+      h += '<div class="frow"><span class="let">' + LET[i] + '</span><div class="field"><label for="f' + i + 'n">' + (g ? "Source" : "Factor") + '</label><input type="text" id="f' + i + 'n" data-in="fname" data-i="' + i + '" value="' + esc(f.name) + '"></div>';
+      h += '<div class="field"><span class="lab">Levels</span>' + seg("nlev", [[2, "2"], [3, "3"]], f.levels.length).replace(/data-act="nlev"/g, 'data-act="nlev" data-i="' + i + '"') + "</div>";
+      f.levels.forEach(function (l, j) { h += '<div class="field"><label for="f' + i + "l" + j + '">Level ' + (j + 1) + '</label><input type="text" class="lv" id="f' + i + "l" + j + '" data-in="flev" data-i="' + i + '" data-j="' + j + '" value="' + esc(l) + '"></div>'; });
+      if (g) h += '<div class="field"><label for="f' + i + 'r">Counts as</label><select id="f' + i + 'r" data-ch="role" data-i="' + i + '"><option value="ms"' + (f.role !== "part" ? " selected" : "") + '>Measurement system</option><option value="part"' + (f.role === "part" ? " selected" : "") + ">Part / process</option></select></div>";
+      if (S.factors.length > 2) h += '<button class="btn ghost" data-act="delf" data-i="' + i + '" aria-label="Remove ' + esc(f.name) + '">Remove</button>';
+      h += "</div>";
+    });
+    h += "</div>";
+    h += '<div class="row">' + (S.factors.length < 5 ? '<button class="btn" data-act="addf">Add ' + (g ? "source" : "factor") + "</button>" : '<span class="muted small">Five is the maximum.</span>') + '<span class="muted small">Changing the number of factors, levels or the matrix clears the results table.</span></div>';
+    $("setupBox").innerHTML = h;
+  }
+
+  /* ---------- 3 matrix ---------- */
+  function describe(c) {
+    var k = S.factors.length, o = { gets: "", limit: "" }, g = isG();
+    if (c.full) { o.gets = "Every combination is tested, so all main effects and every two-factor interaction are estimated separately and the best combination is observed directly."; o.limit = c.runs > 27 ? "The most expensive option; use it when interactions are the question." : "Nothing is aliased. With one run per test little is left for the error estimate."; }
+    else if (c.id === "L4") { o.gets = "A fast ranking of three main effects from half of the eight combinations."; o.limit = "Each interaction is fully mixed into a main effect, so an interaction can pass for a factor effect."; }
+    else if (c.id === "L8") { o.gets = k === 4 ? "Clean main effects for four factors in half the runs of the full factorial." : "A screening pass over five factors in eight runs to drop the weak ones."; o.limit = k === 4 ? "Interactions come in pairs that cannot be told apart (A×B with C×D)." : "Several interactions are mixed into main effects; follow up on the survivors."; }
+    else if (c.id === "L16") { o.gets = "All five main effects and all ten two-factor interactions, each estimated separately, in half the runs of the full factorial."; o.limit = "Assumes three-factor interactions are negligible."; }
+    else if (c.id === "L9") { o.gets = (g ? "Ranks the sources of variation" : "Ranks main effects and shows curvature over three levels") + " at the lowest cost."; o.limit = "Interactions are mixed into the main-effect columns. Confirm the predicted optimum with one extra run."; }
+    else if (c.id === "L18") { o.gets = "The most trustworthy main-effect and S/N ranking for mixed 2- and 3-level factors: interactions are spread thinly over all columns instead of landing on one factor."; o.limit = c.cleanPairs ? "Only the interaction between the first two columns can be isolated; the rest are indicative." : "Interactions can only be read as indicative."; }
+    else if (c.id === "L27") { o.gets = "Main effects with two-factor interactions kept clear of them" + (c.cleanPairs < c.nPairs ? " for " + c.cleanPairs + " of " + c.nPairs + " pairs." : "."); o.limit = c.sepPairs < c.nPairs ? "Some interactions overlap one another, so only the first of an overlapping set enters the ANOVA." : ""; }
+    if (c.dummy.length) o.limit += " " + c.dummy.map(fname).join(" and ") + (c.dummy.length > 1 ? " use" : " uses") + " the dummy-level technique: level 1 is repeated in place of a third level, which keeps the matrix orthogonal.";
+    return o;
+  }
+  function renderMatrix() {
+    var g = isG(), h = '<div class="grid mx">';
+    if (S.custom) h += '<div class="mcard sel"><h3>Imported design <span class="chip strong">In use</span></h3><div class="stats"><div><span class="lab">' + (g ? "Set-ups" : "Tests") + '</span><b>' + S.D.length + '</b></div><div><span class="lab">Measurements</span><b>' + S.D.length * S.reps + "</b></div></div><p>Built from the factor columns in your file. " + (DOE.isOrthogonal(S.D, S.factors.map(function (f) { return f.levels.length; })) ? "The design is balanced and orthogonal." : "<b>The design is not orthogonal</b>, so effects are approximate.") + "</p></div>";
+    CANDS.list.forEach(function (c) {
+      var d = describe(c), sel = !S.custom && c.id === S.designId, rec = c.id === S.rec;
+      h += '<div class="mcard' + (sel ? " sel" : "") + '"><h3>' + esc(c.name) + (rec ? ' <span class="chip rec">Suggested</span>' : "") + (sel ? ' <span class="chip strong">In use</span>' : "") + "</h3>";
+      h += '<div class="stats"><div><span class="lab">' + (g ? "Set-ups" : "Tests") + "</span><b>" + c.runs + '</b></div><div><span class="lab">Measurements</span><b>' + c.runs * S.reps + '</b></div><div><span class="lab">Interactions readable</span><b>' + c.cleanPairs + " / " + c.nPairs + '</b></div><div><span class="lab">Error df</span><b>' + (c.dfLeft + c.runs * (S.reps - 1)) + "</b></div></div>";
+      h += "<p><b>Best output:</b> " + d.gets + "</p>" + (d.limit.trim() ? "<p><b>Limit:</b> " + d.limit + "</p>" : "");
+      h += sel ? "" : '<button class="btn" data-act="design" data-id="' + c.id + '">Use this matrix</button>';
+      h += "</div>";
+    });
+    h += "</div>";
+    if (!CANDS.fullOffered) h += '<p class="note">The full factorial would need ' + CANDS.fullRuns + " tests, so it is not offered; the orthogonal arrays above cover the same factors in a fraction of that.</p>";
+    var cur = S.custom ? null : CANDS.list.filter(function (c) { return c.id === S.designId; })[0];
+    if (cur) {
+      var al = cur.alias.map(function (p) {
+        var st = p.main.frac >= 0.99 ? "mixed with the main effect of " + fname(p.main.f) : p.main.frac > 0.01 ? "partly mixed with " + fname(p.main.f) + " (" + Math.round(p.main.frac * 100) + "%)" : p.pp.some(function (x) { return x.frac >= 0.99; }) ? "separable from main effects, identical to " + p.pp.filter(function (x) { return x.frac >= 0.99; }).map(function (x) { return pname(cur.alias[x.q]); }).join(", ") : p.pp.length ? "separable from main effects, overlaps other interactions" : "fully separable";
+        return "<tr><td>" + esc(pname(p)) + "</td><td>" + esc(st) + "</td></tr>";
+      }).join("");
+      h += '<div class="panel"><h3>What ' + esc(cur.name) + " can separate</h3>" + (cur.cols ? '<p class="cap">Column assignment: ' + S.factors.map(function (f, i) { return esc(fname(i)) + " → column " + cur.cols[i]; }).join(", ") + ".</p>" : "") + '<div class="scroll"><table><thead><tr><th>Interaction</th><th>Status in this matrix</th></tr></thead><tbody>' + al + "</tbody></table></div></div>";
+    }
+    $("matrixBox").innerHTML = h;
+  }
+
+  /* ---------- 4 data ---------- */
+  function rowStatHTML(r) { var st = DOE.runStats(S.data[r], S.goal), d = 4; return { m: st.n ? String(+st.mean.toPrecision(6)).replace("-", "−") : "–", s: st.n >= 2 ? g3(st.sd) : "–" }; }
+  function renderData() {
+    var g = isG(), nR = S.D.length, filled = S.data.filter(function (r) { return r.some(function (x) { return x != null; }); }).length;
+    var tplNow = TEMPLATES.filter(function (t) { return t.id === S.tpl; })[0];
+    var h = '<div class="row"><button class="btn pri" data-act="imp">' + (importOpen ? "Close import" : "Upload or paste data") + '</button><button class="btn" data-act="copycsv">Copy this table as CSV</button><button class="btn" data-act="shuffle">Reshuffle run order</button><button class="btn ghost" data-act="clear">Clear results</button>' + (tplNow && tplNow.src === "example" ? '<span class="ex">illustrative data</span>' : "") + '<span class="muted small" id="fillNote">' + filled + " of " + nR + " " + (g ? "set-ups" : "tests") + " filled</span></div>";
+    if (importOpen) {
+      h += '<div class="panel" style="background:var(--surface2)"><label class="rad"><input type="radio" name="impMode" id="impA" value="res" checked><span><b>Results only.</b> One row per test in the order shown below. The last ' + S.reps + " column" + (S.reps > 1 ? "s are" : " is") + " read as results, so the copied CSV can be filled in and loaded back.</span></label>";
+      h += '<label class="rad"><input type="radio" name="impMode" id="impB" value="full"><span><b>Whole table with factor columns.</b> Needs a header row. The design is rebuilt from the file: up to five factor columns with two or three levels each, followed by ' + S.reps + " result column" + (S.reps > 1 ? "s" : "") + " (set by runs per test).</span></label>";
+      h += '<div class="row"><div class="field"><label for="impFile">CSV or text file</label><input type="file" id="impFile" accept=".csv,.txt,.tsv,text/csv,text/plain"></div></div><div class="field"><label for="impText">Or paste from Excel here</label><textarea id="impText" spellcheck="false"></textarea></div><div class="row"><button class="btn pri" data-act="loadpaste">Load pasted data</button>' + (importMsg ? '<span class="status ' + (importMsg.ok ? "ok" : "err") + '">' + esc(importMsg.t) + "</span>" : "") + "</div></div>";
+    } else if (importMsg) h += '<p class="status ' + (importMsg.ok ? "ok" : "err") + '">' + esc(importMsg.t) + "</p>";
+    h += '<div class="scroll tall"><table><thead><tr><th>#</th><th>Run order</th>' + S.factors.map(function (f, i) { return "<th>" + esc(fname(i)) + "</th>"; }).join("");
+    for (var c = 0; c < S.reps; c++) h += '<th class="r">' + (g ? "Reading " : "y") + (c + 1) + "</th>";
+    h += '<th class="r">Mean</th>' + (S.reps > 1 ? '<th class="r">Std dev</th>' : "") + "</tr></thead><tbody>";
+    S.D.forEach(function (row, r) {
+      var st = rowStatHTML(r);
+      h += '<tr><td class="num">' + (r + 1) + '</td><td class="num muted">' + S.order[r] + "</td>" + row.map(function (l, i) { return "<td>" + esc(lname(i, l)) + "</td>"; }).join("");
+      for (var c = 0; c < S.reps; c++) { var v = S.data[r][c]; h += '<td class="r"><input type="text" inputmode="decimal" id="y' + r + "_" + c + '" data-in="y" data-r="' + r + '" data-c="' + c + '" value="' + (v == null ? "" : v) + '" aria-label="Test ' + (r + 1) + " result " + (c + 1) + '"></td>'; }
+      h += '<td class="r num" id="m' + r + '">' + st.m + "</td>" + (S.reps > 1 ? '<td class="r num" id="s' + r + '">' + st.s + "</td>" : "") + "</tr>";
+    });
+    h += '</tbody></table></div><p class="muted small">Type results directly, or paste a block copied from Excel into any cell. Run the tests in the shuffled run order to keep drift out of the factor effects.</p>';
+    $("dataBox").innerHTML = h;
+  }
+  function parseTable(text) {
+    var lines = text.replace(/\r/g, "").split("\n").filter(function (l) { return l.trim().length; }); if (!lines.length) return [];
+    var d = lines[0].indexOf("\t") >= 0 ? "\t" : lines[0].indexOf(";") >= 0 ? ";" : lines[0].indexOf(",") >= 0 ? "," : null;
+    return lines.map(function (l) { return (d ? l.split(d) : l.trim().split(/\s+/)).map(function (c) { return c.trim().replace(/^"|"$/g, ""); }); });
+  }
+  function num(s) { if (s == null) return null; s = String(s).trim(); if (!s) return null; if (/^-?\d+,\d+$/.test(s)) s = s.replace(",", "."); var v = Number(s); return isFinite(v) ? v : null; }
+  function importText(text, mode) {
+    var rows = parseTable(text);
+    if (!rows.length) return { ok: false, t: "Nothing to load: the file or text box is empty." };
+    if (mode === "res") {
+      if (num(rows[0][rows[0].length - 1]) == null) rows.shift();
+      if (rows.length !== S.D.length) return { ok: false, t: "Expected " + S.D.length + " rows of results (one per test) but found " + rows.length + ". Check the matrix choice or use the whole-table option." };
+      var data = rows.map(function (r) { var c = r.slice(-Math.min(S.reps, r.length)).map(num); while (c.length < S.reps) c.push(null); return c; });
+      if (data.some(function (r) { return r.every(function (x) { return x == null; }); })) return { ok: false, t: "At least one row has no numeric result in its last " + S.reps + " column(s)." };
+      S.data = data; S.tpl = null; return { ok: true, t: "Loaded results for " + rows.length + " tests." };
+    }
+    var head = rows.shift(); if (/^(run|std|#|no\.?|trial|order|test)$/i.test(head[0])) { head.shift(); rows.forEach(function (r) { r.shift(); }); }
+    var nResp = S.reps, nF = head.length - nResp;
+    if (nF < 2 || nF > 5) return { ok: false, t: "Found " + head.length + " columns. With " + nResp + " result column(s) that leaves " + nF + " factor columns; the tool needs 2 to 5. Adjust runs per test to match the file." };
+    var facs = [], err = null;
+    for (var f = 0; f < nF; f++) {
+      var lv = []; rows.forEach(function (r) { if (lv.indexOf(r[f]) < 0) lv.push(r[f]); });
+      if (lv.every(function (x) { return num(x) != null; })) lv.sort(function (a, b) { return num(a) - num(b); });
+      if (lv.length < 2 || lv.length > 3) { err = "Column “" + head[f] + "” has " + lv.length + " levels; each factor needs two or three."; break; }
+      facs.push({ name: head[f], levels: lv, role: /part|sample|piece/i.test(head[f]) ? "part" : "ms" });
+    }
+    if (err) return { ok: false, t: err };
+    var keys = {}, D = [], data2 = [];
+    rows.forEach(function (r) {
+      var lvl = facs.map(function (fc, i) { return fc.levels.indexOf(r[i]); }), key = lvl.join("_"), ys = r.slice(nF, nF + nResp).map(num).filter(function (x) { return x != null; });
+      if (keys[key] == null) { keys[key] = D.length; D.push(lvl); data2.push([]); }
+      data2[keys[key]] = data2[keys[key]].concat(ys);
+    });
+    var reps = Math.min(3, Math.max.apply(null, data2.map(function (r) { return r.length; })));
+    if (!reps) return { ok: false, t: "No numeric results found in the last " + nResp + " column(s)." };
+    S.factors = facs; S.custom = { D: D }; S.reps = reps; S.data = data2.map(function (r) { return r.slice(0, reps); }); S.tpl = null; S.order = null;
+    return { ok: true, t: "Built a " + D.length + "-test design with " + nF + " factors and " + reps + " result(s) per test from the file." };
+  }
+  function csvText() {
+    var q = function (s) { s = String(s); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }, L = [];
+    var hd = ["Run"].concat(S.factors.map(function (f, i) { return fname(i); })); for (var c = 0; c < S.reps; c++) hd.push("y" + (c + 1)); L.push(hd.map(q).join(","));
+    S.D.forEach(function (row, r) { L.push([r + 1].concat(row.map(function (l, i) { return lname(i, l); })).concat(S.data[r].map(function (v) { return v == null ? "" : v; })).map(q).join(",")); });
+    return L.join("\n");
+  }
+  function copyText(t, okMsg) {
+    var fb = function () { importOpen = true; importMsg = { ok: true, t: "Copying is blocked here, so the text is in the box below: select it and copy." }; renderData(); var ta = $("impText"); if (ta) { ta.value = t; ta.focus(); ta.select(); } };
+    try { navigator.clipboard.writeText(t).then(function () { importMsg = { ok: true, t: okMsg }; renderData(); renderConcl(); }, fb); } catch (e) { fb(); }
+  }
+
+  /* ---------- charts ---------- */
+  function ticks(lo, hi, n) {
+    if (hi - lo < 1e-12) { hi = lo + 1; lo -= 1; }
+    var raw = (hi - lo) / n, mag = Math.pow(10, Math.floor(Math.log10(raw))), nr = raw / mag, step = (nr < 1.5 ? 1 : nr < 3 ? 2 : nr < 7 ? 5 : 10) * mag, t = [];
+    for (var v = Math.floor(lo / step + 1e-9) * step; v < hi + step - step * 1e-6; v += step) t.push(+v.toFixed(10));
+    return t;
+  }
+  var W = 240, H = 196, M = { l: 44, r: 14, t: 18, b: 30 };
+  function frame(tk) {
+    var lo = tk[0], hi = tk[tk.length - 1], d = Math.max(0, -Math.floor(Math.log10(tk[1] - tk[0]) + 1e-9)), y = function (v) { return M.t + (H - M.t - M.b) * (1 - (v - lo) / (hi - lo)); }, s = "";
+    tk.forEach(function (t) { s += '<line x1="' + M.l + '" x2="' + (W - M.r) + '" y1="' + y(t).toFixed(1) + '" y2="' + y(t).toFixed(1) + '" stroke="var(--line2)" stroke-width="1"/><text x="' + (M.l - 6) + '" y="' + (y(t) + 3.5).toFixed(1) + '" text-anchor="end" font-size="10" fill="var(--ink3)" font-family="var(--mono)">' + nf(t, d) + "</text>"; });
+    return { y: y, svg: s };
+  }
+  var xs = function (n, i) { var pw = W - M.l - M.r; return M.l + pw * (i + 0.5) / n; };
+  function xlabels(fi) { var n = S.factors[fi].levels.length, s = ""; for (var l = 0; l < n; l++) s += '<text x="' + xs(n, l).toFixed(1) + '" y="' + (H - 12) + '" text-anchor="middle" font-size="10.5" fill="var(--ink2)">' + esc(cut(lname(fi, l), n === 3 ? 9 : 13)) + "</text>"; return s; }
+  function marker(shape, x, y, col, title) {
+    var t = "<title>" + esc(title) + "</title>", st = ' fill="' + col + '" stroke="var(--surface)" stroke-width="2">';
+    if (shape === 1) return '<rect x="' + (x - 4.4).toFixed(1) + '" y="' + (y - 4.4).toFixed(1) + '" width="8.8" height="8.8" transform="rotate(45 ' + x.toFixed(1) + " " + y.toFixed(1) + ')"' + st + t + "</rect>";
+    if (shape === 2) return '<rect x="' + (x - 4.2).toFixed(1) + '" y="' + (y - 4.2).toFixed(1) + '" width="8.4" height="8.4"' + st + t + "</rect>";
+    return '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="4.8"' + st + t + "</circle>";
+  }
+  function mainPlot(A, fi, tk, d, ki) {
+    var f = A.facs[fi], n = f.means.length, fr = frame(tk), s = '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Main effect of ' + esc(fname(fi)) + '">' + fr.svg, pts = [];
+    for (var l = 0; l < n; l++) pts.push([xs(n, l), fr.y(f.means[l])]);
+    s += '<polyline fill="none" stroke="var(--s1)" stroke-width="2" points="' + pts.map(function (p) { return p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" ") + '"/>';
+    pts.forEach(function (p, l) {
+      if (l === f.best && f.delta > 0) s += '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="8.5" fill="none" stroke="var(--amber)" stroke-width="1.5"/>';
+      s += marker(0, p[0], p[1], "var(--s1)", fname(fi) + " = " + lname(fi, l) + ": " + nf(f.means[l], d) + ki.unit);
+      var up = p[1] - 14 > M.t; s += '<text x="' + p[0].toFixed(1) + '" y="' + (up ? p[1] - 12 : p[1] + 20).toFixed(1) + '" text-anchor="middle" font-size="10.5" fill="var(--ink)" font-family="var(--mono)">' + nf(f.means[l], d) + "</text>";
+    });
+    return s + xlabels(fi) + "</svg>";
+  }
+  var SER = ["var(--s1)", "var(--s2)", "var(--s3)"], DASH = ["", "6 4", "2 3"];
+  function intPlot(A, p, tk, d, ki) {
+    var ni = A.nl[p.i], nj = A.nl[p.j], fr = frame(tk), s = '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Interaction of ' + esc(pname(p)) + '">' + fr.svg, x, y;
+    for (y = 0; y < nj; y++) {
+      var pts = []; for (x = 0; x < ni; x++) if (isFinite(p.cells[x][y])) pts.push(xs(ni, x).toFixed(1) + "," + fr.y(p.cells[x][y]).toFixed(1));
+      s += '<polyline fill="none" stroke="' + SER[y] + '" stroke-width="2"' + (DASH[y] ? ' stroke-dasharray="' + DASH[y] + '"' : "") + ' points="' + pts.join(" ") + '"/>';
+    }
+    for (x = 0; x < ni; x++) {
+      var col = []; for (y = 0; y < nj; y++) if (isFinite(p.cells[x][y])) col.push({ y: y, v: p.cells[x][y] });
+      col.sort(function (a, b) { return b.v - a.v; });
+      col.forEach(function (c, idx) {
+        var px = xs(ni, x), py = fr.y(c.v);
+        s += marker(c.y, px, py, SER[c.y], fname(p.i) + " = " + lname(p.i, x) + ", " + fname(p.j) + " = " + lname(p.j, c.y) + ": " + nf(c.v, d) + ki.unit);
+        if (idx === 0 || idx === col.length - 1) { var up = idx === 0 && col.length > 1 || col.length === 1; s += '<text x="' + px.toFixed(1) + '" y="' + (up ? py - 10 : py + 18).toFixed(1) + '" text-anchor="middle" font-size="10" fill="var(--ink)" font-family="var(--mono)">' + nf(c.v, d) + "</text>"; }
+      });
+    }
+    return s + xlabels(p.i) + "</svg>";
+  }
+  function legend(p) { var s = '<div class="legend">'; for (var y = 0; y < S.factors[p.j].levels.length; y++) s += '<span><i style="border-top-color:' + SER[y] + ";border-top-style:" + (y ? "dashed" : "solid") + '"></i>' + esc(fname(p.j)) + " = " + esc(lname(p.j, y)) + "</span>"; return s + "</div>"; }
+  function domain(vals) { var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals), pad = (hi - lo) * 0.18 || Math.abs(hi) * 0.05 || 1; return ticks(lo - pad, hi + pad, 4); }
+  function cube(A, d, ki) {
+    var cw = 380, ch = 250, P = function (a, b, c) { return [118 + 150 * a + 62 * b, 205 - 125 * c - 44 * b]; }, s = '<svg viewBox="0 0 ' + cw + " " + ch + '" role="img" aria-label="Cube plot of the eight test results" style="max-width:480px">';
+    var E = [[0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 1], [1, 0, 0, 1, 0, 1], [0, 0, 1, 1, 0, 1], [0, 1, 0, 1, 1, 0], [0, 1, 0, 0, 1, 1], [1, 1, 0, 1, 1, 1], [0, 1, 1, 1, 1, 1], [0, 0, 0, 0, 1, 0], [1, 0, 0, 1, 1, 0], [0, 0, 1, 0, 1, 1], [1, 0, 1, 1, 1, 1]];
+    E.forEach(function (e) { var p = P(e[0], e[1], e[2]), q = P(e[3], e[4], e[5]); s += '<line x1="' + p[0] + '" y1="' + p[1] + '" x2="' + q[0] + '" y2="' + q[1] + '" stroke="var(--line)" stroke-width="1.5"/>'; });
+    S.D.forEach(function (row, r) {
+      var p = P(row[0], row[1], row[2]), v = A.runStats[r][A.kind], best = r === A.bestRun;
+      s += '<rect x="' + (p[0] - 23) + '" y="' + (p[1] - 11) + '" width="46" height="22" rx="4" fill="var(--surface2)" stroke="' + (best ? "var(--amber)" : "var(--line)") + '" stroke-width="' + (best ? 2 : 1) + '"><title>Test ' + (r + 1) + ": " + esc(row.map(function (l, i) { return fname(i) + " = " + lname(i, l); }).join(", ")) + '</title></rect><text x="' + p[0] + '" y="' + (p[1] + 4) + '" text-anchor="middle" font-size="11" fill="var(--ink)" font-family="var(--mono)">' + nf(v, d) + "</text>";
+    });
+    var a0 = P(0, 0, 0), a1 = P(1, 0, 0);
+    s += '<text x="' + (a0[0] + a1[0]) / 2 + '" y="' + (a0[1] + 30) + '" text-anchor="middle" font-size="11" fill="var(--ink2)">' + esc(cut(fname(0), 16)) + ": " + esc(cut(lname(0, 0), 8)) + " → " + esc(cut(lname(0, 1), 8)) + "</text>";
+    s += '<text x="' + (a1[0] + 44) + '" y="' + (a1[1] - 6) + '" font-size="11" fill="var(--ink2)">' + esc(cut(fname(1), 12)) + '</text><text x="' + (a1[0] + 44) + '" y="' + (a1[1] + 8) + '" font-size="10" fill="var(--ink3)">' + esc(cut(lname(1, 0), 6)) + " → " + esc(cut(lname(1, 1), 6)) + "</text>";
+    s += '<text x="12" y="' + (a0[1] - 56) + '" font-size="11" fill="var(--ink2)">' + esc(cut(fname(2), 14)) + '</text><text x="12" y="' + (a0[1] - 42) + '" font-size="10" fill="var(--ink3)">↑ ' + esc(cut(lname(2, 1), 11)) + "</text>";
+    return s + "</svg>";
+  }
+
+  /* ---------- 5 analysis ---------- */
+  function pairsSorted(A) { return A.pairs.slice().sort(function (a, b) { return (b.grade === "na" ? -1 : b.score) - (a.grade === "na" ? -1 : a.score); }); }
+  function twinOf(A, p) { var idx = A.pairs.indexOf(p), q = A.pairs.filter(function (x) { return x.same.indexOf(idx) >= 0; })[0]; return q ? pname(q) : ""; }
+  function statusText(A, p) {
+    if (p.status === "aliased") return "mixed with " + fname(p.aliasF);
+    if (p.status === "incomplete") return "not all combinations tested";
+    if (p.status === "partial") return "indicative: partly mixed with " + fname(p.aliasF);
+    if (p.status === "partial2") return "indicative: overlaps another interaction";
+    if (p.status === "twin") return "same contrast as " + twinOf(A, p);
+    return "";
+  }
+  function responseTable(A, d, ki) {
+    var h = '<div class="scroll"><table><thead><tr><th>' + (isG() ? "Source" : "Factor") + '</th><th class="r">Level 1</th><th class="r">Level 2</th><th class="r">Level 3</th><th class="r">Delta</th><th class="r">Rank</th><th>' + (A.dir === 0 ? "Closest to target" : isG() ? "Furthest from average" : "Preferred level") + "</th></tr></thead><tbody>";
+    A.facs.forEach(function (f, i) {
+      var pick = f.best; if (isG()) { pick = 0; f.means.forEach(function (m, l) { if (Math.abs(m - A.grand) > Math.abs(f.means[pick] - A.grand)) pick = l; }); }
+      h += "<tr><td>" + esc(fname(i)) + "</td>" + [0, 1, 2].map(function (l) { return '<td class="r num">' + (l < f.means.length ? nf(f.means[l], d) : "") + "</td>"; }).join("") + '<td class="r num">' + nf(f.delta, d) + '</td><td class="r num">' + f.rank + "</td><td>" + esc(lname(i, pick)) + "</td></tr>";
+    });
+    return h + "</tbody></table></div>";
+  }
+  function anovaTable(A) {
+    var rows = "", bars = "", r = function (name, t, cls) {
+      rows += "<tr><td>" + esc(name) + '</td><td class="r num">' + t.df + '</td><td class="r num">' + g3(t.ss) + '</td><td class="r num">' + g3(t.ms) + '</td><td class="r num">' + (isFinite(t.F) ? g3(t.F) : "–") + '</td><td class="r num">' + pv(t.p) + '</td><td class="r num">' + pc(t.rho) + "</td></tr>";
+      bars += "<span>" + esc(name) + '</span><span class="trk"><i class="' + cls + '" style="width:' + Math.min(100, t.rho).toFixed(1) + '%"></i></span><span class="num">' + pc(t.rho) + "</span>";
+    };
+    A.facs.forEach(function (f, i) { r(fname(i), f, ""); });
+    A.pairs.forEach(function (p) { if (p.included) r(pname(p) + (p.same.length ? " (= " + p.same.map(function (q) { return pname(A.pairs[q]); }).join(", ") + ")" : ""), p, "int"); });
+    if (A.resB.df > 0) rows += "<tr><td>Unassigned (between tests)</td><td class=\"r num\">" + A.resB.df + '</td><td class="r num">' + g3(A.resB.ss) + '</td><td class="r num">' + g3(A.resB.ss / A.resB.df) + "</td><td></td><td></td><td></td></tr>";
+    if (A.within.df > 0) rows += "<tr><td>Repeat error (within test)</td><td class=\"r num\">" + A.within.df + '</td><td class="r num">' + g3(A.within.ss) + '</td><td class="r num">' + g3(A.within.ss / A.within.df) + "</td><td></td><td></td><td></td></tr>";
+    if (A.err.df > 0) { rows += '<tr><td>Error (pooled)</td><td class="r num">' + A.err.df + '</td><td class="r num">' + g3(A.err.ss) + '</td><td class="r num">' + g3(A.err.ms) + '</td><td></td><td></td><td class="r num">' + pc(A.err.rho) + "</td></tr>"; bars += '<span>Error</span><span class="trk"><i class="err" style="width:' + Math.min(100, A.err.rho).toFixed(1) + '%"></i></span><span class="num">' + pc(A.err.rho) + "</span>"; }
+    rows += '<tr><td>Total</td><td class="r num">' + (A.N - 1) + '</td><td class="r num">' + g3(A.sst) + "</td><td></td><td></td><td></td><td></td></tr>";
+    var note = A.err.df === 0 ? '<p class="note w">The matrix is saturated: every degree of freedom is used by a factor, so there is no error estimate and no F-test. Contributions are raw shares of the total sum of squares. Add a repeat to test significance.</p>' : A.err.df < 4 ? '<p class="note">Only ' + A.err.df + " degree" + (A.err.df > 1 ? "s" : "") + " of freedom for error, so p-values are a rough guide. Rank by contribution and confirm with a follow-up run.</p>" : A.within.df > 0 && A.kind === "mean" ? '<p class="note">F uses the pooled error, which is valid when each repeat is a fresh set-up. If repeats are back-to-back readings of one set-up, the within-test line is measurement repeatability only.</p>' : "";
+    return '<div class="two anova"><div class="scroll"><table><thead><tr><th>Source</th><th class="r">df</th><th class="r">SS</th><th class="r">MS</th><th class="r">F</th><th class="r">p</th><th class="r">Contribution</th></tr></thead><tbody>' + rows + '</tbody></table></div><div class="bars">' + bars + "</div></div>" + note;
+  }
+  function renderAnalysis() {
+    var box = $("analysisBox"), g = isG();
+    if (!AN.mean.ok) { box.innerHTML = '<div class="panel"><p>Fill in every ' + (g ? "set-up" : "test") + " in the results table to see the analysis. " + AN.mean.missing + " of " + S.D.length + " still empty.</p></div>"; return; }
+    var kind = g ? "mean" : S.view; if (!AN[kind] || !AN[kind].ok) kind = S.view = "mean";
+    var A = AN[kind], ki = kinfo(kind), d = adec(A), h = "";
+    A.bestRun = 0; A.runStats.forEach(function (rs, r) { var a = rs[kind], b = A.runStats[A.bestRun][kind]; if (A.dir === 0 ? Math.abs(a - S.target) < Math.abs(b - S.target) : A.dir * (a - b) > 0) A.bestRun = r; });
+    if (!g) {
+      var sdOk = AN.sd && AN.sd.ok, snOk = AN.sn && AN.sn.ok;
+      h += '<div class="row"><div class="field"><span class="lab">Analyse</span><span class="seg"><button data-act="view" data-v="mean" aria-pressed="' + (kind === "mean") + '">Mean</button><button data-act="view" data-v="sd" aria-pressed="' + (kind === "sd") + '"' + (sdOk ? "" : " disabled") + '>Variability (std dev)</button><button data-act="view" data-v="sn" aria-pressed="' + (kind === "sn") + '"' + (snOk ? "" : " disabled") + ">S/N ratio</button></span></div>" + (sdOk ? '<span class="muted small" style="max-width:52ch">Read variability first: a factor that changes scatter is fixed before the mean is tuned.</span>' : '<span class="muted small">Variability needs two or three runs per test.</span>') + "</div>";
+    }
+    if (!A.orth) h += '<p class="note w">This design is not orthogonal, so level averages are partly confounded. Treat the effects as approximate.</p>';
+    if (g && AN.grr.ok) h += grrBlock(AN.grr, d);
+    /* main effects */
+    var allM = []; A.facs.forEach(function (f) { allM = allM.concat(f.means); });
+    var tk = domain(allM), eff = A.facs.map(function (f, i) { return esc(fname(i)) + " " + (f.means.length === 2 ? sg(f.effect, d) : "Δ " + nf(f.delta, d)) + ki.unit; }).join(", ");
+    h += '<div class="panel"><h3>' + (g ? "Level averages by source" : "Main effect plots: " + esc(ki.label)) + '</h3><div class="plots">' + A.facs.map(function (f, i) { return '<div class="plot"><h4>' + esc(fname(i)) + (f.rank === 1 ? ' <span class="chip strong">largest</span>' : "") + "</h4>" + mainPlot(A, i, tk, d, ki) + "</div>"; }).join("") + '</div><p class="cap">' + (g ? "Offsets between levels of each source" : "Effects on " + esc(ki.short)) + ": " + eff + "." + (g ? "" : " The ring marks the preferred level.") + "</p>" + responseTable(A, d, ki) + "</div>";
+    /* interactions */
+    if (!g && A.pairs.length) {
+      var ps = pairsSorted(A), allC = []; ps.forEach(function (p) { p.cells.forEach(function (c) { c.forEach(function (v) { if (isFinite(v)) allC.push(v); }); }); });
+      var tk2 = domain(allC), firstClean = ps.filter(function (p) { return (p.included || p.status === "twin") && p.grade !== "none"; })[0];
+      h += '<div class="panel"><h3>Interaction plots, graded</h3><p class="cap">Parallel lines mean no interaction. The grade is the share of total variation explained by the interaction after main effects are removed: Strong from 10%, Moderate from 4%, Weak from 1%.</p><div class="plots">' + ps.map(function (p) {
+        var st = statusText(A, p);
+        return '<div class="plot ip"><h4>' + esc(pname(p)) + ' <span class="chip ' + p.grade + '">' + GR[p.grade] + (p.grade !== "na" ? " · " + pc(p.score) : "") + "</span>" + (p === firstClean ? ' <span class="chip rec">strongest</span>' : "") + "</h4>" + intPlot(A, p, tk2, d, ki) + legend(p) + (st ? '<span class="muted small">' + esc(st) + "</span>" : "") + "</div>";
+      }).join("") + "</div>";
+      h += '<div class="scroll"><table><thead><tr><th>Rank</th><th>Interaction</th><th>Grade</th><th class="r">Share</th><th class="r">p</th><th>Best combination</th><th>Lines cross</th><th>Note</th></tr></thead><tbody>' + ps.map(function (p, n) {
+        return '<tr><td class="num">' + (n + 1) + "</td><td>" + esc(pname(p)) + "</td><td>" + GR[p.grade] + '</td><td class="r num">' + (p.grade === "na" ? "–" : pc(p.score)) + '</td><td class="r num">' + (p.included ? pv(p.p) : "–") + "</td><td>" + (p.grade === "na" ? "–" : esc(lname(p.i, p.bestCell[0]) + " + " + lname(p.j, p.bestCell[1]))) + "</td><td>" + (p.grade === "na" ? "–" : p.cross ? "Yes" : "No") + "</td><td>" + esc(statusText(A, p)) + "</td></tr>";
+      }).join("") + "</tbody></table></div></div>";
+    }
+    /* anova */
+    if (!g) h += '<div class="panel"><h3>ANOVA and contribution: ' + esc(ki.label) + "</h3>" + anovaTable(A) + "</div>";
+    if (!g && S.factors.length === 3 && A.nl.every(function (n) { return n === 2; }) && S.D.length === 8 && A.pairs.every(function (p) { return p.status === "clean"; }))
+      h += '<div class="panel"><h3>Cube plot: ' + esc(ki.label) + "</h3>" + cube(A, d, ki) + '<p class="cap">Each corner is one test. The amber corner is the best result observed.</p></div>';
+    box.innerHTML = h;
+  }
+  function verdict(G) {
+    if (G.hasPart) return G.grrSv < 10 ? ["Acceptable", "good"] : G.grrSv <= 30 ? ["Marginal", "warnc"] : ["Not acceptable", "bad"];
+    if (isFinite(G.pt)) return G.pt < 10 ? ["Acceptable", "good"] : G.pt <= 30 ? ["Marginal", "warnc"] : ["Not acceptable", "bad"];
+    return null;
+  }
+  function compName(c) { return c.type === "factor" ? fname(c.fi) : c.type === "repeat" ? (AN.grr.sepRep ? "Repeatability (equipment)" : "Repeatability + unassigned") : "Unassigned / interactions"; }
+  function grrBlock(G, d) {
+    var v = verdict(G), u = S.resp.unit ? " " + S.resp.unit : "", h = '<div class="tiles">';
+    if (G.hasPart) h += '<div class="tile"><span class="lab">%GR&amp;R of study variation</span><b>' + pc(G.grrSv) + '</b><span class="chip ' + v[1] + '" style="align-self:flex-start">' + v[0] + '</span></div><div class="tile"><span class="lab">Distinct categories (ndc)</span><b>' + (isFinite(G.ndc) ? G.ndc : "–") + '</b><span class="small muted">5 or more is the usual requirement</span></div>';
+    if (isFinite(G.pt)) h += '<div class="tile"><span class="lab">Precision / tolerance</span><b>' + pc(G.pt) + "</b>" + (!G.hasPart ? '<span class="chip ' + v[1] + '" style="align-self:flex-start">' + v[0] + "</span>" : '<span class="small muted">6σ of the measurement system over ' + S.tol + u + "</span>") + "</div>";
+    h += '<div class="tile"><span class="lab">Measurement system std dev</span><b>' + g3(Math.sqrt(G.vGrr)) + '</b><span class="small muted">' + esc(S.resp.unit || "units") + '</span></div><div class="tile"><span class="lab">Repeatability std dev</span><b>' + g3(G.comp[G.comp.length - 1].sd) + '</b><span class="small muted">' + (G.sepRep ? "within set-up" : "not separable with one reading") + "</span></div></div>";
+    if (!G.hasPart) h += '<p class="note">No source is marked as part or process variation, so %GR&amp;R cannot be scaled against product spread. Sources are ranked by their share of the observed variance' + (isFinite(G.pt) ? " and judged against the tolerance." : "; enter a tolerance width to get a precision-to-tolerance ratio.") + "</p>";
+    var rows = "", bars = "";
+    G.comp.slice().sort(function (a, b) { return b.pct - a.pct; }).forEach(function (c) {
+      var nm = compName(c), role = c.type === "factor" ? (c.role === "part" ? "Part / process" : "Reproducibility") : c.type === "repeat" ? "Repeatability" : "Reproducibility";
+      rows += "<tr><td>" + esc(nm) + "</td><td>" + role + '</td><td class="r num">' + g3(c.sd) + '</td><td class="r num">' + pc(c.pct) + '</td><td class="r num">' + pc(c.sv) + '</td><td class="r num">' + (c.type === "factor" ? pv(G.A.facs[c.fi].p) : "–") + "</td></tr>";
+      bars += "<span>" + esc(nm) + '</span><span class="trk"><i class="' + (c.type !== "factor" ? "err" : c.role === "part" ? "part" : "") + '" style="width:' + c.pct.toFixed(1) + '%"></i></span><span class="num">' + pc(c.pct) + "</span>";
+    });
+    h += '<div class="panel"><h3>Where the variation comes from</h3><div class="two"><div class="bars">' + bars + '</div><div class="scroll"><table><thead><tr><th>Source</th><th>Type</th><th class="r">σ</th><th class="r">% of variance</th><th class="r">% study var</th><th class="r">p</th></tr></thead><tbody>' + rows + '</tbody></table></div></div><p class="cap">Variance components from the main-effects ANOVA of the orthogonal matrix. With two or three levels per source they are screening estimates; they locate the dominant source and do not replace a full crossed study for release decisions.</p></div>';
+    return h;
+  }
+
+  /* ---------- 6 conclusions ---------- */
+  function conclDOE() {
+    var A = AN.mean, B = AN.sd && AN.sd.ok ? AN.sd : null, ki = kinfo("mean"), d = adec(A), u = ki.unit, out = [], k = S.factors.length;
+    var best = A.dir < 0 ? "lowest" : A.dir > 0 ? "highest" : "closest to target";
+    var ord = A.facs.map(function (_, i) { return i; }).sort(function (a, b) { return A.facs[b].rho - A.facs[a].rho; });
+    var sig = function (f) { return f.rho >= 3 && (!isFinite(f.p) || f.p < 0.1); };
+    /* variability first */
+    var fixed = {}, drivers = [];
+    if (B) {
+      var db = adec(B);
+      B.facs.forEach(function (f, i) { if (f.rho >= 15 && (!isFinite(f.p) || f.p < 0.1)) { drivers.push(i); fixed[i] = f.best; } });
+      var bi = pairsSorted(B).filter(function (p) { return p.included && (p.grade === "strong" || p.grade === "moderate") && (!isFinite(p.p) || p.p < 0.1); })[0];
+      var t = "<b>Variability first.</b> ";
+      if (drivers.length) t += drivers.map(function (i) { var f = B.facs[i], w = 0; f.means.forEach(function (m, l) { if (m > f.means[w]) w = l; }); return esc(fname(i)) + " drives the scatter between repeats (" + pc(f.rho) + " of the variation in standard deviation): s averages " + nf(f.means[f.best], db) + u + " at " + esc(lname(i, f.best)) + " against " + nf(f.means[w], db) + u + " at " + esc(lname(i, w)); }).join("; ") + ". Fix " + (drivers.length > 1 ? "these levels" : "this level") + " before tuning the mean.";
+      else { var top = B.facs.map(function (_, i) { return i; }).sort(function (a, b2) { return B.facs[b2].rho - B.facs[a].rho; })[0]; t += "No factor clearly controls the scatter between repeats (largest contributor: " + esc(fname(top)) + ", " + pc(B.facs[top].rho) + "). Treat the scatter as common noise and optimise the mean."; }
+      if (bi) { var wc = [0, 0]; bi.cells.forEach(function (c, x) { c.forEach(function (v, y) { if (v > bi.cells[wc[0]][wc[1]]) wc = [x, y]; }); }); t += " The combination " + esc(pname(bi)) + " also matters for scatter (" + GR[bi.grade].toLowerCase() + ", " + pc(bi.score) + "): it is worst at " + esc(lname(bi.i, wc[0])) + " with " + esc(lname(bi.j, wc[1])) + "."; }
+      out.push(t);
+    }
+    /* mean ranking */
+    var t2 = "<b>Main effects on " + esc(ki.short) + ".</b> " + esc(fname(ord[0])) + " is the largest driver (" + pc(A.facs[ord[0]].rho) + " contribution). Ranking: " + ord.map(function (i) { var f = A.facs[i]; return esc(fname(i)) + " " + pc(f.rho) + " (" + (f.means.length === 2 ? sg(f.effect, d) + u + " from " + esc(lname(i, 0)) + " to " + esc(lname(i, 1)) : "range " + nf(f.delta, d) + u + ", " + best + " at " + esc(lname(i, f.best))) + ")"; }).join("; ") + ".";
+    var weak = ord.filter(function (i) { return !sig(A.facs[i]); });
+    if (weak.length) t2 += " " + weak.map(fname).map(esc).join(" and ") + (weak.length > 1 ? " have" : " has") + " little effect over the tested range; set " + (weak.length > 1 ? "them" : "it") + " by cost or convenience.";
+    out.push(t2);
+    /* interactions */
+    if (A.pairs.length) {
+      var ps = pairsSorted(A), clean = ps.filter(function (p) { return p.included || p.status === "twin"; }), top2 = clean.filter(function (p) { return p.grade !== "none"; })[0], t3 = "<b>Interactions.</b> ";
+      if (top2) {
+        var last = A.nl[top2.i] - 1;
+        t3 += "The strongest is " + esc(pname(top2)) + " (" + GR[top2.grade].toLowerCase() + ", " + pc(top2.score) + (top2.status === "twin" ? ", indistinguishable from " + esc(twinOf(A, top2)) : top2.same.length ? ", indistinguishable from " + top2.same.map(function (q) { return esc(pname(A.pairs[q])); }).join(", ") : "") + "). Going from " + esc(lname(top2.i, 0)) + " to " + esc(lname(top2.i, last)) + " on " + esc(fname(top2.i)) + " changes " + esc(ki.short) + " by " + top2.cells[0].map(function (_, y) { return sg(top2.cells[last][y] - top2.cells[0][y], d) + u + " at " + esc(fname(top2.j)) + " = " + esc(lname(top2.j, y)); }).join(", ") + ". " + (top2.cross ? "The lines cross, so the better level of one factor depends on the other. " : "") + "Best combination: " + esc(lname(top2.i, top2.bestCell[0])) + " with " + esc(lname(top2.j, top2.bestCell[1])) + ".";
+        var rest = clean.filter(function (p) { return p !== top2; });
+        if (rest.length) t3 += " Others: " + rest.map(function (p) { return esc(pname(p)) + " (" + GR[p.grade].toLowerCase() + ", " + pc(p.score) + ")"; }).join(", ") + ".";
+      } else if (clean.length) t3 += "None of the readable interactions is meaningful (all below 1% of the variation), so the factors act independently and each can be set on its own.";
+      var hid = ps.filter(function (p) { return p.grade === "na"; }), ind = ps.filter(function (p) { return (p.status === "partial" || p.status === "partial2") && (p.grade === "strong" || p.grade === "moderate"); });
+      if (!clean.length) t3 += "This matrix cannot separate any two-factor interaction from the main effects, so the ranking above assumes the factors act independently.";
+      if (ind.length) t3 += " Indicative only, because this matrix sees just part of them: " + ind.map(function (p) { return esc(pname(p)) + " (" + pc(p.score) + ")"; }).join(", ") + ".";
+      if (hid.length && clean.length) t3 += " Not readable in this matrix: " + hid.map(pname).map(esc).join(", ") + ".";
+      out.push(t3);
+    }
+    /* recommended setting */
+    var opt = DOE.optimum(A, S, fixed), conflict = [];
+    var rows = S.factors.map(function (f, i) {
+      var why, inPair = A.pairs.filter(function (p) { return p.included && p.score >= 3 && (p.i === i || p.j === i); })[0];
+      if (fixed[i] != null) { why = "lowest scatter"; if (A.facs[i].best !== fixed[i] && sig(A.facs[i])) { conflict.push(i); why += " (trade-off: the mean prefers " + lname(i, A.facs[i].best) + ")"; } }
+      else if (inPair && opt.levels[i] !== A.facs[i].best) why = "chosen with its interaction partner";
+      else if (sig(A.facs[i])) why = best + " mean";
+      else why = "little effect: choose on cost";
+      return "<tr><td>" + esc(fname(i)) + "</td><td><b>" + esc(lname(i, opt.levels[i])) + "</b></td><td>" + esc(why) + "</td></tr>";
+    }).join("");
+    var t4 = "<b>Recommended setting.</b> Predicted " + esc(ki.short) + ": <b class=\"num\">" + nf(opt.pred, d) + u + "</b>" + (S.goal === "target" ? " against a target of " + S.target + u : "") + ". " + (opt.run >= 0 ? "This combination is test " + (opt.run + 1) + " in the matrix, which measured " + nf(A.runStats[opt.run].mean, d) + u + "." : "This combination was not among the tests, so the prediction rests on the model.") + '<div class="scroll" style="margin-top:8px"><table><thead><tr><th>Factor</th><th>Set to</th><th>Why</th></tr></thead><tbody>' + rows + "</tbody></table></div>";
+    out.push(t4);
+    /* confidence + next */
+    var t5 = "<b>Confidence.</b> ";
+    if (A.err.df === 0) t5 += "The matrix is saturated, so nothing is left to estimate error and effects cannot be tested for significance.";
+    else if (A.err.df < 4) t5 += "Only " + A.err.df + " degree" + (A.err.df > 1 ? "s" : "") + " of freedom remain" + (A.err.df > 1 ? "" : "s") + " for error, so the p-values are weak evidence. The ranking is sound as a screening result.";
+    else { var sg2 = ord.filter(function (i) { return A.facs[i].p < 0.05; }); t5 += (sg2.length ? sg2.map(fname).map(esc).join(", ") + (sg2.length > 1 ? " are" : " is") + " significant at the 5% level" : "No factor reaches the 5% significance level") + " with " + A.err.df + " degrees of freedom for error; unexplained variation is " + pc(A.err.rho) + "."; }
+    out.push(t5);
+    var nx = ["Run a confirmation test at the recommended setting" + (S.reps < 2 ? ", repeated two or three times," : "") + " and compare it with the prediction of " + nf(opt.pred, d) + u + "."];
+    if (A.nl.every(function (n) { return n === 2; }) && sig(A.facs[ord[0]])) nx.push("Two levels cannot show curvature. Add centre points or a third level for " + esc(fname(ord[0])) + (ord[1] != null && sig(A.facs[ord[1]]) ? " and " + esc(fname(ord[1])) : "") + " before fixing the final setting.");
+    if (A.pairs.some(function (p) { return p.grade === "na" || p.status === "partial"; }) && k > 2) nx.push("If an interaction between the top factors is suspected, follow up with a full factorial on those factors only.");
+    if (S.reps < 2) nx.push("Use two or three runs per test next time to see which factors change the scatter, and settle those first.");
+    if (conflict.length) nx.push("Resolve the trade-off on " + conflict.map(fname).map(esc).join(", ") + ": the level that reduces scatter is not the level that gives the best mean.");
+    out.push("<b>Next steps.</b> " + nx.join(" "));
+    return out;
+  }
+  function conclGRR() {
+    var G = AN.grr, A = G.A, d = adec(A), u = S.resp.unit ? " " + S.resp.unit : "", out = [], v = verdict(G);
+    if (G.hasPart) out.push("<b>Verdict: " + v[0].toLowerCase() + ".</b> The measurement system takes " + pc(G.grrSv) + " of study variation (" + pc(G.grrPct) + " of variance) and resolves " + (isFinite(G.ndc) ? G.ndc : "–") + " distinct categories. The usual limits are under 10% acceptable, 10 to 30% marginal, above 30% not acceptable, with at least 5 categories." + (isFinite(G.pt) ? " Against the tolerance of " + S.tol + u + " the precision-to-tolerance ratio is " + pc(G.pt) + "." : ""));
+    else if (v) out.push("<b>Verdict: " + v[0].toLowerCase() + ".</b> The measurement system spread (6σ) uses " + pc(G.pt) + " of the " + S.tol + u + " tolerance.");
+    var cs = G.comp.slice().sort(function (a, b) { return b.pct - a.pct; });
+    out.push("<b>Ranking of sources.</b> " + cs.filter(function (c) { return c.pct >= 0.05; }).map(function (c) { return esc(compName(c)) + " " + pc(c.pct); }).join("; ") + " of the observed variance.");
+    cs.forEach(function (c) {
+      if (c.type !== "factor" || c.pct < 5) return;
+      var f = A.facs[c.fi], w = 0, off = function (l) { var o = f.means.filter(function (_, j) { return j !== l; }); return f.means[l] - DOE.mean(o); };
+      f.means.forEach(function (_, l) { if (Math.abs(off(l)) > Math.abs(off(w))) w = l; });
+      out.push("<b>" + esc(fname(c.fi)) + " (" + pc(c.pct) + ").</b> " + esc(lname(c.fi, w)) + " reads " + sg(off(w), d) + u + " against the other level" + (f.means.length > 2 ? "s" : "") + (isFinite(f.p) ? " (p " + (f.p < 0.001 ? "< 0.001" : "= " + f.p.toFixed(3)) + ")" : "") + ". " + (c.role === "part" ? "This is a real difference in the product or process, which is what the gauge should be able to see; investigate it as a process issue." : "This is a reproducibility loss: check the method, calibration or conditions specific to " + esc(lname(c.fi, w)) + ", then repeat the study."));
+    });
+    var rep = G.comp[G.comp.length - 1];
+    out.push("<b>Repeatability.</b> " + (G.sepRep ? "Equipment noise within a set-up is σ = " + g3(rep.sd) + u + ", " + pc(rep.pct) + " of the variance" + (rep.pct < 10 ? ", so the instrument itself is stable." : ". Look at clamping, resolution and instrument condition.") : "With one reading per set-up, repeatability cannot be separated from interactions. Take two or three readings."));
+    var topMs = cs.filter(function (c) { return c.type === "factor" && c.role !== "part" && c.pct >= 5; })[0];
+    out.push("<b>Next steps.</b> " + (topMs ? "Correct the largest measurement-system source (" + esc(fname(topMs.fi)) + ") first and re-run the same matrix to confirm the gain. " : "No single measurement-system source stands out. ") + "Repeat the study on a schedule and after any tooling, gauge or method change, so drift is caught before it reaches the product.");
+    return out;
+  }
+  function renderConcl() {
+    var box = $("conclBox");
+    if (!AN.mean.ok) { box.innerHTML = "<p>Conclusions appear once every " + (isG() ? "set-up" : "test") + " has a result.</p>"; return; }
+    var items = isG() ? conclGRR() : conclDOE();
+    box.innerHTML = '<ol class="concl">' + items.map(function (t) { return "<li>" + t + "</li>"; }).join("") + '</ol><div class="row"><button class="btn" data-act="copyconcl">Copy conclusions as text</button></div>';
+  }
+  function conclPlain() {
+    var el = document.createElement("div"); el.innerHTML = (isG() ? conclGRR() : conclDOE()).map(function (t, i) { return "<p>" + (i + 1) + ". " + t.replace(/<tr>/g, "\n   ").replace(/<\/td><td>/g, " | ").replace(/<thead>.*?<\/thead>/, "") + "</p>"; }).join("\n");
+    return Array.prototype.map.call(el.querySelectorAll("p"), function (p) { return p.textContent; }).join("\n\n");
+  }
+
+  /* ---------- wiring ---------- */
+  function renderAll() { compute(); renderTemplates(); renderSetup(); renderMatrix(); renderData(); renderAnalysis(); renderConcl(); save(); }
+  function renderDown() { compute(); renderMatrix(); renderData(); renderAnalysis(); renderConcl(); save(); }
+  function renderResults() { compute(); renderAnalysis(); renderConcl(); save(); }
+  function setCell(r, c, v) { S.data[r][c] = v; }
+  function refreshRow(r) { var st = rowStatHTML(r); if ($("m" + r)) $("m" + r).textContent = st.m; if ($("s" + r)) $("s" + r).textContent = st.s; }
+  function fillNote() { var n = $("fillNote"); if (n) n.textContent = S.data.filter(function (r) { return r.some(function (x) { return x != null; }); }).length + " of " + S.D.length + " " + (isG() ? "set-ups" : "tests") + " filled"; }
+  function doImport(text) {
+    var mode = $("impB") && $("impB").checked ? "full" : "res";
+    importMsg = importText(text, mode);
+    if (importMsg.ok) { importOpen = false; if (mode === "full") { rebuild(true); renderAll(); } else { renderData(); renderResults(); renderTemplates(); } }
+    else renderData();
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-act]"); if (!b) return; var a = b.dataset.act, i = +b.dataset.i;
+    if (a === "tpl") { importMsg = null; loadTemplate(b.dataset.id); }
+    else if (a === "mode") { if (S.mode === b.dataset.v) return; S.mode = b.dataset.v; if (S.mode === "grr") { S.goal = "target"; if (S.reps < 2) S.reps = 3; } else if (S.goal === "target" && !S.target) S.goal = "min"; S.view = "mean"; struct(true); }
+    else if (a === "reps") { S.reps = +b.dataset.v; S.tpl = null; rebuild(true); renderAll(); }
+    else if (a === "nlev") { var n = +b.dataset.v, f = S.factors[i]; if (f.levels.length === n) return; f.levels = n === 2 ? f.levels.slice(0, 2) : f.levels.concat(["Level 3"]); S.designId = null; struct(false); }
+    else if (a === "addf") { S.factors.push({ name: (isG() ? "Source " : "Factor ") + LET[S.factors.length], levels: isG() ? ["Level 1", "Level 2", "Level 3"] : ["Low", "High"], role: "ms" }); S.designId = null; struct(false); }
+    else if (a === "delf") { S.factors.splice(i, 1); S.designId = null; struct(false); }
+    else if (a === "design") { S.custom = null; S.designId = b.dataset.id; S.tpl = null; rebuild(false); renderAll(); }
+    else if (a === "view") { S.view = b.dataset.v; renderAnalysis(); save(); }
+    else if (a === "imp") { importOpen = !importOpen; importMsg = null; renderData(); }
+    else if (a === "loadpaste") doImport($("impText").value);
+    else if (a === "copycsv") copyText(csvText(), "Table copied. Paste it into Excel, fill the result columns, then load it back.");
+    else if (a === "copyconcl") copyText(conclPlain(), "Conclusions copied.");
+    else if (a === "shuffle") { shuffle(); renderData(); save(); }
+    else if (a === "clear") { S.data = S.D.map(function () { var r = []; for (var c = 0; c < S.reps; c++) r.push(null); return r; }); S.tpl = null; importMsg = null; renderAll(); }
+  });
+  document.addEventListener("input", function (e) {
+    var t = e.target, k = t.dataset.in; if (!k) return;
+    if (k === "y") { setCell(+t.dataset.r, +t.dataset.c, num(t.value)); refreshRow(+t.dataset.r); fillNote(); renderResults(); return; }
+    if (k === "respName") S.resp.name = t.value; else if (k === "respUnit") S.resp.unit = t.value;
+    else if (k === "target") S.target = +t.value || 0; else if (k === "tol") S.tol = +t.value || 0;
+    else if (k === "fname") S.factors[+t.dataset.i].name = t.value; else if (k === "flev") S.factors[+t.dataset.i].levels[+t.dataset.j] = t.value;
+    renderDown();
+  });
+  document.addEventListener("change", function (e) {
+    var t = e.target, k = t.dataset.ch;
+    if (t.id === "impFile" && t.files && t.files[0]) { var rd = new FileReader(); rd.onload = function () { doImport(String(rd.result)); }; rd.onerror = function () { importMsg = { ok: false, t: "The file could not be read. Save it as CSV or plain text and try again." }; renderData(); }; rd.readAsText(t.files[0]); return; }
+    if (!k) return;
+    if (k === "goal") { S.goal = t.value; renderAll(); }
+    else if (k === "plan") { S.planGoal = t.value; rebuild(true); renderMatrix(); save(); }
+    else if (k === "role") { S.factors[+t.dataset.i].role = t.value; renderResults(); }
+  });
+  document.addEventListener("paste", function (e) {
+    var t = e.target; if (!t.dataset || t.dataset.in !== "y") return;
+    var txt = (e.clipboardData || window.clipboardData).getData("text"); if (!/[\t\n]/.test(txt.trim())) return;
+    e.preventDefault(); var rows = parseTable(txt), r0 = +t.dataset.r, c0 = +t.dataset.c;
+    rows.forEach(function (row, dr) { row.forEach(function (cell, dc) { var r = r0 + dr, c = c0 + dc; if (r < S.D.length && c < S.reps) setCell(r, c, num(cell)); }); });
+    S.tpl = null; renderData(); renderResults();
+  });
+
+  /* ---------- start ---------- */
+  var restored = false;
+  try { var raw = localStorage.getItem(KEY); if (raw) { var o = JSON.parse(raw); if (o && o.factors && o.factors.length >= 2 && o.resp && o.mode) { S = o; rebuild(true); restored = true; } } } catch (e) { restored = false; }
+  if (restored) { try { renderAll(); } catch (e) { restored = false; } }
+  if (!restored) loadTemplate("battery");
+})();
+</script>
+</body></html>

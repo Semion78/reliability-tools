@@ -1,0 +1,2375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interference Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* ==========================================================
+   Interference Console — design tokens
+   Engineering-instrument identity: blueprint-cool neutrals,
+   a teal "chrome" accent distinct from the semantic load/strength
+   pair (blue = load, rust-red = strength/failure) so the console
+   chrome never competes with the data encoding.
+   IBM Plex Sans (UI/labels) + IBM Plex Mono (figures/params) —
+   a family literally drawn for technical/engineering material.
+   ========================================================== */
+
+:root {
+  --bg: #eef1f5;
+  --bg-grid: #e2e7ee;
+  --panel: #ffffff;
+  --panel-2: #f6f8fa;
+  --border: #d7dee6;
+  --border-strong: #c1cad5;
+  --ink: #17212c;
+  --ink-muted: #5b6b7c;
+  --ink-faint: #8695a5;
+
+  --accent: #0f7a86;
+  --accent-ink: #ffffff;
+  --accent-soft: #e3f1f2;
+
+  --load: #2456c4;
+  --load-soft: #e7edfb;
+  --strength: #c4401f;
+  --strength-soft: #fbeae4;
+  --good: #187a52;
+  --good-soft: #e3f3ea;
+  --overlap: #7c5da8;
+
+  --focus: #0f7a86;
+  --shadow: 0 1px 2px rgba(23, 33, 44, 0.06), 0 6px 20px -8px rgba(23, 33, 44, 0.18);
+  --radius: 6px;
+  --radius-sm: 4px;
+
+  --font-ui: "IBM Plex Sans", -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e161e;
+    --bg-grid: #131e28;
+    --panel: #17222d;
+    --panel-2: #1c2833;
+    --border: #2b3947;
+    --border-strong: #3a4a5a;
+    --ink: #e8eef4;
+    --ink-muted: #93a4b5;
+    --ink-faint: #6b7c8d;
+
+    --accent: #4fd0dc;
+    --accent-ink: #062024;
+    --accent-soft: #123138;
+
+    --load: #6f9bff;
+    --load-soft: #17233d;
+    --strength: #ff7a52;
+    --strength-soft: #3a2118;
+    --good: #3fd08e;
+    --good-soft: #123326;
+    --overlap: #b79ce0;
+
+    --focus: #4fd0dc;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px -10px rgba(0, 0, 0, 0.55);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0e161e;
+  --bg-grid: #131e28;
+  --panel: #17222d;
+  --panel-2: #1c2833;
+  --border: #2b3947;
+  --border-strong: #3a4a5a;
+  --ink: #e8eef4;
+  --ink-muted: #93a4b5;
+  --ink-faint: #6b7c8d;
+
+  --accent: #4fd0dc;
+  --accent-ink: #062024;
+  --accent-soft: #123138;
+
+  --load: #6f9bff;
+  --load-soft: #17233d;
+  --strength: #ff7a52;
+  --strength-soft: #3a2118;
+  --good: #3fd08e;
+  --good-soft: #123326;
+  --overlap: #b79ce0;
+
+  --focus: #4fd0dc;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px -10px rgba(0, 0, 0, 0.55);
+}
+
+* { box-sizing: border-box; }
+
+/* the standalone document has no injected reset, and some rules below
+   match [hidden] elements with equal specificity — make hidden always win */
+[hidden] { display: none !important; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.app {
+  min-height: 100%;
+  background:
+    linear-gradient(var(--bg-grid) 1px, transparent 1px) 0 0 / 100% 28px,
+    var(--bg);
+}
+
+h1, h2, h3 { font-family: var(--font-ui); text-wrap: balance; margin: 0; }
+
+button { font-family: inherit; }
+input, select { font-family: inherit; }
+
+a { color: var(--accent); }
+
+::selection { background: var(--accent-soft); }
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* ---------------- topbar ---------------- */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
+  backdrop-filter: blur(6px);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.topbar-titles { display: flex; align-items: baseline; gap: 10px; }
+
+.topbar h1 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.topbar .kicker {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 3px 7px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.topbar-sub {
+  font-size: 12.5px;
+  color: var(--ink-muted);
+  margin-top: 2px;
+}
+
+.icon-btn {
+  width: 34px; height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--ink-muted);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.icon-btn:hover { color: var(--ink); border-color: var(--border-strong); }
+.icon-btn svg { width: 17px; height: 17px; }
+
+/* ---------------- layout ---------------- */
+.layout {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 20px;
+  padding: 20px 24px 40px;
+  align-items: start;
+  max-width: 1520px;
+  margin: 0 auto;
+}
+
+@media (max-width: 980px) {
+  .layout { grid-template-columns: 1fr; }
+}
+
+.console { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 78px; }
+@media (max-width: 980px) { .console { position: static; } }
+
+/* ---------------- channel cards ---------------- */
+.channel-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--channel-color, var(--border-strong));
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px 16px 18px;
+}
+.channel-card.role-load { --channel-color: var(--load); }
+.channel-card.role-strength { --channel-color: var(--strength); }
+
+.channel-head { display: flex; align-items: start; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.channel-head h2 { font-size: 14.5px; font-weight: 700; color: var(--channel-color); }
+.channel-sub { font-size: 11.5px; color: var(--ink-muted); margin-top: 2px; }
+.channel-swatch { width: 10px; height: 10px; border-radius: 2px; background: var(--channel-color); margin-top: 4px; flex: none; }
+
+.mode-switch {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+  background: var(--panel-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 3px; margin-bottom: 14px;
+}
+.mode-btn {
+  border: none; background: transparent; padding: 6px 8px; border-radius: 3px;
+  font-size: 12px; font-weight: 600; color: var(--ink-muted); cursor: pointer;
+}
+.mode-btn.active { background: var(--panel); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+
+.field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+.field label { font-size: 11px; font-weight: 600; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.03em; }
+.field input[type="number"], .field select, .field input[type="text"] {
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 7px 9px; font-size: 13px; color: var(--ink); font-family: var(--font-mono);
+}
+.field select { font-family: var(--font-ui); }
+.field input:focus, .field select:focus { border-color: var(--focus); }
+
+.param-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 10px; }
+.param-grid .field { margin-bottom: 0; }
+
+.file-drop {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  border: 1.5px dashed var(--border-strong); border-radius: var(--radius-sm);
+  padding: 14px 10px; cursor: pointer; text-align: center; margin-bottom: 10px;
+  color: var(--ink-muted); font-size: 12.5px; background: var(--panel-2);
+}
+.file-drop:hover { border-color: var(--channel-color, var(--accent)); color: var(--ink); }
+.file-drop small { display: block; color: var(--ink-faint); font-size: 10.5px; margin-top: 2px; }
+
+.file-meta { font-size: 11.5px; color: var(--ink-muted); margin-bottom: 8px; word-break: break-word; }
+.file-meta.has-file { color: var(--ink); }
+
+.column-picker { margin-bottom: 10px; }
+
+.fit-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 8px; }
+.fit-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.fit-table th {
+  text-align: left; padding: 6px 8px; background: var(--panel-2); color: var(--ink-muted);
+  font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; font-size: 10px;
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.fit-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); font-family: var(--font-mono); white-space: nowrap; }
+.fit-table tbody tr { cursor: pointer; }
+.fit-table tbody tr:last-child td { border-bottom: none; }
+.fit-table tbody tr:hover td { background: var(--panel-2); }
+.fit-table tbody tr.selected td { background: var(--channel-soft, var(--accent-soft)); }
+.channel-card.role-load .fit-table tbody tr.selected td { background: var(--load-soft); }
+.channel-card.role-strength .fit-table tbody tr.selected td { background: var(--strength-soft); }
+.fit-table td.err { color: var(--strength); font-family: var(--font-ui); font-style: italic; }
+
+.fit-hint { font-size: 10.5px; color: var(--ink-faint); margin: 0 0 10px; }
+
+.fit-preview { border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; background: var(--panel-2); }
+.fit-preview canvas { display: block; width: 100%; height: 130px; }
+.fit-preview-title { font-size: 11px; font-weight: 600; padding: 6px 9px 0; color: var(--ink-muted); }
+
+/* ---------------- sim card ---------------- */
+.sim-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
+.sim-card h2 { font-size: 14.5px; font-weight: 700; margin-bottom: 12px; }
+.field-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.field-row label { font-size: 12.5px; color: var(--ink-muted); display: flex; align-items: center; gap: 6px; }
+.field-row input[type="number"] {
+  width: 130px; background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 6px 9px; font-family: var(--font-mono); font-size: 13px; color: var(--ink); text-align: right;
+}
+.field-row input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; }
+
+.run-btn {
+  width: 100%; padding: 11px; margin-top: 4px; border: none; border-radius: var(--radius-sm);
+  background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 13.5px;
+  cursor: pointer; letter-spacing: 0.01em; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.run-btn:hover { filter: brightness(1.06); }
+.run-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.progress-track { height: 5px; background: var(--panel-2); border-radius: 3px; margin-top: 10px; overflow: hidden; }
+.progress-fill { height: 100%; width: 0%; background: var(--accent); transition: width 0.12s linear; }
+
+.hint-text { font-size: 11px; color: var(--ink-faint); margin-top: 8px; }
+
+/* ---------------- stage / readouts ---------------- */
+.stage { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+.readout-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+@media (max-width: 700px) { .readout-strip { grid-template-columns: repeat(2, 1fr); } }
+
+.tile {
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 12px 14px; box-shadow: var(--shadow); border-top: 2px solid var(--tile-color, var(--border-strong));
+}
+.tile-value { font-family: var(--font-mono); font-size: 21px; font-weight: 600; color: var(--tile-color, var(--ink)); line-height: 1.2; }
+.tile-label { font-size: 10.5px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 3px; }
+
+/* ---------------- tabs ---------------- */
+.tabbar { display: flex; gap: 2px; border-bottom: 1px solid var(--border); }
+.tab-btn {
+  border: none; background: transparent; padding: 10px 16px; font-size: 12.5px; font-weight: 600;
+  color: var(--ink-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-btn .tab-num { font-family: var(--font-mono); color: var(--ink-faint); margin-right: 5px; }
+.tab-btn.active .tab-num { color: var(--accent); }
+
+.chart-viewport {
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 16px; position: relative;
+}
+
+.chart-pane { display: none; }
+.chart-pane.active { display: block; }
+
+.chart-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 6px; flex-wrap: wrap; }
+.chart-head h3 { font-size: 14px; font-weight: 700; }
+.chart-head p { font-size: 11.5px; color: var(--ink-muted); }
+
+.chart-canvas-wrap { position: relative; height: 360px; }
+.chart-canvas-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.chart-canvas-wrap canvas.chart-overlay { pointer-events: auto; }
+
+.chart-empty {
+  height: 360px; display: flex; align-items: center; justify-content: center;
+  color: var(--ink-faint); font-size: 13px; text-align: center; padding: 20px;
+}
+
+.chart-tooltip {
+  position: absolute; pointer-events: none; z-index: 30;
+  background: var(--ink); color: var(--panel); font-family: var(--font-mono);
+  font-size: 11px; line-height: 1.5; padding: 7px 9px; border-radius: 4px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25); white-space: nowrap; opacity: 0; transform: translateY(2px);
+  transition: opacity 0.08s ease;
+}
+.chart-tooltip.visible { opacity: 1; }
+.chart-tooltip .t-row { display: flex; align-items: center; gap: 6px; }
+.chart-tooltip .t-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+
+.chart-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.ghost-btn {
+  border: 1px solid var(--border); background: var(--panel-2); color: var(--ink);
+  padding: 7px 12px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.ghost-btn:hover { border-color: var(--border-strong); }
+.ghost-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.ghost-btn svg { width: 13px; height: 13px; }
+
+/* ---------------- statusbar ---------------- */
+.statusbar {
+  border-top: 1px solid var(--border); padding: 10px 24px; font-size: 11.5px; color: var(--ink-muted);
+  font-family: var(--font-mono);
+}
+.statusbar.error { color: var(--strength); }
+.statusbar.ok { color: var(--good); }
+
+/* ---------------- misc ---------------- */
+.legend-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; font-size: 11.5px; color: var(--ink-muted); margin-bottom: 4px; }
+.legend-chip { display: flex; align-items: center; gap: 5px; }
+.legend-chip .sw { width: 10px; height: 3px; border-radius: 2px; }
+.legend-chip .sw.box { width: 9px; height: 9px; border-radius: 2px; }
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div>
+      <div class="topbar-titles">
+        <h1>Interference Console</h1>
+        <span class="kicker">Monte Carlo</span>
+      </div>
+      <p class="topbar-sub">Stress&ndash;strength reliability estimation for two independent distributions</p>
+    </div>
+    <button class="icon-btn" id="themeToggle" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">
+      <svg id="themeIconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/></svg>
+      <svg id="themeIconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="display:none"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5z"/></svg>
+    </button>
+  </header>
+
+  <main class="layout">
+    <aside class="console" id="consoleColumn">
+      <!-- load-card, strength-card and sim-card are injected by app.js -->
+    </aside>
+
+    <section class="stage">
+      <div class="readout-strip" id="readoutStrip">
+        <div class="tile" data-tile="reliability">
+          <div class="tile-value mono" id="tileReliability">&mdash;</div>
+          <div class="tile-label">Reliability, R</div>
+        </div>
+        <div class="tile" data-tile="pf" style="--tile-color:var(--strength)">
+          <div class="tile-value mono" id="tilePf">&mdash;</div>
+          <div class="tile-label">Probability of failure, Pf</div>
+        </div>
+        <div class="tile" data-tile="trials">
+          <div class="tile-value mono" id="tileTrials">&mdash;</div>
+          <div class="tile-label">Monte Carlo trials</div>
+        </div>
+        <div class="tile" data-tile="failures" style="--tile-color:var(--strength)">
+          <div class="tile-value mono" id="tileFailures">&mdash;</div>
+          <div class="tile-label">Virtual failures</div>
+        </div>
+      </div>
+
+      <nav class="tabbar" id="tabbar" role="tablist" aria-label="Chart selection">
+        <button class="tab-btn active" data-pane="1" role="tab" aria-selected="true"><span class="tab-num">01</span>Stress&ndash;Strength</button>
+        <button class="tab-btn" data-pane="2" role="tab" aria-selected="false"><span class="tab-num">02</span>Safety Margin</button>
+        <button class="tab-btn" data-pane="3" role="tab" aria-selected="false"><span class="tab-num">03</span>Convergence</button>
+      </nav>
+
+      <div class="chart-viewport">
+        <div class="chart-pane active" data-pane="1">
+          <div class="chart-head">
+            <div>
+              <h3>Stress&ndash;strength interference</h3>
+              <p>Load and strength probability densities, updated live as you configure each channel.</p>
+            </div>
+          </div>
+          <div class="chart-canvas-wrap" id="wrap1">
+            <canvas id="chart1" class="chart-base" aria-label="Load and strength probability density curves"></canvas>
+            <canvas id="chart1-overlay" class="chart-overlay"></canvas>
+            <div class="chart-tooltip" id="tooltip1"></div>
+          </div>
+        </div>
+
+        <div class="chart-pane" data-pane="2">
+          <div class="chart-head">
+            <div>
+              <h3>Monte Carlo safety margin</h3>
+              <p>Distribution of (strength &minus; load) across all virtual units. Negative margin = failure.</p>
+            </div>
+          </div>
+          <div class="chart-canvas-wrap" id="wrap2">
+            <div class="chart-empty" id="empty2">Run a simulation to see this chart.</div>
+            <canvas id="chart2" class="chart-base" hidden aria-label="Histogram of strength minus load"></canvas>
+            <canvas id="chart2-overlay" class="chart-overlay" hidden></canvas>
+            <div class="chart-tooltip" id="tooltip2"></div>
+          </div>
+        </div>
+
+        <div class="chart-pane" data-pane="3">
+          <div class="chart-head">
+            <div>
+              <h3>Convergence of the estimate</h3>
+              <p>Running probability-of-failure estimate vs. trial count, with a 95% confidence band.</p>
+            </div>
+          </div>
+          <div class="chart-canvas-wrap" id="wrap3">
+            <div class="chart-empty" id="empty3">Run a simulation to see this chart.</div>
+            <canvas id="chart3" class="chart-base" hidden aria-label="Convergence of failure probability estimate"></canvas>
+            <canvas id="chart3-overlay" class="chart-overlay" hidden></canvas>
+            <div class="chart-tooltip" id="tooltip3"></div>
+          </div>
+        </div>
+
+        <div class="chart-actions">
+          <button class="ghost-btn" id="exportPngBtn" type="button" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+            Export chart PNG
+          </button>
+          <button class="ghost-btn" id="exportCsvBtn" type="button" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+            Export trial data CSV
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="statusbar" id="statusBar">Configure Load and Strength, then run the simulation.</footer>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" onerror="window.__xlsxFailed=true"></script>
+<script>
+/* ============================================================
+   Core statistics engine: RNG, special functions, distribution
+   registry (pdf/cdf/sample/fit), fitting/ranking, Monte Carlo.
+   Written to run unmodified inside a <script> tag in the browser;
+   this file is also loaded directly under Node for testing.
+   ============================================================ */
+
+// ---------- seedable RNG (mulberry32) ----------
+function makeRng(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function randomSeed() {
+  return (Math.random() * 4294967296) >>> 0;
+}
+
+// ---------- special functions ----------
+function erf(x) {
+  // Abramowitz & Stegun 7.1.26, max error ~1.5e-7
+  const sign = x < 0 ? -1 : 1;
+  x = Math.abs(x);
+  const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741,
+        a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
+  const t = 1 / (1 + p * x);
+  const y = 1 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+  return sign * y;
+}
+
+function normalCdf01(z) {
+  return 0.5 * (1 + erf(z / Math.SQRT2));
+}
+
+function lgamma(x) {
+  // Lanczos approximation (g=7, n=9), double precision
+  const g = 7;
+  const c = [
+    0.99999999999980993, 676.5203681218851, -1259.1392167224028,
+    771.32342877765313, -176.61502916214059, 12.507343278686905,
+    -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7
+  ];
+  if (x < 0.5) {
+    return Math.log(Math.PI / Math.sin(Math.PI * x)) - lgamma(1 - x);
+  }
+  x -= 1;
+  let a = c[0];
+  const t = x + g + 0.5;
+  for (let i = 1; i < g + 2; i++) a += c[i] / (x + i);
+  return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
+}
+
+function digamma(x) {
+  // Recurrence up to x>=6, then asymptotic series
+  let result = 0;
+  while (x < 6) {
+    result -= 1 / x;
+    x += 1;
+  }
+  const x2 = 1 / (x * x);
+  result += Math.log(x) - 0.5 / x
+    - x2 * (1 / 12 - x2 * (1 / 120 - x2 * (1 / 252)));
+  return result;
+}
+
+function mean(arr) {
+  let s = 0;
+  for (let i = 0; i < arr.length; i++) s += arr[i];
+  return s / arr.length;
+}
+
+function populationStd(arr, m) {
+  m = m === undefined ? mean(arr) : m;
+  let s = 0;
+  for (let i = 0; i < arr.length; i++) { const d = arr[i] - m; s += d * d; }
+  return Math.sqrt(s / arr.length);
+}
+
+// generic 1D bisection root finder
+function bisect(f, lo, hi, iters, tol) {
+  iters = iters || 200; tol = tol || 1e-10;
+  let flo = f(lo), fhi = f(hi);
+  if (flo === 0) return lo;
+  if (fhi === 0) return hi;
+  if (flo * fhi > 0) {
+    // try to expand bracket a bit (rare edge cases)
+    let expand = 0;
+    while (flo * fhi > 0 && expand < 60) {
+      hi *= 2; fhi = f(hi); expand++;
+    }
+    if (flo * fhi > 0) return NaN;
+  }
+  for (let i = 0; i < iters; i++) {
+    const mid = 0.5 * (lo + hi);
+    const fm = f(mid);
+    if (Math.abs(fm) < tol || (hi - lo) < tol) return mid;
+    if (flo * fm <= 0) { hi = mid; fhi = fm; } else { lo = mid; flo = fm; }
+  }
+  return 0.5 * (lo + hi);
+}
+
+// ---------- standard-normal sampler (Box-Muller, cached) ----------
+function makeNormalSampler(rng) {
+  let spare = null;
+  return function () {
+    if (spare !== null) { const v = spare; spare = null; return v; }
+    let u1, u2;
+    do { u1 = rng(); } while (u1 <= 1e-12);
+    u2 = rng();
+    const r = Math.sqrt(-2 * Math.log(u1));
+    const theta = 2 * Math.PI * u2;
+    spare = r * Math.sin(theta);
+    return r * Math.cos(theta);
+  };
+}
+
+// ---------- distribution registry ----------
+// Each distribution exposes: key, name, symbol, positiveSupport,
+// params: [{key,label,default,min,max,step}], nFreeParams,
+// pdf(x,p), cdf(x,p), makeSampler(rng,p) -> ()=>value, fit(data) -> params|null
+
+const DISTRIBUTIONS = {};
+
+DISTRIBUTIONS.normal = {
+  key: 'normal', name: 'Normal', symbol: 'N(μ, σ)',
+  positiveSupport: false, nFreeParams: 2,
+  params: [
+    { key: 'mean', label: 'Mean (μ)', default: 100, min: -1e9, max: 1e9, step: 1 },
+    { key: 'std', label: 'Std dev (σ)', default: 10, min: 1e-9, max: 1e9, step: 0.5 },
+  ],
+  pdf(x, p) {
+    const z = (x - p.mean) / p.std;
+    return Math.exp(-0.5 * z * z) / (p.std * Math.sqrt(2 * Math.PI));
+  },
+  cdf(x, p) { return normalCdf01((x - p.mean) / p.std); },
+  makeSampler(rng, p) {
+    const nz = makeNormalSampler(rng);
+    return () => p.mean + p.std * nz();
+  },
+  fit(data) {
+    const m = mean(data);
+    const s = populationStd(data, m);
+    return { mean: m, std: s };
+  },
+};
+
+DISTRIBUTIONS.lognormal = {
+  key: 'lognormal', name: 'Lognormal', symbol: 'Lognormal(median, σ)',
+  positiveSupport: true, nFreeParams: 2,
+  params: [
+    { key: 'median', label: 'Median', default: 1.6, min: 1e-9, max: 1e9, step: 0.05 },
+    { key: 'sigma', label: 'Log-scale std dev (σ)', default: 0.28, min: 1e-6, max: 5, step: 0.01 },
+  ],
+  pdf(x, p) {
+    if (x <= 0) return 0;
+    const mu = Math.log(p.median);
+    const z = (Math.log(x) - mu) / p.sigma;
+    return Math.exp(-0.5 * z * z) / (x * p.sigma * Math.sqrt(2 * Math.PI));
+  },
+  cdf(x, p) {
+    if (x <= 0) return 0;
+    const mu = Math.log(p.median);
+    return normalCdf01((Math.log(x) - mu) / p.sigma);
+  },
+  makeSampler(rng, p) {
+    const nz = makeNormalSampler(rng);
+    const mu = Math.log(p.median);
+    return () => Math.exp(mu + p.sigma * nz());
+  },
+  fit(data) {
+    const y = data.map(Math.log);
+    const mu = mean(y);
+    const sigma = populationStd(y, mu);
+    return { median: Math.exp(mu), sigma: sigma };
+  },
+};
+
+DISTRIBUTIONS.weibull = {
+  key: 'weibull', name: 'Weibull (2-parameter)', symbol: 'Weibull(β, η)',
+  positiveSupport: true, nFreeParams: 2,
+  params: [
+    { key: 'beta', label: 'Shape (β)', default: 5, min: 1e-3, max: 100, step: 0.1 },
+    { key: 'eta', label: 'Scale (η)', default: 3.2, min: 1e-9, max: 1e9, step: 0.05 },
+  ],
+  pdf(x, p) {
+    if (x < 0) return 0;
+    const r = x / p.eta;
+    return (p.beta / p.eta) * Math.pow(r, p.beta - 1) * Math.exp(-Math.pow(r, p.beta));
+  },
+  cdf(x, p) {
+    if (x < 0) return 0;
+    return 1 - Math.exp(-Math.pow(x / p.eta, p.beta));
+  },
+  makeSampler(rng, p) {
+    return () => {
+      let u;
+      do { u = rng(); } while (u <= 0);
+      return p.eta * Math.pow(-Math.log(1 - u), 1 / p.beta);
+    };
+  },
+  fit(data) {
+    const n = data.length;
+    const lnx = data.map(Math.log);
+    const meanLnX = mean(lnx);
+    function h(k) {
+      let sxk = 0, sxklnx = 0;
+      for (let i = 0; i < n; i++) {
+        const xk = Math.pow(data[i], k);
+        sxk += xk;
+        sxklnx += xk * lnx[i];
+      }
+      return sxklnx / sxk - 1 / k - meanLnX;
+    }
+    const k = bisect(h, 0.02, 60, 200, 1e-9);
+    if (!isFinite(k) || isNaN(k)) return null;
+    let sxk = 0;
+    for (let i = 0; i < n; i++) sxk += Math.pow(data[i], k);
+    const eta = Math.pow(sxk / n, 1 / k);
+    return { beta: k, eta: eta };
+  },
+};
+
+DISTRIBUTIONS.exponential = {
+  key: 'exponential', name: 'Exponential', symbol: 'Exp(mean)',
+  positiveSupport: true, nFreeParams: 1,
+  params: [
+    { key: 'mean', label: 'Mean', default: 1, min: 1e-9, max: 1e9, step: 0.05 },
+  ],
+  pdf(x, p) {
+    if (x < 0) return 0;
+    return Math.exp(-x / p.mean) / p.mean;
+  },
+  cdf(x, p) {
+    if (x < 0) return 0;
+    return 1 - Math.exp(-x / p.mean);
+  },
+  makeSampler(rng, p) {
+    return () => {
+      let u;
+      do { u = rng(); } while (u <= 0);
+      return -p.mean * Math.log(u);
+    };
+  },
+  fit(data) {
+    return { mean: mean(data) };
+  },
+};
+
+DISTRIBUTIONS.gamma = {
+  key: 'gamma', name: 'Gamma', symbol: 'Gamma(k, θ)',
+  positiveSupport: true, nFreeParams: 2,
+  params: [
+    { key: 'shape', label: 'Shape (k)', default: 5, min: 1e-3, max: 200, step: 0.1 },
+    { key: 'scale', label: 'Scale (θ)', default: 0.4, min: 1e-9, max: 1e9, step: 0.01 },
+  ],
+  pdf(x, p) {
+    if (x <= 0) return 0;
+    const logpdf = (p.shape - 1) * Math.log(x) - x / p.scale
+      - p.shape * Math.log(p.scale) - lgamma(p.shape);
+    return Math.exp(logpdf);
+  },
+  cdf(x, p) {
+    if (x <= 0) return 0;
+    return regularizedLowerGammaP(p.shape, x / p.scale);
+  },
+  makeSampler(rng, p) {
+    const nz = makeNormalSampler(rng);
+    function sampleStdGamma(shape) {
+      if (shape < 1) {
+        let u;
+        do { u = rng(); } while (u <= 0);
+        return sampleStdGamma(1 + shape) * Math.pow(u, 1 / shape);
+      }
+      const d = shape - 1 / 3;
+      const c = 1 / Math.sqrt(9 * d);
+      for (;;) {
+        let x, v;
+        do {
+          x = nz();
+          v = 1 + c * x;
+        } while (v <= 0);
+        v = v * v * v;
+        let u;
+        do { u = rng(); } while (u <= 0);
+        if (u < 1 - 0.0331 * x * x * x * x) return d * v;
+        if (Math.log(u) < 0.5 * x * x + d * (1 - v + Math.log(v))) return d * v;
+      }
+    }
+    return () => sampleStdGamma(p.shape) * p.scale;
+  },
+  fit(data) {
+    const n = data.length;
+    const xbar = mean(data);
+    const meanLnX = mean(data.map(Math.log));
+    const target = Math.log(xbar) - meanLnX; // >= 0 by Jensen
+    if (target <= 1e-12) {
+      // near-degenerate (all values ~equal): fall back to a large shape
+      return { shape: 1e3, scale: xbar / 1e3 };
+    }
+    function f(k) { return Math.log(k) - digamma(k) - target; }
+    const k = bisect(f, 1e-3, 1e4, 200, 1e-10);
+    if (!isFinite(k) || isNaN(k)) return null;
+    return { shape: k, scale: xbar / k };
+  },
+};
+
+DISTRIBUTIONS.logistic = {
+  key: 'logistic', name: 'Logistic', symbol: 'Logistic(μ, s)',
+  positiveSupport: false, nFreeParams: 2,
+  params: [
+    { key: 'location', label: 'Location (μ)', default: 100, min: -1e9, max: 1e9, step: 1 },
+    { key: 'scale', label: 'Scale (s)', default: 10, min: 1e-9, max: 1e9, step: 0.5 },
+  ],
+  pdf(x, p) {
+    const z = (x - p.location) / p.scale;
+    const ez = Math.exp(-Math.abs(z));
+    const denom = p.scale * Math.pow(1 + ez, 2) / ez; // numerically stable form
+    // fallback to direct formula if denom degenerates
+    const direct = Math.exp(-z) / (p.scale * Math.pow(1 + Math.exp(-z), 2));
+    return isFinite(direct) ? direct : 0;
+  },
+  cdf(x, p) {
+    const z = (x - p.location) / p.scale;
+    return 1 / (1 + Math.exp(-z));
+  },
+  makeSampler(rng, p) {
+    return () => {
+      let u;
+      do { u = rng(); } while (u <= 0 || u >= 1);
+      return p.location + p.scale * Math.log(u / (1 - u));
+    };
+  },
+  fit(data) {
+    // Closed-form MLE has no analytic solution; use the standard
+    // moment-based estimator (documented to the user as approximate).
+    const m = mean(data);
+    const s = populationStd(data, m);
+    return { location: m, scale: s * Math.sqrt(3) / Math.PI };
+  },
+};
+
+const DISTRIBUTION_ORDER = ['normal', 'lognormal', 'weibull', 'exponential', 'gamma', 'logistic'];
+
+// ---------- regularized lower incomplete gamma function P(a,x) ----------
+// Numerical Recipes style: series for x < a+1, continued fraction otherwise.
+function regularizedLowerGammaP(a, x) {
+  if (x <= 0) return 0;
+  if (x < a + 1) {
+    let sum = 1 / a, term = sum, ap = a;
+    for (let n = 1; n < 500; n++) {
+      ap += 1;
+      term *= x / ap;
+      sum += term;
+      if (Math.abs(term) < Math.abs(sum) * 1e-14) break;
+    }
+    return sum * Math.exp(-x + a * Math.log(x) - lgamma(a));
+  } else {
+    // continued fraction for Q(a,x), then P = 1-Q
+    const FPMIN = 1e-300;
+    let b = x + 1 - a, c = 1 / FPMIN, d = 1 / b, h = d;
+    for (let i = 1; i < 500; i++) {
+      const an = -i * (i - a);
+      b += 2;
+      d = an * d + b; if (Math.abs(d) < FPMIN) d = FPMIN;
+      c = b + an / c; if (Math.abs(c) < FPMIN) c = FPMIN;
+      d = 1 / d;
+      const del = d * c;
+      h *= del;
+      if (Math.abs(del - 1) < 1e-14) break;
+    }
+    const Q = Math.exp(-x + a * Math.log(x) - lgamma(a)) * h;
+    return 1 - Q;
+  }
+}
+
+// ---------- distribution fitting & ranking ----------
+function fitAllDistributions(data) {
+  const n = data.length;
+  const results = [];
+  for (const key of DISTRIBUTION_ORDER) {
+    const spec = DISTRIBUTIONS[key];
+    if (spec.positiveSupport && data.some(v => v <= 0)) {
+      results.push({ key, name: spec.name, error: 'requires strictly positive data' });
+      continue;
+    }
+    try {
+      const params = spec.fit(data);
+      if (!params) throw new Error('fit did not converge');
+      let logLik = 0;
+      for (let i = 0; i < n; i++) {
+        const d = spec.pdf(data[i], params);
+        logLik += Math.log(d > 0 ? d : 1e-300);
+      }
+      const k = spec.nFreeParams;
+      const aic = 2 * k - 2 * logLik;
+      const bic = k * Math.log(n) - 2 * logLik;
+      const ks = ksStatistic(data, x => spec.cdf(x, params));
+      const ksP = ksPValue(ks, n);
+      results.push({
+        key, name: spec.name, params, logLik, aic, bic,
+        ksStat: ks, ksPValue: ksP,
+      });
+    } catch (e) {
+      results.push({ key, name: spec.name, error: String(e.message || e) });
+    }
+  }
+  const fitted = results.filter(r => !r.error).sort((a, b) => a.aic - b.aic);
+  const unfitted = results.filter(r => r.error);
+  return fitted.concat(unfitted);
+}
+
+function ksStatistic(data, cdfFn) {
+  const sorted = data.slice().sort((a, b) => a - b);
+  const n = sorted.length;
+  let d = 0;
+  for (let i = 0; i < n; i++) {
+    const f = cdfFn(sorted[i]);
+    const dPlus = Math.abs((i + 1) / n - f);
+    const dMinus = Math.abs(f - i / n);
+    if (dPlus > d) d = dPlus;
+    if (dMinus > d) d = dMinus;
+  }
+  return d;
+}
+
+function ksPValue(d, n) {
+  // Asymptotic Kolmogorov distribution approximation (Marsaglia/Stephens
+  // finite-sample correction). Adequate for an informational readout.
+  const ne = Math.sqrt(n) + 0.12 + 0.11 / Math.sqrt(n);
+  const lambda = ne * d;
+  let sum = 0;
+  for (let k = 1; k <= 100; k++) {
+    sum += (k % 2 === 0 ? -1 : 1) * Math.exp(-2 * k * k * lambda * lambda);
+  }
+  const p = 2 * sum;
+  return Math.max(0, Math.min(1, p));
+}
+
+// ---------- Monte Carlo stress-strength simulation ----------
+function wilsonInterval(successes, n, z) {
+  z = z || 1.96;
+  const p = successes / n;
+  const denom = 1 + (z * z) / n;
+  const center = (p + (z * z) / (2 * n)) / denom;
+  const half = (z / denom) * Math.sqrt((p * (1 - p)) / n + (z * z) / (4 * n * n));
+  return [Math.max(0, center - half), Math.min(1, center + half)];
+}
+
+// convergence trace: log-spaced checkpoints over cumulative failures
+function computeConvergence(failFlags, nTrials) {
+  const nPoints = Math.min(250, nTrials);
+  const startN = Math.max(10, Math.floor(nTrials / 500));
+  const checkpoints = [];
+  for (let i = 0; i < nPoints; i++) {
+    const frac = i / (nPoints - 1);
+    const n = Math.round(startN * Math.pow(nTrials / startN, frac));
+    checkpoints.push(Math.min(n, nTrials));
+  }
+  checkpoints[checkpoints.length - 1] = nTrials;
+  const seen = new Set();
+  const cps = [];
+  for (const c of checkpoints) { if (!seen.has(c) && c > 0) { seen.add(c); cps.push(c); } }
+
+  let cum = 0, cpIdx = 0;
+  const convN = [], convPf = [], convLo = [], convHi = [];
+  for (let i = 0; i < nTrials; i++) {
+    cum += failFlags[i];
+    if (cpIdx < cps.length && (i + 1) === cps[cpIdx]) {
+      const nAt = i + 1;
+      convN.push(nAt);
+      convPf.push(cum / nAt);
+      const [lo, hi] = wilsonInterval(cum, nAt);
+      convLo.push(lo); convHi.push(hi);
+      cpIdx++;
+    }
+  }
+  return { convN, convPf, convLo, convHi };
+}
+
+function runMonteCarlo(loadSpec, loadParams, strengthSpec, strengthParams, nTrials, seed) {
+  const rng = makeRng(seed === null || seed === undefined ? randomSeed() : seed);
+  const loadSampler = loadSpec.makeSampler(rng, loadParams);
+  const strengthSampler = strengthSpec.makeSampler(rng, strengthParams);
+
+  const load = new Float64Array(nTrials);
+  const strength = new Float64Array(nTrials);
+  const margin = new Float64Array(nTrials);
+  const failFlags = new Uint8Array(nTrials);
+  let failCount = 0;
+
+  for (let i = 0; i < nTrials; i++) {
+    const l = loadSampler();
+    const s = strengthSampler();
+    load[i] = l; strength[i] = s;
+    const m = s - l;
+    margin[i] = m;
+    if (m < 0) { failFlags[i] = 1; failCount++; }
+  }
+
+  const pf = failCount / nTrials;
+  const reliability = 1 - pf;
+  const conv = computeConvergence(failFlags, nTrials);
+
+  return Object.assign({ load, strength, margin, failFlags, nTrials, failCount, pf, reliability }, conv);
+}
+
+// Browser-friendly chunked version: yields to the event loop between
+// chunks (via setTimeout) so the tab stays responsive for large trial
+// counts, and reports progress through onProgress(fraction).
+function runMonteCarloAsync(loadSpec, loadParams, strengthSpec, strengthParams, nTrials, seed, onProgress) {
+  return new Promise((resolve, reject) => {
+    try {
+      const rng = makeRng(seed === null || seed === undefined ? randomSeed() : seed);
+      const loadSampler = loadSpec.makeSampler(rng, loadParams);
+      const strengthSampler = strengthSpec.makeSampler(rng, strengthParams);
+
+      const load = new Float64Array(nTrials);
+      const strength = new Float64Array(nTrials);
+      const margin = new Float64Array(nTrials);
+      const failFlags = new Uint8Array(nTrials);
+
+      let i = 0;
+      const chunkSize = Math.max(2000, Math.min(50000, Math.ceil(nTrials / 40)));
+
+      function step() {
+        try {
+          const end = Math.min(nTrials, i + chunkSize);
+          for (; i < end; i++) {
+            const l = loadSampler();
+            const s = strengthSampler();
+            load[i] = l; strength[i] = s;
+            const m = s - l;
+            margin[i] = m;
+            if (m < 0) failFlags[i] = 1;
+          }
+          if (onProgress) onProgress(i / nTrials);
+          if (i < nTrials) {
+            setTimeout(step, 0);
+          } else {
+            let failCount = 0;
+            for (let j = 0; j < nTrials; j++) failCount += failFlags[j];
+            const pf = failCount / nTrials;
+            const reliability = 1 - pf;
+            const conv = computeConvergence(failFlags, nTrials);
+            resolve(Object.assign({ load, strength, margin, failFlags, nTrials, failCount, pf, reliability }, conv));
+          }
+        } catch (e) { reject(e); }
+      }
+      step();
+    } catch (e) { reject(e); }
+  });
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = {
+    makeRng, randomSeed, erf, normalCdf01, lgamma, digamma, mean, populationStd, bisect,
+    regularizedLowerGammaP, DISTRIBUTIONS, DISTRIBUTION_ORDER, fitAllDistributions,
+    ksStatistic, ksPValue, wilsonInterval, computeConvergence, runMonteCarlo, runMonteCarloAsync,
+  };
+}
+
+</script>
+<script>
+/* ==========================================================
+   Canvas chart rendering + hover interaction for the three
+   required views, plus the small fit-preview chart used inside
+   each channel card's "fit from data" table.
+   Two-canvas-per-chart pattern: a base canvas holds the static
+   drawing, a transparent overlay canvas holds the crosshair /
+   highlight redrawn on mousemove (cheap — no full repaint).
+   ========================================================== */
+
+function readColor(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+function getThemeColors() {
+  return {
+    panel: readColor('--panel'),
+    panel2: readColor('--panel-2'),
+    border: readColor('--border'),
+    ink: readColor('--ink'),
+    inkMuted: readColor('--ink-muted'),
+    inkFaint: readColor('--ink-faint'),
+    accent: readColor('--accent'),
+    load: readColor('--load'),
+    loadSoft: readColor('--load-soft'),
+    strength: readColor('--strength'),
+    strengthSoft: readColor('--strength-soft'),
+    good: readColor('--good'),
+    overlap: readColor('--overlap'),
+  };
+}
+
+function hexToRgb(hex) {
+  hex = hex.replace('#', '');
+  if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+  const num = parseInt(hex, 16);
+  return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+}
+
+function rgba(hex, alpha) {
+  const { r, g, b } = hexToRgb(hex);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function setupHiDPI(canvas) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const w = Math.max(1, Math.round(rect.width));
+  const h = Math.max(1, Math.round(rect.height));
+  canvas.width = Math.round(w * dpr);
+  canvas.height = Math.round(h * dpr);
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  return { ctx, width: w, height: h };
+}
+
+function niceStep(rough) {
+  const mag = Math.pow(10, Math.floor(Math.log10(rough)));
+  const norm = rough / mag;
+  let step;
+  if (norm < 1.5) step = 1;
+  else if (norm < 3) step = 2;
+  else if (norm < 7) step = 5;
+  else step = 10;
+  return step * mag;
+}
+
+function niceLinearTicks(min, max, targetCount) {
+  if (min === max) { min -= 1; max += 1; }
+  const step = niceStep((max - min) / targetCount);
+  const start = Math.ceil(min / step) * step;
+  const ticks = [];
+  for (let v = start; v <= max + step * 1e-6; v += step) ticks.push(Math.round(v / step) * step);
+  ticks.step = step;
+  return ticks;
+}
+
+// Decimal places implied by a tick step (0.2 -> 1, 5 -> 0, 0.05 -> 2, ...)
+// so every tick on one axis prints with the same number of decimals.
+function decimalsForStep(step) {
+  if (!isFinite(step) || step <= 0) return 2;
+  const d = -Math.floor(Math.log10(step) + 1e-9);
+  return Math.max(0, Math.min(6, d));
+}
+
+function makeTickFormatter(ticks) {
+  const step = ticks && ticks.step;
+  const maxAbs = Math.max(1e-12, ...ticks.map(Math.abs));
+  if (maxAbs >= 100000 || (maxAbs !== 0 && maxAbs < 0.0005)) {
+    return v => v.toExponential(1);
+  }
+  const decimals = decimalsForStep(step || 1);
+  return v => v.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
+function formatAxisNumber(v) {
+  const av = Math.abs(v);
+  if (av !== 0 && (av < 0.001 || av >= 100000)) return v.toExponential(1);
+  if (av >= 1000) return v.toLocaleString(undefined, { maximumFractionDigits: 0 });
+  if (Number.isInteger(v)) return String(v);
+  return v.toFixed(av < 1 ? 3 : av < 10 ? 2 : 1);
+}
+
+function formatCompactInt(v) {
+  return Math.round(v).toLocaleString();
+}
+
+function formatPct(v, decimals) {
+  decimals = decimals === undefined ? 4 : decimals;
+  return (v * 100).toFixed(decimals) + '%';
+}
+
+// generic inverse-CDF via expanding-bracket bisection — works for any
+// distribution's cdf(x, params), used to size chart domains.
+function distPpf(spec, params, q) {
+  const cdf = x => spec.cdf(x, params);
+  let center = 0;
+  if (params.mean !== undefined) center = params.mean;
+  else if (params.location !== undefined) center = params.location;
+  else if (params.median !== undefined) center = params.median;
+  else if (params.eta !== undefined) center = params.eta;
+  else if (params.scale !== undefined) center = params.scale * (params.shape || 1);
+
+  let lo = spec.positiveSupport ? 1e-9 : center - 1;
+  let hi = spec.positiveSupport ? Math.max(center, 1) : center + 1;
+  let guard = 0;
+  while (cdf(hi) < q && guard < 200) { hi = hi <= 0 ? 1 : hi * 1.8; guard++; }
+  guard = 0;
+  while (cdf(lo) > q && guard < 200) { lo = spec.positiveSupport ? lo / 2 : (lo - Math.abs(lo || 1) * 1.8); guard++; }
+  for (let i = 0; i < 80; i++) {
+    const mid = (lo + hi) / 2;
+    if (cdf(mid) < q) lo = mid; else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+/* ---------------- shared plot-area / axis drawing ---------------- */
+
+function drawPlotFrame(ctx, rect, colors) {
+  ctx.strokeStyle = colors.border;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(rect.x + 0.5, rect.y + 0.5, rect.w, rect.h);
+}
+
+function drawYAxis(ctx, rect, ticks, yScale, colors, formatFn) {
+  ctx.strokeStyle = colors.border;
+  ctx.fillStyle = colors.inkMuted;
+  ctx.font = '11px "IBM Plex Mono", monospace';
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  ticks.forEach(t => {
+    const y = yScale(t);
+    ctx.beginPath();
+    ctx.moveTo(rect.x, y);
+    ctx.lineTo(rect.x + rect.w, y);
+    ctx.strokeStyle = rgba(colors.border, 0.6);
+    ctx.stroke();
+    ctx.fillText(formatFn(t), rect.x - 8, y);
+  });
+}
+
+function drawXAxis(ctx, rect, ticks, xScale, colors, formatFn) {
+  ctx.fillStyle = colors.inkMuted;
+  ctx.font = '11px "IBM Plex Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ticks.forEach(t => {
+    const x = xScale(t);
+    ctx.beginPath();
+    ctx.moveTo(x, rect.y);
+    ctx.lineTo(x, rect.y + rect.h);
+    ctx.strokeStyle = rgba(colors.border, 0.35);
+    ctx.stroke();
+    ctx.fillText(formatFn(t), x, rect.y + rect.h + 8);
+  });
+}
+
+function axisLabel(ctx, rect, text, axis, colors) {
+  ctx.fillStyle = colors.inkMuted;
+  ctx.font = '600 11px "IBM Plex Sans", sans-serif';
+  if (axis === 'x') {
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(text, rect.x + rect.w / 2, rect.y + rect.h + 32);
+  } else {
+    ctx.save();
+    ctx.translate(14, rect.y + rect.h / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(text, 0, 0);
+    ctx.restore();
+  }
+}
+
+function drawLegendChip(ctx, x, y, colors, entries) {
+  ctx.font = '600 11px "IBM Plex Sans", sans-serif';
+  ctx.textBaseline = 'middle';
+  let cx = x;
+  entries.forEach(e => {
+    if (e.kind === 'line') {
+      ctx.strokeStyle = e.color; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(cx, y); ctx.lineTo(cx + 16, y); ctx.stroke();
+      cx += 22;
+    } else if (e.kind === 'dash') {
+      ctx.strokeStyle = e.color; ctx.lineWidth = 1.6;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath(); ctx.moveTo(cx, y); ctx.lineTo(cx + 16, y); ctx.stroke();
+      ctx.setLineDash([]);
+      cx += 22;
+    } else {
+      ctx.fillStyle = e.color;
+      ctx.fillRect(cx, y - 5, 11, 11);
+      cx += 17;
+    }
+    ctx.fillStyle = colors.ink;
+    ctx.textAlign = 'left';
+    const w = ctx.measureText(e.label).width;
+    ctx.fillText(e.label, cx, y);
+    cx += w + 16;
+  });
+  return cx;
+}
+
+/* ================= Chart 1: stress-strength interference ================= */
+
+function drawInterferenceChart(baseCanvas, overlayCanvas, loadSpec, loadParams, strengthSpec, strengthParams, loadLabel, strengthLabel) {
+  const colors = getThemeColors();
+  const { ctx, width, height } = setupHiDPI(baseCanvas);
+  setupHiDPI(overlayCanvas); // clear overlay too
+
+  const rect = { x: 54, y: 16, w: width - 54 - 26, h: height - 16 - 44 };
+
+  let lo = Math.min(distPpf(loadSpec, loadParams, 0.001), distPpf(strengthSpec, strengthParams, 0.001));
+  let hi = Math.max(distPpf(loadSpec, loadParams, 0.999), distPpf(strengthSpec, strengthParams, 0.999));
+  if (loadSpec.positiveSupport && strengthSpec.positiveSupport) lo = Math.max(0, lo);
+  const span = hi - lo || 1;
+  lo -= span * 0.04; hi += span * 0.04;
+
+  const N = 400;
+  const xs = new Array(N), loadPdf = new Array(N), strengthPdf = new Array(N), overlap = new Array(N);
+  let yMax = 0;
+  for (let i = 0; i < N; i++) {
+    const x = lo + (hi - lo) * (i / (N - 1));
+    const lp = loadSpec.pdf(x, loadParams);
+    const sp = strengthSpec.pdf(x, strengthParams);
+    xs[i] = x; loadPdf[i] = lp; strengthPdf[i] = sp; overlap[i] = Math.min(lp, sp);
+    if (lp > yMax) yMax = lp;
+    if (sp > yMax) yMax = sp;
+  }
+  yMax = yMax > 0 ? yMax * 1.38 : 1;
+
+  const xScale = x => rect.x + ((x - lo) / (hi - lo)) * rect.w;
+  const yScale = y => rect.y + rect.h - (y / yMax) * rect.h;
+
+  const xTicks = niceLinearTicks(lo, hi, 6);
+  const yTicksAll = niceLinearTicks(0, yMax, 5);
+  const yTicks = yTicksAll.filter(t => t > 0);
+  yTicks.step = yTicksAll.step;
+
+  drawYAxis(ctx, rect, yTicks, yScale, colors, makeTickFormatter(yTicks));
+  drawXAxis(ctx, rect, xTicks, xScale, colors, makeTickFormatter(xTicks));
+  drawPlotFrame(ctx, rect, colors);
+  axisLabel(ctx, rect, 'Value', 'x', colors);
+  axisLabel(ctx, rect, 'Probability density', 'y', colors);
+
+  // overlap fill
+  ctx.beginPath();
+  ctx.moveTo(xScale(xs[0]), yScale(overlap[0]));
+  for (let i = 1; i < N; i++) ctx.lineTo(xScale(xs[i]), yScale(overlap[i]));
+  for (let i = N - 1; i >= 0; i--) ctx.lineTo(xScale(xs[i]), yScale(0));
+  ctx.closePath();
+  ctx.fillStyle = rgba(colors.overlap, 0.32);
+  ctx.fill();
+
+  function strokeCurve(arr, color) {
+    ctx.beginPath();
+    ctx.moveTo(xScale(xs[0]), yScale(arr[0]));
+    for (let i = 1; i < N; i++) ctx.lineTo(xScale(xs[i]), yScale(arr[i]));
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.4;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+  }
+  strokeCurve(loadPdf, colors.load);
+  strokeCurve(strengthPdf, colors.strength);
+
+  // legend (top-right, inside headroom)
+  ctx.save();
+  ctx.font = '600 11px "IBM Plex Sans", sans-serif';
+  const legendEntries = [
+    { kind: 'box', color: rgba(colors.overlap, 0.55), label: 'Interference region' },
+    { kind: 'line', color: colors.load, label: 'Load — ' + loadLabel },
+    { kind: 'line', color: colors.strength, label: 'Strength — ' + strengthLabel },
+  ];
+  let ly = rect.y + 14;
+  legendEntries.forEach(e => {
+    drawLegendChip(ctx, rect.x + rect.w - measureLegendWidth(ctx, [e]) , ly, colors, [e]);
+    ly += 18;
+  });
+  ctx.restore();
+
+  baseCanvas.__chart = {
+    kind: 'interference', rect, xScale, yScale, lo, hi, yMax,
+    xs, loadPdf, strengthPdf, colors, loadLabel, strengthLabel,
+  };
+}
+
+function measureLegendWidth(ctx, entries) {
+  let w = 0;
+  entries.forEach(e => {
+    w += (e.kind === 'box' ? 17 : 22);
+    w += ctx.measureText(e.label).width + 16;
+  });
+  return w;
+}
+
+/* ================= Chart 2: safety margin histogram ================= */
+
+function drawMarginHistogram(baseCanvas, overlayCanvas, margin, pf, reliability, nBins) {
+  const colors = getThemeColors();
+  const { ctx, width, height } = setupHiDPI(baseCanvas);
+  setupHiDPI(overlayCanvas);
+
+  nBins = nBins || 90;
+  let min = Infinity, max = -Infinity;
+  for (let i = 0; i < margin.length; i++) { if (margin[i] < min) min = margin[i]; if (margin[i] > max) max = margin[i]; }
+  if (min === max) { min -= 1; max += 1; }
+  const binW = (max - min) / nBins;
+  const counts = new Array(nBins).fill(0);
+  for (let i = 0; i < margin.length; i++) {
+    let b = Math.floor((margin[i] - min) / binW);
+    if (b >= nBins) b = nBins - 1;
+    if (b < 0) b = 0;
+    counts[b]++;
+  }
+  const maxCount = Math.max.apply(null, counts);
+
+  const rect = { x: 60, y: 16, w: width - 60 - 26, h: height - 16 - 44 };
+  const xScale = x => rect.x + ((x - min) / (max - min)) * rect.w;
+  const yScale = y => rect.y + rect.h - (y / (maxCount * 1.08)) * rect.h;
+
+  const xTicks = niceLinearTicks(min, max, 7);
+  const yTicksAll = niceLinearTicks(0, maxCount * 1.08, 5);
+  const yTicks = yTicksAll.filter(t => t > 0);
+  yTicks.step = yTicksAll.step;
+  drawYAxis(ctx, rect, yTicks, yScale, colors, formatCompactInt);
+  drawXAxis(ctx, rect, xTicks, xScale, colors, makeTickFormatter(xTicks));
+  drawPlotFrame(ctx, rect, colors);
+  axisLabel(ctx, rect, 'Safety margin = Strength − Load', 'x', colors);
+  axisLabel(ctx, rect, 'Number of virtual units', 'y', colors);
+
+  const barPxW = Math.max(1, rect.w / nBins - 0.6);
+  for (let b = 0; b < nBins; b++) {
+    const x0 = min + b * binW, x1 = x0 + binW;
+    const failBin = x1 <= 0 || (x0 < 0 && x1 > 0);
+    ctx.fillStyle = failBin ? colors.strength : colors.load;
+    const xPix = xScale(x0);
+    const yPix = yScale(counts[b]);
+    ctx.fillRect(xPix, yPix, barPxW, rect.y + rect.h - yPix);
+  }
+
+  // zero line
+  if (min < 0 && max > 0) {
+    const zx = xScale(0);
+    ctx.strokeStyle = colors.ink;
+    ctx.lineWidth = 1.6;
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(zx, rect.y); ctx.lineTo(zx, rect.y + rect.h); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // legend
+  drawLegendChip(ctx, rect.x + 10, rect.y + 16, colors, [
+    { kind: 'box', color: colors.load, label: 'Margin > 0 (survives)' },
+    { kind: 'box', color: colors.strength, label: 'Margin < 0 (failure)' },
+  ]);
+
+  baseCanvas.__chart = {
+    kind: 'histogram', rect, xScale, yScale, min, max, binW, nBins, counts, colors,
+  };
+}
+
+/* ================= Chart 3: convergence ================= */
+
+function drawConvergenceChart(baseCanvas, overlayCanvas, convN, convPf, convLo, convHi, finalPf) {
+  const colors = getThemeColors();
+  const { ctx, width, height } = setupHiDPI(baseCanvas);
+  setupHiDPI(overlayCanvas);
+
+  const rect = { x: 62, y: 16, w: width - 62 - 34, h: height - 16 - 44 };
+  const nMin = convN[0], nMax = convN[convN.length - 1];
+  const logMin = Math.log10(nMin), logMax = Math.log10(nMax);
+
+  let yMin = Infinity, yMax = -Infinity;
+  for (let i = 0; i < convN.length; i++) {
+    if (convLo[i] < yMin) yMin = convLo[i];
+    if (convHi[i] > yMax) yMax = convHi[i];
+  }
+  const ySpan = (yMax - yMin) || 0.01;
+  yMin = Math.max(0, yMin - ySpan * 0.08);
+  yMax = yMax + ySpan * 0.12;
+
+  const xScale = n => rect.x + ((Math.log10(n) - logMin) / (logMax - logMin || 1)) * rect.w;
+  const yScale = y => rect.y + rect.h - ((y - yMin) / (yMax - yMin)) * rect.h;
+
+  // log-scale x ticks: powers of ten within range, plus a couple of
+  // 2x/5x helpers if the range spans less than one decade
+  const xTicks = [];
+  const startExp = Math.floor(logMin), endExp = Math.ceil(logMax);
+  for (let e = startExp; e <= endExp; e++) {
+    [1, 2, 5].forEach(m => {
+      const v = m * Math.pow(10, e);
+      if (v >= nMin * 0.98 && v <= nMax * 1.02) xTicks.push(v);
+    });
+  }
+  const yTicks = niceLinearTicks(yMin, yMax, 5);
+
+  drawYAxis(ctx, rect, yTicks, yScale, colors, v => formatPct(v, 2));
+  drawXAxis(ctx, rect, xTicks, xScale, colors, formatCompactInt);
+  drawPlotFrame(ctx, rect, colors);
+  axisLabel(ctx, rect, 'Number of Monte Carlo trials (log scale)', 'x', colors);
+  axisLabel(ctx, rect, 'Estimated Pf', 'y', colors);
+
+  // confidence band
+  ctx.beginPath();
+  ctx.moveTo(xScale(convN[0]), yScale(convHi[0]));
+  for (let i = 1; i < convN.length; i++) ctx.lineTo(xScale(convN[i]), yScale(convHi[i]));
+  for (let i = convN.length - 1; i >= 0; i--) ctx.lineTo(xScale(convN[i]), yScale(convLo[i]));
+  ctx.closePath();
+  ctx.fillStyle = rgba(colors.load, 0.16);
+  ctx.fill();
+
+  // final estimate reference line
+  const fy = yScale(finalPf);
+  ctx.strokeStyle = colors.strength;
+  ctx.lineWidth = 1.4;
+  ctx.setLineDash([5, 4]);
+  ctx.beginPath(); ctx.moveTo(rect.x, fy); ctx.lineTo(rect.x + rect.w, fy); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // running estimate line
+  ctx.beginPath();
+  ctx.moveTo(xScale(convN[0]), yScale(convPf[0]));
+  for (let i = 1; i < convN.length; i++) ctx.lineTo(xScale(convN[i]), yScale(convPf[i]));
+  ctx.strokeStyle = colors.load;
+  ctx.lineWidth = 2.2;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  drawLegendChip(ctx, rect.x + 10, rect.y + 16, colors, [
+    { kind: 'box', color: rgba(colors.load, 0.4), label: '95% confidence band' },
+    { kind: 'line', color: colors.load, label: 'Running Pf estimate' },
+    { kind: 'dash', color: colors.strength, label: 'Final: Pf = ' + formatPct(finalPf, 3) },
+  ]);
+
+  baseCanvas.__chart = {
+    kind: 'convergence', rect, xScale, yScale, logMin, logMax, nMin, nMax, convN, convPf, colors,
+  };
+}
+
+/* ================= fit-preview chart (small) ================= */
+
+function drawFitPreview(canvas, data, spec, params, color) {
+  const colors = getThemeColors();
+  const { ctx, width, height } = setupHiDPI(canvas);
+  const rect = { x: 8, y: 6, w: width - 16, h: height - 6 - 8 };
+
+  let min = Infinity, max = -Infinity;
+  for (let i = 0; i < data.length; i++) { if (data[i] < min) min = data[i]; if (data[i] > max) max = data[i]; }
+  const pad = (max - min) * 0.08 || 1;
+  min -= pad; max += pad;
+
+  const nBins = Math.max(10, Math.min(30, Math.round(data.length / 8)));
+  const binW = (max - min) / nBins;
+  const counts = new Array(nBins).fill(0);
+  for (let i = 0; i < data.length; i++) {
+    let b = Math.floor((data[i] - min) / binW);
+    if (b >= nBins) b = nBins - 1; if (b < 0) b = 0;
+    counts[b]++;
+  }
+  const density = counts.map(c => c / data.length / binW);
+  const maxDensity = Math.max.apply(null, density);
+
+  const N = 200;
+  let curveMax = 0;
+  const xs = new Array(N), ys = new Array(N);
+  for (let i = 0; i < N; i++) {
+    const x = min + (max - min) * (i / (N - 1));
+    const y = spec.pdf(x, params);
+    xs[i] = x; ys[i] = isFinite(y) ? y : 0;
+    if (ys[i] > curveMax) curveMax = ys[i];
+  }
+  const yMax = Math.max(maxDensity, curveMax) * 1.15 || 1;
+
+  const xScale = x => rect.x + ((x - min) / (max - min)) * rect.w;
+  const yScale = y => rect.y + rect.h - (y / yMax) * rect.h;
+
+  ctx.fillStyle = rgba(colors.inkMuted, 0.28);
+  const barPxW = Math.max(1, rect.w / nBins - 0.5);
+  for (let b = 0; b < nBins; b++) {
+    const x0 = min + b * binW;
+    const yPix = yScale(density[b]);
+    ctx.fillRect(xScale(x0), yPix, barPxW, rect.y + rect.h - yPix);
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(xScale(xs[0]), yScale(ys[0]));
+  for (let i = 1; i < N; i++) ctx.lineTo(xScale(xs[i]), yScale(ys[i]));
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.strokeStyle = colors.border;
+  ctx.strokeRect(rect.x + 0.5, rect.y + 0.5, rect.w, rect.h);
+}
+
+/* ================= hover interaction ================= */
+
+function clearOverlay(canvas) {
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.restore();
+}
+
+function positionTooltip(tooltipEl, wrapEl, px, py) {
+  const wrapRect = wrapEl.getBoundingClientRect();
+  let left = px + 14, top = py + 14;
+  const tw = tooltipEl.offsetWidth || 140, th = tooltipEl.offsetHeight || 40;
+  if (left + tw > wrapRect.width) left = px - tw - 14;
+  if (top + th > wrapRect.height) top = py - th - 14;
+  tooltipEl.style.left = Math.max(4, left) + 'px';
+  tooltipEl.style.top = Math.max(4, top) + 'px';
+}
+
+function attachHover(baseCanvas, overlayCanvas, tooltipEl, wrapEl) {
+  function onMove(evt) {
+    const chart = baseCanvas.__chart;
+    if (!chart) return;
+    const rectPx = overlayCanvas.getBoundingClientRect();
+    const px = evt.clientX - rectPx.left;
+    const py = evt.clientY - rectPx.top;
+    if (px < chart.rect.x || px > chart.rect.x + chart.rect.w || py < chart.rect.y || py > chart.rect.y + chart.rect.h) {
+      clearOverlay(overlayCanvas);
+      tooltipEl.classList.remove('visible');
+      return;
+    }
+    const ctx = overlayCanvas.getContext('2d');
+    clearOverlay(overlayCanvas);
+    ctx.strokeStyle = rgba(chart.colors.ink, 0.35);
+    ctx.lineWidth = 1;
+
+    if (chart.kind === 'interference') {
+      const x = chart.lo + ((px - chart.rect.x) / chart.rect.w) * (chart.hi - chart.lo);
+      ctx.beginPath(); ctx.moveTo(px, chart.rect.y); ctx.lineTo(px, chart.rect.y + chart.rect.h); ctx.stroke();
+      const lp = 0, sp = 0; // recompute via nearest sample index for speed
+      let idx = Math.round(((x - chart.lo) / (chart.hi - chart.lo)) * (chart.xs.length - 1));
+      idx = Math.max(0, Math.min(chart.xs.length - 1, idx));
+      const loadY = chart.yScale(chart.loadPdf[idx]);
+      const strY = chart.yScale(chart.strengthPdf[idx]);
+      drawDot(ctx, px, loadY, chart.colors.load);
+      drawDot(ctx, px, strY, chart.colors.strength);
+      tooltipEl.innerHTML =
+        `<div class="t-row"><b>x = ${formatAxisNumber(chart.xs[idx])}</b></div>` +
+        `<div class="t-row"><span class="t-dot" style="background:${chart.colors.load}"></span>load density ${chart.loadPdf[idx].toFixed(4)}</div>` +
+        `<div class="t-row"><span class="t-dot" style="background:${chart.colors.strength}"></span>strength density ${chart.strengthPdf[idx].toFixed(4)}</div>`;
+      tooltipEl.classList.add('visible');
+      positionTooltip(tooltipEl, wrapEl, px, Math.min(loadY, strY));
+    } else if (chart.kind === 'histogram') {
+      const xVal = chart.min + ((px - chart.rect.x) / chart.rect.w) * (chart.max - chart.min);
+      let b = Math.floor((xVal - chart.min) / chart.binW);
+      b = Math.max(0, Math.min(chart.nBins - 1, b));
+      const x0 = chart.min + b * chart.binW, x1 = x0 + chart.binW;
+      const xPix0 = chart.xScale(x0), xPix1 = chart.xScale(x1);
+      const yPix = chart.yScale(chart.counts[b]);
+      ctx.fillStyle = rgba(chart.colors.ink, 0.08);
+      ctx.fillRect(xPix0, chart.rect.y, xPix1 - xPix0, chart.rect.h);
+      const failBin = x1 <= 0 || (x0 < 0 && x1 > 0);
+      tooltipEl.innerHTML =
+        `<div class="t-row"><b>${formatAxisNumber(x0)} to ${formatAxisNumber(x1)}</b></div>` +
+        `<div class="t-row"><span class="t-dot" style="background:${failBin ? chart.colors.strength : chart.colors.load}"></span>${formatCompactInt(chart.counts[b])} units — ${failBin ? 'failure' : 'survives'}</div>`;
+      tooltipEl.classList.add('visible');
+      positionTooltip(tooltipEl, wrapEl, px, yPix);
+    } else if (chart.kind === 'convergence') {
+      const logN = chart.logMin + ((px - chart.rect.x) / chart.rect.w) * (chart.logMax - chart.logMin);
+      const nVal = Math.pow(10, logN);
+      // nearest checkpoint by log distance
+      let bestI = 0, bestD = Infinity;
+      for (let i = 0; i < chart.convN.length; i++) {
+        const d = Math.abs(Math.log10(chart.convN[i]) - logN);
+        if (d < bestD) { bestD = d; bestI = i; }
+      }
+      const px2 = chart.xScale(chart.convN[bestI]);
+      const py2 = chart.yScale(chart.convPf[bestI]);
+      ctx.beginPath(); ctx.moveTo(px2, chart.rect.y); ctx.lineTo(px2, chart.rect.y + chart.rect.h); ctx.stroke();
+      drawDot(ctx, px2, py2, chart.colors.load);
+      tooltipEl.innerHTML =
+        `<div class="t-row"><b>n = ${formatCompactInt(chart.convN[bestI])}</b></div>` +
+        `<div class="t-row"><span class="t-dot" style="background:${chart.colors.load}"></span>Pf = ${formatPct(chart.convPf[bestI], 3)}</div>`;
+      tooltipEl.classList.add('visible');
+      positionTooltip(tooltipEl, wrapEl, px2, py2);
+    }
+  }
+  function onLeave() {
+    clearOverlay(overlayCanvas);
+    tooltipEl.classList.remove('visible');
+  }
+  overlayCanvas.addEventListener('mousemove', onMove);
+  overlayCanvas.addEventListener('mouseleave', onLeave);
+}
+
+function drawDot(ctx, x, y, color) {
+  ctx.beginPath();
+  ctx.arc(x, y, 3.6, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+  ctx.stroke();
+}
+
+</script>
+<script>
+/* ==========================================================
+   App wiring: channel (Load/Strength) config panels, file
+   import + fitting, Monte Carlo run, tabs, theme, export.
+   ========================================================== */
+
+(function () {
+  'use strict';
+
+  const DEFAULTS = {
+    load: { distKey: 'lognormal', params: { median: 1.6, sigma: 0.28 } },
+    strength: { distKey: 'weibull', params: { beta: 5.0, eta: 3.2 } },
+  };
+
+  const statusBar = document.getElementById('statusBar');
+  function setStatus(text, isError, isOk) {
+    statusBar.textContent = text;
+    statusBar.classList.toggle('error', !!isError);
+    statusBar.classList.toggle('ok', !!isOk);
+  }
+
+  /* ---------------- channel card builder ---------------- */
+
+  function paramFieldHtml(role, p) {
+    return `
+      <div class="field">
+        <label for="${role}-param-${p.key}">${p.label}</label>
+        <input type="number" id="${role}-param-${p.key}" data-param="${p.key}"
+               value="${p.default}" step="${p.step}" min="${p.min > -1e8 ? p.min : ''}" />
+      </div>`;
+  }
+
+  function distOptionsHtml(selectedKey) {
+    return DISTRIBUTION_ORDER.map(key => {
+      const spec = DISTRIBUTIONS[key];
+      return `<option value="${key}"${key === selectedKey ? ' selected' : ''}>${spec.name}</option>`;
+    }).join('');
+  }
+
+  function channelCardHtml(role, title, subtitle) {
+    const def = DEFAULTS[role];
+    return `
+      <div class="channel-head">
+        <div>
+          <h2>${title}</h2>
+          <p class="channel-sub">${subtitle}</p>
+        </div>
+        <span class="channel-swatch" aria-hidden="true"></span>
+      </div>
+      <div class="mode-switch" role="tablist">
+        <button type="button" class="mode-btn active" data-mode="manual">Manual</button>
+        <button type="button" class="mode-btn" data-mode="fit">Fit from data</button>
+      </div>
+
+      <div class="mode-panel" data-mode-panel="manual">
+        <div class="field">
+          <label for="${role}-dist-select">Distribution</label>
+          <select id="${role}-dist-select" class="dist-select">${distOptionsHtml(def.distKey)}</select>
+        </div>
+        <div class="param-grid" data-param-grid></div>
+      </div>
+
+      <div class="mode-panel" data-mode-panel="fit" hidden>
+        <label class="file-drop">
+          <input type="file" class="file-input" accept=".csv,.txt,.xlsx,.xls" hidden />
+          <span>
+            <strong>Choose data file…</strong>
+            <small>.csv &nbsp;.xlsx &nbsp;.xls &nbsp;.txt</small>
+          </span>
+        </label>
+        <div class="file-meta" data-file-meta>No file loaded</div>
+        <div class="field column-picker" data-column-picker hidden>
+          <label>Column</label>
+          <select class="column-select"></select>
+        </div>
+        <div class="fit-table-wrap" data-fit-table-wrap hidden>
+          <table class="fit-table">
+            <thead>
+              <tr><th>Distribution</th><th>Params</th><th>AIC</th><th>BIC</th><th>KS p</th></tr>
+            </thead>
+            <tbody data-fit-tbody></tbody>
+          </table>
+        </div>
+        <p class="fit-hint" data-fit-hint hidden>Lowest AIC is selected automatically — click another row to use it instead.</p>
+        <div class="fit-preview" data-fit-preview hidden>
+          <div class="fit-preview-title" data-fit-preview-title></div>
+          <canvas></canvas>
+        </div>
+      </div>`;
+  }
+
+  /* ---------------- Channel controller ---------------- */
+
+  function Channel(role, title, subtitle, cardEl, onChange) {
+    this.role = role;
+    this.card = cardEl;
+    this.onChange = onChange;
+    this.mode = 'manual';
+    this.distKey = DEFAULTS[role].distKey;
+    this.manualParams = Object.assign({}, DEFAULTS[role].params);
+    this.rawData = null;
+    this.fitResults = [];
+    this.selectedFitIndex = -1;
+
+    cardEl.classList.add('role-' + role);
+    cardEl.innerHTML = channelCardHtml(role, title, subtitle);
+
+    this.els = {
+      modeBtns: cardEl.querySelectorAll('.mode-btn'),
+      manualPanel: cardEl.querySelector('[data-mode-panel="manual"]'),
+      fitPanel: cardEl.querySelector('[data-mode-panel="fit"]'),
+      distSelect: cardEl.querySelector('.dist-select'),
+      paramGrid: cardEl.querySelector('[data-param-grid]'),
+      fileInput: cardEl.querySelector('.file-input'),
+      fileMeta: cardEl.querySelector('[data-file-meta]'),
+      columnPicker: cardEl.querySelector('[data-column-picker]'),
+      columnSelect: cardEl.querySelector('.column-select'),
+      fitTableWrap: cardEl.querySelector('[data-fit-table-wrap]'),
+      fitTbody: cardEl.querySelector('[data-fit-tbody]'),
+      fitHint: cardEl.querySelector('[data-fit-hint]'),
+      fitPreview: cardEl.querySelector('[data-fit-preview]'),
+      fitPreviewTitle: cardEl.querySelector('[data-fit-preview-title]'),
+      fitPreviewCanvas: cardEl.querySelector('[data-fit-preview] canvas'),
+    };
+
+    this._buildParamGrid();
+    this._wireEvents();
+  }
+
+  Channel.prototype._buildParamGrid = function () {
+    const spec = DISTRIBUTIONS[this.distKey];
+    this.els.paramGrid.innerHTML = spec.params.map(p => paramFieldHtml(this.role, p)).join('');
+    const self = this;
+    spec.params.forEach(p => {
+      const input = this.els.paramGrid.querySelector(`[data-param="${p.key}"]`);
+      input.addEventListener('input', function () {
+        const v = parseFloat(input.value);
+        self.manualParams[p.key] = v;
+        self.onChange();
+      });
+    });
+  };
+
+  Channel.prototype._wireEvents = function () {
+    const self = this;
+
+    this.els.modeBtns.forEach(btn => {
+      btn.addEventListener('click', function () {
+        self.els.modeBtns.forEach(b => b.classList.toggle('active', b === btn));
+        self.mode = btn.dataset.mode;
+        self.els.manualPanel.hidden = self.mode !== 'manual';
+        self.els.fitPanel.hidden = self.mode !== 'fit';
+        self.onChange();
+      });
+    });
+
+    this.els.distSelect.addEventListener('change', function () {
+      self.distKey = self.els.distSelect.value;
+      self.manualParams = {};
+      DISTRIBUTIONS[self.distKey].params.forEach(p => { self.manualParams[p.key] = p.default; });
+      self._buildParamGrid();
+      self.onChange();
+    });
+
+    this.els.fileInput.addEventListener('change', function () {
+      const file = self.els.fileInput.files[0];
+      if (file) self._handleFile(file);
+    });
+
+    this.els.columnSelect.addEventListener('change', function () {
+      self._refitFromColumn(self.els.columnSelect.value);
+    });
+
+    this.els.fitTbody.addEventListener('click', function (evt) {
+      const tr = evt.target.closest('tr');
+      if (!tr) return;
+      const idx = parseInt(tr.dataset.idx, 10);
+      self._selectFitRow(idx);
+    });
+  };
+
+  Channel.prototype._handleFile = async function (file) {
+    this.els.fileMeta.textContent = 'Reading ' + file.name + '…';
+    this.els.fileMeta.classList.remove('has-file');
+    try {
+      const parsed = await parseDataFile(file);
+      this._parsed = parsed;
+      const names = Object.keys(parsed.columns);
+      if (names.length === 0) throw new Error('no numeric columns found');
+
+      this.els.columnSelect.innerHTML = names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+      this.els.columnPicker.hidden = names.length < 2;
+
+      this.els.fileMeta.textContent = `${file.name} — ${names.length} numeric column${names.length > 1 ? 's' : ''} found`;
+      this.els.fileMeta.classList.add('has-file');
+
+      this._refitFromColumn(names[0]);
+    } catch (err) {
+      this.els.fileMeta.textContent = 'Could not read file: ' + (err.message || err);
+      this.els.fileMeta.classList.remove('has-file');
+      this.els.fitTableWrap.hidden = true;
+      this.els.fitHint.hidden = true;
+      this.els.fitPreview.hidden = true;
+      this.rawData = null;
+      this.selectedFitIndex = -1;
+      this.onChange();
+    }
+  };
+
+  Channel.prototype._refitFromColumn = function (columnName) {
+    const values = this._parsed.columns[columnName];
+    if (!values || values.length < 5) {
+      this.els.fileMeta.textContent = `Column "${columnName}" has only ${values ? values.length : 0} usable numeric values (need at least 5).`;
+      this.els.fileMeta.classList.remove('has-file');
+      this.rawData = null;
+      this.onChange();
+      return;
+    }
+    this.rawData = values;
+    const n = values.length;
+    this.els.fileMeta.textContent = `column "${columnName}" — n = ${n}`;
+    this.els.fileMeta.classList.add('has-file');
+
+    this.fitResults = fitAllDistributions(values);
+    this._renderFitTable();
+    const bestIdx = this.fitResults.findIndex(r => !r.error);
+    this._selectFitRow(bestIdx);
+  };
+
+  Channel.prototype._renderFitTable = function () {
+    const self = this;
+    this.els.fitTableWrap.hidden = false;
+    this.els.fitHint.hidden = false;
+    this.els.fitTbody.innerHTML = this.fitResults.map((r, idx) => {
+      if (r.error) {
+        return `<tr data-idx="${idx}"><td>${r.name}</td><td class="err" colspan="4">${escapeHtml(r.error)}</td></tr>`;
+      }
+      const paramStr = Object.entries(r.params).map(([k, v]) => `${k}=${formatParam(v)}`).join(', ');
+      return `<tr data-idx="${idx}">
+        <td>${r.name}</td>
+        <td>${paramStr}</td>
+        <td>${r.aic.toFixed(2)}</td>
+        <td>${r.bic.toFixed(2)}</td>
+        <td>${r.ksPValue.toFixed(4)}</td>
+      </tr>`;
+    }).join('');
+  };
+
+  Channel.prototype._selectFitRow = function (idx) {
+    if (idx < 0 || idx >= this.fitResults.length || this.fitResults[idx].error) return;
+    this.selectedFitIndex = idx;
+    Array.from(this.els.fitTbody.children).forEach((tr, i) => tr.classList.toggle('selected', i === idx));
+    const r = this.fitResults[idx];
+    const spec = DISTRIBUTIONS[r.key];
+    const colors = getThemeColors();
+    this.els.fitPreview.hidden = false;
+    this.els.fitPreviewTitle.textContent = r.name + ' — fitted overlay';
+    drawFitPreview(this.els.fitPreviewCanvas, this.rawData, spec, r.params, this.role === 'load' ? colors.load : colors.strength);
+    this.onChange();
+  };
+
+  Channel.prototype.isReady = function () {
+    if (this.mode === 'fit') {
+      return this.selectedFitIndex >= 0 && this.fitResults[this.selectedFitIndex] && !this.fitResults[this.selectedFitIndex].error;
+    }
+    const spec = DISTRIBUTIONS[this.distKey];
+    return spec.params.every(p => isFinite(this.manualParams[p.key]));
+  };
+
+  Channel.prototype.current = function () {
+    if (this.mode === 'fit' && this.selectedFitIndex >= 0) {
+      const r = this.fitResults[this.selectedFitIndex];
+      const spec = DISTRIBUTIONS[r.key];
+      const paramStr = Object.entries(r.params).map(([k, v]) => `${k}=${formatParam(v)}`).join(', ');
+      return { key: r.key, spec, params: r.params, label: `${spec.name} (fitted: ${paramStr})` };
+    }
+    const spec = DISTRIBUTIONS[this.distKey];
+    const paramStr = spec.params.map(p => `${p.key}=${formatParam(this.manualParams[p.key])}`).join(', ');
+    return { key: this.distKey, spec, params: this.manualParams, label: `${spec.name} (${paramStr})` };
+  };
+
+  Channel.prototype.repaintFitPreview = function () {
+    if (this.mode === 'fit' && this.selectedFitIndex >= 0) this._selectFitRow(this.selectedFitIndex);
+  };
+
+  function formatParam(v) {
+    if (Math.abs(v) >= 1000 || (Math.abs(v) < 0.001 && v !== 0)) return v.toExponential(3);
+    return Number(v.toFixed(4)).toString();
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  /* ---------------- file parsing ---------------- */
+
+  function isNumericToken(s) {
+    if (s === null || s === undefined) return false;
+    const t = String(s).trim();
+    if (t === '') return false;
+    return isFinite(Number(t));
+  }
+
+  function buildColumnsFromRows(headerRow, dataRows) {
+    const hasHeader = !headerRow.every(isNumericToken) && headerRow.some(h => h !== null && String(h).trim() !== '');
+    let names, rows;
+    if (hasHeader) {
+      names = headerRow.map((h, i) => (h === null || String(h).trim() === '') ? `Column ${i + 1}` : String(h).trim());
+      rows = dataRows;
+    } else {
+      names = headerRow.map((_, i) => `Column ${i + 1}`);
+      rows = [headerRow].concat(dataRows);
+    }
+    const columns = {};
+    names.forEach((name, colIdx) => {
+      const vals = [];
+      let allNumeric = true;
+      for (const row of rows) {
+        const cell = row[colIdx];
+        if (cell === null || cell === undefined || String(cell).trim() === '') continue;
+        if (!isNumericToken(cell)) { allNumeric = false; break; }
+        vals.push(Number(cell));
+      }
+      if (allNumeric && vals.length > 0) columns[name] = vals;
+    });
+    return columns;
+  }
+
+  function parseDelimitedText(text) {
+    const lines = text.split(/\r\n|\n|\r/).map(l => l.trim()).filter(l => l.length > 0);
+    if (lines.length === 0) throw new Error('file is empty');
+    let delim = ',';
+    if (lines[0].indexOf(',') === -1) {
+      delim = lines[0].indexOf('\t') !== -1 ? '\t' : /\s+/;
+    }
+    const rows = lines.map(l => (delim instanceof RegExp ? l.split(delim) : l.split(delim)).map(c => c.trim()));
+    const header = rows[0];
+    const data = rows.slice(1);
+    return { columns: buildColumnsFromRows(header, data) };
+  }
+
+  async function parseCsvOrTxt(file) {
+    const text = await file.text();
+    return parseDelimitedText(text);
+  }
+
+  async function parseXlsx(file) {
+    if (typeof XLSX === 'undefined') {
+      throw new Error('Excel support did not load in this session — please re-save the file as .csv and try again.');
+    }
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array' });
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: null });
+    const nonEmpty = rows.filter(r => r.some(c => c !== null && String(c).trim() !== ''));
+    if (nonEmpty.length === 0) throw new Error('sheet is empty');
+    const header = nonEmpty[0];
+    const data = nonEmpty.slice(1);
+    return { columns: buildColumnsFromRows(header, data) };
+  }
+
+  function parseDataFile(file) {
+    const ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
+    if (ext === '.csv' || ext === '.txt') return parseCsvOrTxt(file);
+    if (ext === '.xlsx' || ext === '.xls') return parseXlsx(file);
+    return Promise.reject(new Error('unsupported file type "' + ext + '" — use .csv, .xlsx, .xls, or .txt'));
+  }
+
+  /* ---------------- app bootstrap ---------------- */
+
+  let lastResult = null;
+  let simRunning = false;
+
+  const consoleColumn = document.getElementById('consoleColumn');
+  const loadCardEl = document.createElement('section');
+  loadCardEl.className = 'channel-card';
+  const strengthCardEl = document.createElement('section');
+  strengthCardEl.className = 'channel-card';
+  const simCardEl = document.createElement('section');
+  simCardEl.className = 'sim-card';
+  simCardEl.innerHTML = `
+    <h2>Simulation</h2>
+    <div class="field-row">
+      <label for="trialsInput">Number of trials</label>
+      <input type="number" id="trialsInput" min="1000" max="1000000" step="10000" value="100000" />
+    </div>
+    <div class="field-row">
+      <label><input type="checkbox" id="seedCheck" checked /> Fixed seed</label>
+      <input type="number" id="seedInput" value="20260828" />
+    </div>
+    <button class="run-btn" id="runBtn" type="button">▶&nbsp; Run simulation</button>
+    <div class="progress-track" id="progressTrack" hidden><div class="progress-fill" id="progressFill"></div></div>
+    <p class="hint-text">Runs entirely in your browser — no data leaves this page.</p>`;
+  consoleColumn.appendChild(loadCardEl);
+  consoleColumn.appendChild(strengthCardEl);
+  consoleColumn.appendChild(simCardEl);
+
+  const runBtn = document.getElementById('runBtn');
+  const trialsInput = document.getElementById('trialsInput');
+  const seedCheck = document.getElementById('seedCheck');
+  const seedInput = document.getElementById('seedInput');
+  const progressTrack = document.getElementById('progressTrack');
+  const progressFill = document.getElementById('progressFill');
+
+  seedCheck.addEventListener('change', () => { seedInput.disabled = !seedCheck.checked; });
+
+  // A pane's canvas can only be measured/drawn correctly while its
+  // wrapper is actually visible (display:block) — drawing into a
+  // display:none pane yields a degenerate 0x0 backing store. So state
+  // changes just mark a pane "dirty"; the draw happens the moment that
+  // pane becomes the active tab (or immediately, if it already is).
+  const paneDirty = { '1': true, '2': false, '3': false };
+
+  function markDirty(paneNum) {
+    paneDirty[String(paneNum)] = true;
+    if (activePaneNumber() === String(paneNum)) renderActivePane();
+  }
+
+  function onChannelChange() {
+    updateRunEnabled();
+    markDirty(1);
+  }
+
+  const loadChannel = new Channel('load', 'Load channel', 'What the product experiences in service', loadCardEl, onChannelChange);
+  const strengthChannel = new Channel('strength', 'Strength channel', 'What the product is capable of withstanding', strengthCardEl, onChannelChange);
+
+  function updateRunEnabled() {
+    const ready = loadChannel.isReady() && strengthChannel.isReady();
+    runBtn.disabled = !ready || simRunning;
+  }
+
+  /* ---------------- chart 1 (live) ---------------- */
+
+  const chart1 = document.getElementById('chart1');
+  const chart1Overlay = document.getElementById('chart1-overlay');
+  const tooltip1 = document.getElementById('tooltip1');
+  const wrap1 = document.getElementById('wrap1');
+  attachHover(chart1, chart1Overlay, tooltip1, wrap1);
+
+  function drawPane1() {
+    if (!loadChannel.isReady() || !strengthChannel.isReady()) return;
+    const l = loadChannel.current();
+    const s = strengthChannel.current();
+    drawInterferenceChart(chart1, chart1Overlay, l.spec, l.params, s.spec, s.params, l.label, s.label);
+    paneDirty['1'] = false;
+  }
+
+  function drawPane2() {
+    if (!lastResult) return;
+    drawMarginHistogram(chart2, chart2Overlay, lastResult.margin, lastResult.pf, lastResult.reliability, 90);
+    paneDirty['2'] = false;
+  }
+
+  function drawPane3() {
+    if (!lastResult) return;
+    drawConvergenceChart(chart3, chart3Overlay, lastResult.convN, lastResult.convPf, lastResult.convLo, lastResult.convHi, lastResult.pf);
+    paneDirty['3'] = false;
+  }
+
+  function renderActivePane() {
+    const p = activePaneNumber();
+    if (!paneDirty[p]) return;
+    if (p === '1') drawPane1();
+    else if (p === '2') drawPane2();
+    else if (p === '3') drawPane3();
+  }
+
+  /* ---------------- tabs ---------------- */
+
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const panes = document.querySelectorAll('.chart-pane');
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabBtns.forEach(b => { b.classList.toggle('active', b === btn); b.setAttribute('aria-selected', b === btn ? 'true' : 'false'); });
+      panes.forEach(p => p.classList.toggle('active', p.dataset.pane === btn.dataset.pane));
+      renderActivePane();
+      updateExportButtonsState();
+    });
+  });
+
+  /* ---------------- run simulation ---------------- */
+
+  const chart2 = document.getElementById('chart2'), chart2Overlay = document.getElementById('chart2-overlay');
+  const chart3 = document.getElementById('chart3'), chart3Overlay = document.getElementById('chart3-overlay');
+  const tooltip2 = document.getElementById('tooltip2'), tooltip3 = document.getElementById('tooltip3');
+  const wrap2 = document.getElementById('wrap2'), wrap3 = document.getElementById('wrap3');
+  const empty2 = document.getElementById('empty2'), empty3 = document.getElementById('empty3');
+  attachHover(chart2, chart2Overlay, tooltip2, wrap2);
+  attachHover(chart3, chart3Overlay, tooltip3, wrap3);
+
+  const tileReliability = document.getElementById('tileReliability');
+  const tilePf = document.getElementById('tilePf');
+  const tileTrials = document.getElementById('tileTrials');
+  const tileFailures = document.getElementById('tileFailures');
+
+  runBtn.addEventListener('click', async function () {
+    if (!loadChannel.isReady() || !strengthChannel.isReady()) return;
+    const l = loadChannel.current();
+    const s = strengthChannel.current();
+    const nTrials = Math.max(1000, Math.min(1000000, parseInt(trialsInput.value, 10) || 100000));
+    const seed = seedCheck.checked ? (parseInt(seedInput.value, 10) || 0) : null;
+
+    simRunning = true;
+    runBtn.disabled = true;
+    progressTrack.hidden = false;
+    progressFill.style.width = '0%';
+    setStatus('Running Monte Carlo simulation…');
+
+    try {
+      const result = await runMonteCarloAsync(l.spec, l.params, s.spec, s.params, nTrials, seed, frac => {
+        progressFill.style.width = Math.round(frac * 100) + '%';
+      });
+      lastResult = result;
+      renderResults(result, l, s);
+      setStatus(`Done — R = ${formatPct(result.reliability, 4)}, Pf = ${formatPct(result.pf, 4)} over ${result.nTrials.toLocaleString()} trials.`, false, true);
+    } catch (err) {
+      setStatus('Simulation failed: ' + (err.message || err), true);
+    } finally {
+      simRunning = false;
+      progressTrack.hidden = true;
+      updateRunEnabled();
+    }
+  });
+
+  function renderResults(result, l, s) {
+    tileReliability.textContent = formatPct(result.reliability, 4);
+    tilePf.textContent = formatPct(result.pf, 4);
+    tileTrials.textContent = result.nTrials.toLocaleString();
+    tileFailures.textContent = result.failCount.toLocaleString();
+
+    empty2.hidden = true; chart2.hidden = false; chart2Overlay.hidden = false;
+    empty3.hidden = true; chart3.hidden = false; chart3Overlay.hidden = false;
+
+    markDirty(2);
+    markDirty(3);
+    updateExportButtonsState();
+  }
+
+  /* ---------------- theme ---------------- */
+
+  const themeToggle = document.getElementById('themeToggle');
+  const iconSun = document.getElementById('themeIconSun');
+  const iconMoon = document.getElementById('themeIconMoon');
+
+  function currentIsDark() {
+    const attr = document.documentElement.getAttribute('data-theme');
+    if (attr === 'dark') return true;
+    if (attr === 'light') return false;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+
+  function syncThemeIcon() {
+    const dark = currentIsDark();
+    iconSun.style.display = dark ? 'none' : 'block';
+    iconMoon.style.display = dark ? 'block' : 'none';
+  }
+
+  function redrawAllCharts() {
+    // colors/sizes changed everywhere; only the active pane can be
+    // redrawn right now — the rest redraw themselves on next activation
+    paneDirty['1'] = true; paneDirty['2'] = true; paneDirty['3'] = true;
+    renderActivePane();
+    loadChannel.repaintFitPreview();
+    strengthChannel.repaintFitPreview();
+  }
+
+  themeToggle.addEventListener('click', function () {
+    const goingDark = !currentIsDark();
+    document.documentElement.setAttribute('data-theme', goingDark ? 'dark' : 'light');
+    try { localStorage.setItem('interference-console-theme', goingDark ? 'dark' : 'light'); } catch (e) { /* ignore */ }
+    syncThemeIcon();
+    redrawAllCharts();
+  });
+
+  (function initTheme() {
+    try {
+      const saved = localStorage.getItem('interference-console-theme');
+      if (saved === 'dark' || saved === 'light') document.documentElement.setAttribute('data-theme', saved);
+    } catch (e) { /* ignore */ }
+    syncThemeIcon();
+  })();
+
+  /* ---------------- export ---------------- */
+
+  function saveFile(filename, mime, dataStrOrBlob) {
+    function fallback() {
+      try {
+        const blob = (dataStrOrBlob instanceof Blob) ? dataStrOrBlob : new Blob([dataStrOrBlob], { type: mime });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+        setStatus('Saved ' + filename, false, true);
+      } catch (e) {
+        setStatus('Could not save ' + filename + ': ' + (e.message || e), true);
+      }
+    }
+    if (window.claude && typeof window.claude.use === 'function') {
+      window.claude.use('downloads').then(downloads => {
+        if (!downloads) { fallback(); return; }
+        downloads.save({ filename, data: dataStrOrBlob }).then(() => {
+          setStatus('Saved ' + filename, false, true);
+        }).catch(err => {
+          if (err && err.code === 'declined') return;
+          fallback();
+        });
+      }).catch(fallback);
+    } else {
+      fallback();
+    }
+  }
+
+  const exportPngBtn = document.getElementById('exportPngBtn');
+  const exportCsvBtn = document.getElementById('exportCsvBtn');
+
+  function activePaneNumber() {
+    const active = document.querySelector('.tab-btn.active');
+    return active ? active.dataset.pane : '1';
+  }
+
+  function updateExportButtonsState() {
+    const pane = activePaneNumber();
+    const canvasMap = { '1': chart1, '2': chart2, '3': chart3 };
+    const canvas = canvasMap[pane];
+    exportPngBtn.disabled = !canvas || canvas.hidden;
+    exportCsvBtn.disabled = !lastResult;
+  }
+
+  exportPngBtn.addEventListener('click', function () {
+    const pane = activePaneNumber();
+    const canvasMap = {
+      '1': [chart1, 'stress_strength_interference.png'],
+      '2': [chart2, 'safety_margin_histogram.png'],
+      '3': [chart3, 'convergence.png'],
+    };
+    const [canvas, filename] = canvasMap[pane];
+    canvas.toBlob(blob => { if (blob) saveFile(filename, 'image/png', blob); }, 'image/png');
+  });
+
+  exportCsvBtn.addEventListener('click', function () {
+    if (!lastResult) return;
+    const lines = ['trial,load,strength,margin,failure'];
+    for (let i = 0; i < lastResult.nTrials; i++) {
+      lines.push(`${i + 1},${lastResult.load[i]},${lastResult.strength[i]},${lastResult.margin[i]},${lastResult.failFlags[i]}`);
+    }
+    saveFile('monte_carlo_trial_data.csv', 'text/csv', lines.join('\n'));
+  });
+
+  /* ---------------- initial paint ---------------- */
+
+  window.addEventListener('resize', debounce(redrawAllCharts, 120));
+
+  function debounce(fn, ms) {
+    let t = null;
+    return function () { clearTimeout(t); t = setTimeout(fn, ms); };
+  }
+
+  updateRunEnabled();
+  renderActivePane();
+  updateExportButtonsState();
+})();
+
+</script>
+</body>
+</html>

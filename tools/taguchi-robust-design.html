@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Robustness: Taguchi's Way — Interactive Companion</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0b1526; --panel:#13203a; --panel2:#1a2a4a; --line:#28406a;
+    --text:#e6edf7; --muted:#9fb0c8; --amber:#f5b041; --teal:#2ec4b6;
+    --red:#ef6461; --blue:#5aa9e6; --green:#7bd389;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.5}
+  header{padding:22px 28px 10px;border-bottom:1px solid var(--line)}
+  header h1{margin:0;font-size:24px;color:var(--amber)}
+  header p{margin:6px 0 0;color:var(--muted);max-width:980px}
+  .tabs{display:flex;gap:6px;padding:12px 28px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .tab{padding:10px 16px;background:var(--panel);border:1px solid var(--line);border-bottom:none;border-radius:8px 8px 0 0;cursor:pointer;color:var(--muted);font-weight:600}
+  .tab.active{background:var(--panel2);color:var(--amber);border-color:var(--amber)}
+  .page{display:none;padding:22px 28px 40px}
+  .page.active{display:block}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:1000px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+  .card h2{margin:0 0 10px;font-size:17px;color:var(--teal)}
+  .card h3{margin:14px 0 6px;font-size:14px;color:var(--amber)}
+  label{display:block;font-size:12px;color:var(--muted);margin-top:8px}
+  input[type=number],input[type=text],select{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:6px;color:var(--text);padding:7px 9px;font-size:14px}
+  input[type=number]:focus,select:focus{outline:none;border-color:var(--teal)}
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+  button{background:var(--amber);color:#1a1200;border:none;border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointer;margin-top:10px}
+  button.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+  button:hover{filter:brightness(1.1)}
+  .examples{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px}
+  .examples button{margin-top:0;background:var(--panel2);color:var(--teal);border:1px solid var(--teal);font-size:13px}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+  th,td{border:1px solid var(--line);padding:5px 6px;text-align:center}
+  th{background:var(--panel2);color:var(--amber);font-weight:600}
+  td.lvl{color:var(--teal);font-weight:700}
+  td input{width:70px;text-align:center;padding:4px}
+  td.best{background:rgba(46,196,182,.18);font-weight:700}
+  .kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px}
+  .kpi div{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px}
+  .kpi .v{font-size:22px;font-weight:700;color:var(--amber)}
+  .kpi .l{font-size:11px;color:var(--muted)}
+  .note{background:rgba(245,176,65,.08);border-left:3px solid var(--amber);padding:10px 14px;border-radius:0 8px 8px 0;color:var(--text);font-size:14px;margin-top:12px}
+  .insight{background:rgba(46,196,182,.08);border-left:3px solid var(--teal);padding:10px 14px;border-radius:0 8px 8px 0;font-size:14px;margin-top:12px}
+  canvas{background:var(--bg);border-radius:8px;padding:6px}
+  .chart-box{position:relative;height:320px}
+  .chart-box.tall{height:380px}
+  code{background:var(--bg);padding:1px 6px;border-radius:4px;color:var(--teal);font-size:13px}
+  .small{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Robustness: Taguchi's Way — Interactive Companion</h1>
+  <p>A product is good when it stays close to target while ambient temperature, aging, tolerances and users all vary. This tool lets you (1) see Taguchi's quadratic loss, (2) run an inner/outer-array robust-design experiment with signal-to-noise ratios and main effects, and (3) compare two concepts across noise conditions. Three worked examples are embedded.</p>
+</header>
+
+<div class="tabs">
+  <div class="tab active" data-page="p1">1 · Quality Loss Function</div>
+  <div class="tab" data-page="p2">2 · Robust Design Experiment (L9)</div>
+  <div class="tab" data-page="p3">3 · Concept A vs B Robustness</div>
+  <div class="tab" data-page="p4">Theory &amp; How-to</div>
+</div>
+
+<!-- ============================ PAGE 1 ============================ -->
+<div class="page active" id="p1">
+  <div class="grid">
+    <div class="card">
+      <h2>Quality loss: L(y) = k·(y − T)²</h2>
+      <div class="examples">
+        <button onclick="loadQL(0)">Example: Battery cell temperature</button>
+        <button onclick="loadQL(1)">Example: Gasket contact pressure</button>
+        <button onclick="loadQL(2)">Example: Shaft diameter</button>
+      </div>
+      <div class="row">
+        <div><label>Characteristic name</label><input type="text" id="ql_name" value="Max cell temperature (°C)"></div>
+        <div><label>Target T</label><input type="number" id="ql_T" value="45" step="any"></div>
+        <div><label>Tolerance Δ₀ (±)</label><input type="number" id="ql_D" value="10" step="any"></div>
+        <div><label>Cost at tolerance A₀ ($ / unit)</label><input type="number" id="ql_A" value="500" step="any"></div>
+      </div>
+      <h3>Two production distributions to compare</h3>
+      <div class="row">
+        <div><label>Process A mean μ</label><input type="number" id="ql_muA" value="43" step="any"></div>
+        <div><label>Process A std σ</label><input type="number" id="ql_sdA" value="4.5" step="any"></div>
+        <div><label>Process B mean μ</label><input type="number" id="ql_muB" value="46" step="any"></div>
+        <div><label>Process B std σ</label><input type="number" id="ql_sdB" value="1.5" step="any"></div>
+      </div>
+      <button onclick="calcQL()">Compute</button>
+      <div class="kpi" id="ql_kpi"></div>
+      <div class="insight" id="ql_text"></div>
+      <div class="note"><b>Key formulas.</b> k = A₀ / Δ₀². Expected loss per unit for a population: L̄ = k·[σ² + (μ − T)²]. Variance and off-target bias both cost money — being "within spec" is never free.</div>
+    </div>
+    <div class="card">
+      <h2>Loss curve vs. the "goalpost" view</h2>
+      <div class="chart-box tall"><canvas id="ql_chart"></canvas></div>
+      <p class="small">Red: Taguchi quadratic loss. Dashed blue: traditional step view (zero loss inside limits, full loss outside). Shaded bells: the two process distributions (scaled for display).</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ PAGE 2 ============================ -->
+<div class="page" id="p2">
+  <div class="card">
+    <h2>Inner array (L9: 3 control factors × 3 levels) × outer noise array</h2>
+    <div class="examples">
+      <button onclick="loadDOE(0)">Example 1: Battery-pack cooling (smaller-the-better)</button>
+      <button onclick="loadDOE(1)">Example 2: Fuel-cell gasket pressure (nominal-the-best)</button>
+      <button onclick="loadDOE(2)">Example 3: Solder-joint thermal-cycle life (larger-the-better)</button>
+    </div>
+    <div class="row">
+      <div><label>Response name</label><input type="text" id="d_resp"></div>
+      <div><label>S/N type</label>
+        <select id="d_type">
+          <option value="stb">Smaller-the-better</option>
+          <option value="ntb">Nominal-the-best</option>
+          <option value="ltb">Larger-the-better</option>
+        </select></div>
+      <div><label>Target (nominal-the-best only)</label><input type="number" id="d_target" step="any"></div>
+    </div>
+    <div class="row">
+      <div><label>Factor A name</label><input type="text" id="fA"></div>
+      <div><label>A levels (L1 / L2 / L3)</label><input type="text" id="lA"></div>
+      <div><label>Factor B name</label><input type="text" id="fB"></div>
+      <div><label>B levels</label><input type="text" id="lB"></div>
+      <div><label>Factor C name</label><input type="text" id="fC"></div>
+      <div><label>C levels</label><input type="text" id="lC"></div>
+    </div>
+    <div class="row">
+      <div><label>Noise column 1</label><input type="text" id="n1"></div>
+      <div><label>Noise column 2</label><input type="text" id="n2"></div>
+      <div><label>Noise column 3</label><input type="text" id="n3"></div>
+      <div><label>Noise column 4</label><input type="text" id="n4"></div>
+    </div>
+    <div style="overflow-x:auto"><table id="d_table"></table></div>
+    <button onclick="calcDOE()">Analyze</button>
+    <button class="secondary" onclick="clearDOE()">Clear responses</button>
+  </div>
+
+  <div class="grid" style="margin-top:20px">
+    <div class="card">
+      <h2>Main effects on S/N ratio (η, dB)</h2>
+      <div class="chart-box"><canvas id="sn_chart"></canvas></div>
+      <p class="small">Higher S/N is always better, whatever the response type. Pick the level with the highest η for each factor → robust setting.</p>
+    </div>
+    <div class="card">
+      <h2>Main effects on mean response</h2>
+      <div class="chart-box"><canvas id="mean_chart"></canvas></div>
+      <p class="small">For nominal-the-best, use a factor that moves the mean but not S/N as an <i>adjustment factor</i> to put the response on target after robustness is fixed.</p>
+    </div>
+  </div>
+
+  <div class="grid" style="margin-top:20px">
+    <div class="card">
+      <h2>Response table</h2>
+      <div id="d_rtable"></div>
+    </div>
+    <div class="card">
+      <h2>Recommendation &amp; prediction</h2>
+      <div class="kpi" id="d_kpi"></div>
+      <div class="insight" id="d_text"></div>
+      <h3>Run-by-run results</h3>
+      <div id="d_runs"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ PAGE 3 ============================ -->
+<div class="page" id="p3">
+  <div class="grid">
+    <div class="card">
+      <h2>Two concepts across noise conditions</h2>
+      <div class="examples">
+        <button onclick="loadCmp(0)">Example: Cooling concepts A vs B</button>
+        <button onclick="loadCmp(1)">Example: Two gasket designs</button>
+        <button onclick="loadCmp(2)">Example: Two PCB layouts</button>
+      </div>
+      <div class="row">
+        <div><label>Response name</label><input type="text" id="c_resp"></div>
+        <div><label>Target</label><input type="number" id="c_T" step="any"></div>
+        <div><label>Loss constant k</label><input type="number" id="c_k" step="any" value="0.5"></div>
+        <div><label>S/N type</label>
+          <select id="c_type"><option value="stb">Smaller-the-better</option><option value="ntb">Nominal-the-best</option><option value="ltb">Larger-the-better</option></select></div>
+      </div>
+      <table id="c_table"></table>
+      <button onclick="calcCmp()">Compare</button>
+      <div class="kpi" id="c_kpi"></div>
+      <div class="insight" id="c_text"></div>
+    </div>
+    <div class="card">
+      <h2>Robustness plot</h2>
+      <div class="chart-box tall"><canvas id="c_chart"></canvas></div>
+      <p class="small">The robust design is not the one with the best single result — it is the one that stays dependable when reality arrives.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ PAGE 4 ============================ -->
+<div class="page" id="p4">
+  <div class="grid">
+    <div class="card">
+      <h2>Signal-to-noise ratios</h2>
+      <p>For n observations y₁…yₙ of one design across the noise conditions:</p>
+      <table>
+        <tr><th>Type</th><th>η (dB)</th><th>Use when</th></tr>
+        <tr><td>Smaller-the-better</td><td>−10·log₁₀( Σyᵢ² / n )</td><td>temperature, wear, leakage, defects</td></tr>
+        <tr><td>Larger-the-better</td><td>−10·log₁₀( Σ(1/yᵢ²) / n )</td><td>life, strength, efficiency</td></tr>
+        <tr><td>Nominal-the-best</td><td>10·log₁₀( ȳ² / s² )</td><td>dimensions, pressure, voltage at a target</td></tr>
+      </table>
+      <p>In every case a higher η means the design is less sensitive to noise. A 3 dB gain roughly halves the mean-square deviation.</p>
+      <h3>The L9 orthogonal array</h3>
+      <p>Nine runs cover 3 factors at 3 levels (27 full-factorial combinations). Each level of each factor appears 3 times and is paired equally with every level of the other factors, so the level averages are unbiased estimates of main effects. The three control factors below use columns 1, 2 and 3 of the standard L9; column 4 is left empty (it would carry a fourth factor or interactions).</p>
+      <h3>Two-step optimisation (nominal-the-best)</h3>
+      <ol>
+        <li>Choose levels that maximise S/N (reduce variability).</li>
+        <li>Use an "adjustment factor" — one that moves the mean but barely changes S/N — to bring the mean onto target.</li>
+      </ol>
+      <h3>Prediction</h3>
+      <p>η̂ at the optimum = η̄ + Σ (η̄<sub>factor at chosen level</sub> − η̄). Always run a confirmation experiment; if the confirmed η is far below the prediction, strong interactions are present and the additive model is not adequate.</p>
+    </div>
+    <div class="card">
+      <h2>How to use this tool with your own data</h2>
+      <ol>
+        <li><b>Tab 1</b> — enter your target, tolerance and the cost of a unit at the tolerance limit; k is derived. Enter mean and σ for two processes to see which one costs less even if both are "in spec".</li>
+        <li><b>Tab 2</b> — name three control factors and their three levels, name up to four noise conditions (e.g. cold/hot ambient × new/aged TIM), and type the measured response for each of the 36 cells. Press Analyze.</li>
+        <li><b>Tab 3</b> — type two concepts' results across the same noise conditions to produce the article's Figure 1 and quantify range, σ, S/N and expected loss.</li>
+      </ol>
+      <h3>Reading the main-effects plot</h3>
+      <p>A steep line = influential factor. A flat line = that factor does not affect robustness (free to set by cost or packaging). The level with the highest point is the robust choice.</p>
+      <h3>Automotive validation already does this</h3>
+      <p>Thermal cycling, hot/cold soak, vibration, humidity, voltage disturbance, aging and tolerance studies are all outer-array noise. Taguchi's contribution is to put them at the front of design, inside the experiment, rather than at the end as a pass/fail gate.</p>
+      <div class="note">Robustness is not extra margin added at the end. It is engineered into the concept from the beginning.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------------- tabs ---------------- */
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active'); document.getElementById(t.dataset.page).classList.add('active');
+});
+Chart.defaults.color='#9fb0c8'; Chart.defaults.borderColor='#28406a'; Chart.defaults.font.size=12;
+const C={amber:'#f5b041',teal:'#2ec4b6',red:'#ef6461',blue:'#5aa9e6',green:'#7bd389',muted:'#9fb0c8'};
+const f=(x,d=2)=>Number(x).toFixed(d);
+const mean=a=>a.reduce((s,v)=>s+v,0)/a.length;
+const sd=a=>{const m=mean(a);return Math.sqrt(a.reduce((s,v)=>s+(v-m)**2,0)/(a.length-1));};
+function SN(y,type,T){
+  const n=y.length;
+  if(type==='stb') return -10*Math.log10(y.reduce((s,v)=>s+v*v,0)/n);
+  if(type==='ltb') return -10*Math.log10(y.reduce((s,v)=>s+1/(v*v),0)/n);
+  const m=mean(y),s=sd(y); return 10*Math.log10(m*m/(s*s));
+}
+
+/* ================= PAGE 1: Quality loss ================= */
+const QL=[
+ {name:'Max cell temperature (°C)',T:45,D:10,A:500,muA:43,sdA:4.5,muB:46,sdB:1.5},
+ {name:'Gasket contact pressure (MPa)',T:0.80,D:0.20,A:120,muA:0.78,sdA:0.09,muB:0.83,sdB:0.03},
+ {name:'Shaft diameter (mm)',T:25.00,D:0.05,A:40,muA:25.00,sdA:0.022,muB:25.01,sdB:0.010}
+];
+let qlChart;
+function loadQL(i){const e=QL[i];for(const k in e)document.getElementById('ql_'+k).value=e[k];calcQL();}
+function calcQL(){
+  const g=id=>parseFloat(document.getElementById(id).value);
+  const name=document.getElementById('ql_name').value,T=g('ql_T'),D=g('ql_D'),A=g('ql_A');
+  const k=A/(D*D);
+  const muA=g('ql_muA'),sdA=g('ql_sdA'),muB=g('ql_muB'),sdB=g('ql_sdB');
+  const LA=k*(sdA**2+(muA-T)**2),LB=k*(sdB**2+(muB-T)**2);
+  // fraction out of spec (normal)
+  const Phi=x=>0.5*(1+erf(x/Math.SQRT2));
+  const outA=1-(Phi((T+D-muA)/sdA)-Phi((T-D-muA)/sdA)),outB=1-(Phi((T+D-muB)/sdB)-Phi((T-D-muB)/sdB));
+  document.getElementById('ql_kpi').innerHTML=`
+   <div><div class="v">${k.toPrecision(3)}</div><div class="l">k = A₀/Δ₀²</div></div>
+   <div><div class="v">$${f(LA,2)}</div><div class="l">Expected loss / unit — Process A</div></div>
+   <div><div class="v">$${f(LB,2)}</div><div class="l">Expected loss / unit — Process B</div></div>
+   <div><div class="v">${f(100*outA,2)}%</div><div class="l">Out of spec — A</div></div>
+   <div><div class="v">${f(100*outB,2)}%</div><div class="l">Out of spec — B</div></div>`;
+  const better=LA<LB?'A':'B',ratio=Math.max(LA,LB)/Math.min(LA,LB);
+  document.getElementById('ql_text').innerHTML=`<b>Process ${better}</b> has ${f(ratio,1)}× lower expected loss. Decomposition — A: variance term $${f(k*sdA**2,2)} + bias term $${f(k*(muA-T)**2,2)}; B: variance term $${f(k*sdB**2,2)} + bias term $${f(k*(muB-T)**2,2)}. ${outA<0.001&&outB<0.001?'Both processes are essentially 100% within spec — the goalpost view sees no difference, the loss function does.':'Note how out-of-spec fraction and expected loss tell different stories.'}`;
+  // chart
+  const xs=[],ys=[],step=[],bellA=[],bellB=[];
+  const lo=T-1.6*D,hi=T+1.6*D,n=160;
+  const ymax=k*(1.3*D)**2;
+  for(let i=0;i<=n;i++){const x=lo+(hi-lo)*i/n;xs.push(x);ys.push(k*(x-T)**2);step.push(Math.abs(x-T)<=D?0:A);
+    bellA.push(ymax*0.6*Math.exp(-0.5*((x-muA)/sdA)**2)*Math.min(1,sdB/sdA));bellB.push(ymax*0.6*Math.exp(-0.5*((x-muB)/sdB)**2));}
+  if(qlChart)qlChart.destroy();
+  qlChart=new Chart(document.getElementById('ql_chart'),{type:'line',data:{labels:xs.map(x=>f(x,D<1?3:1)),datasets:[
+    {label:'Taguchi loss L = k(y−T)²',data:ys,borderColor:C.red,borderWidth:2.5,pointRadius:0,tension:0.2},
+    {label:'Goalpost (step) loss',data:step,borderColor:C.blue,borderDash:[6,4],borderWidth:1.8,pointRadius:0,stepped:true},
+    {label:'Process A distribution',data:bellA,borderColor:C.amber,backgroundColor:'rgba(245,176,65,.18)',fill:true,pointRadius:0,borderWidth:1},
+    {label:'Process B distribution',data:bellB,borderColor:C.teal,backgroundColor:'rgba(46,196,182,.18)',fill:true,pointRadius:0,borderWidth:1}]},
+   options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    scales:{x:{title:{display:true,text:name},ticks:{maxTicksLimit:9}},y:{title:{display:true,text:'Loss ($ / unit)'},min:0,max:ymax}},
+    plugins:{legend:{position:'top'},tooltip:{callbacks:{label:c=>c.dataset.label.includes('distribution')?null:`${c.dataset.label}: $${f(c.parsed.y,2)}`}}}}});
+}
+function erf(x){const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+0.3275911*x);const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return s*y;}
+
+/* ================= PAGE 2: L9 DOE ================= */
+const L9=[[1,1,1],[1,2,2],[1,3,3],[2,1,2],[2,2,3],[2,3,1],[3,1,3],[3,2,1],[3,3,2]];
+const DOE=[
+ {resp:'Max cell temperature (°C)',type:'stb',target:'',
+  f:['Channel width','Pump flow','TIM thickness'],l:['3 / 4 / 5 mm','60 / 80 / 100 %','0.5 / 1.0 / 1.5 mm'],
+  n:['Cold −10°C, new TIM','Nominal 25°C, new TIM','Hot 40°C, new TIM','Hot 40°C, aged TIM'],
+  d:[[44.8,49.5,60.5,63.4],[43.7,49.4,57.1,60.6],[43.9,50.3,56.1,58.3],[43.7,48.7,56.4,59.2],[43.4,47.9,55.6,57.5],[40.5,43.6,47.0,47.8],[43.9,49.2,57.3,58.9],[40.5,43.9,47.5,49.1],[41.1,43.2,46.4,47.7]]},
+ {resp:'Gasket contact pressure (MPa)',type:'ntb',target:0.80,
+  f:['Rubber hardness','Compression','Bead width'],l:['50 / 60 / 70 Sh A','15 / 20 / 25 %','2 / 3 / 4 mm'],
+  n:['−30°C, 1000 h aged','−30°C, new','80°C, new','80°C, 1000 h aged'],
+  d:[[0.386,0.426,0.624,0.718],[0.569,0.638,0.702,0.794],[0.737,0.85,0.873,0.915],[0.6,0.654,0.732,0.802],[0.801,0.825,0.892,0.91],[0.727,0.827,0.92,0.981],[0.813,0.858,0.926,0.926],[0.777,0.851,0.902,0.966],[0.963,1.002,1.057,1.109]]},
+ {resp:'Thermal cycles to failure',type:'ltb',target:'',
+  f:['Pad size','Solder volume','Underfill'],l:['Small / Med / Large','Low / Nom / High','None / Partial / Full'],
+  n:['−40/125°C, thick board','−40/125°C, thin board','−40/85°C, thick board','−40/85°C, thin board'],
+  d:[[1000,1200,1670,1960],[1110,1420,1790,2100],[990,1390,1850,2330],[1140,1440,1790,2150],[1210,1430,1870,2280],[1830,2060,2170,2360],[1100,1550,1900,2240],[1870,2100,2260,2520],[1860,2140,2340,2590]]}
+];
+let snChart,meanChart;
+function buildTable(){
+  const nn=[1,2,3,4].map(i=>document.getElementById('n'+i).value||('N'+i));
+  const fn=['fA','fB','fC'].map(id=>document.getElementById(id).value||id.slice(1));
+  let h=`<tr><th>Run</th><th>${fn[0]}</th><th>${fn[1]}</th><th>${fn[2]}</th>${nn.map(x=>`<th>${x}</th>`).join('')}<th>Mean</th><th>σ</th><th>S/N (dB)</th></tr>`;
+  L9.forEach((r,i)=>{h+=`<tr><td>${i+1}</td>${r.map(v=>`<td class="lvl">${v}</td>`).join('')}${[0,1,2,3].map(j=>`<td><input type="number" step="any" id="y${i}_${j}"></td>`).join('')}<td id="m${i}"></td><td id="s${i}"></td><td id="e${i}"></td></tr>`;});
+  document.getElementById('d_table').innerHTML=h;
+}
+function loadDOE(i){
+  const e=DOE[i];
+  document.getElementById('d_resp').value=e.resp;document.getElementById('d_type').value=e.type;document.getElementById('d_target').value=e.target;
+  ['fA','fB','fC'].forEach((id,k)=>document.getElementById(id).value=e.f[k]);
+  ['lA','lB','lC'].forEach((id,k)=>document.getElementById(id).value=e.l[k]);
+  [1,2,3,4].forEach(k=>document.getElementById('n'+k).value=e.n[k-1]);
+  buildTable();
+  e.d.forEach((r,ri)=>r.forEach((v,ci)=>document.getElementById(`y${ri}_${ci}`).value=v));
+  calcDOE();
+}
+function clearDOE(){buildTable();}
+function calcDOE(){
+  const type=document.getElementById('d_type').value,T=parseFloat(document.getElementById('d_target').value);
+  const fn=['fA','fB','fC'].map(id=>document.getElementById(id).value);
+  const lv=['lA','lB','lC'].map(id=>document.getElementById(id).value.split('/').map(s=>s.trim()));
+  const Y=[],E=[],M=[];
+  for(let i=0;i<9;i++){const y=[];for(let j=0;j<4;j++){const v=parseFloat(document.getElementById(`y${i}_${j}`).value);if(!isNaN(v))y.push(v);}
+    if(y.length<2){alert('Run '+(i+1)+' needs at least 2 noise values.');return;}
+    Y.push(y);const e=SN(y,type,T);E.push(e);M.push(mean(y));
+    document.getElementById('m'+i).textContent=f(mean(y),3);document.getElementById('s'+i).textContent=f(sd(y),3);document.getElementById('e'+i).textContent=f(e,2);}
+  // level averages
+  const effE=[0,1,2].map(fi=>[1,2,3].map(l=>mean(E.filter((_,r)=>L9[r][fi]===l))));
+  const effM=[0,1,2].map(fi=>[1,2,3].map(l=>mean(M.filter((_,r)=>L9[r][fi]===l))));
+  const Ebar=mean(E);
+  const best=effE.map(a=>a.indexOf(Math.max(...a)));
+  const deltaE=effE.map(a=>Math.max(...a)-Math.min(...a));
+  const rank=[0,1,2].sort((a,b)=>deltaE[b]-deltaE[a]);
+  const pred=Ebar+best.reduce((s,b,fi)=>s+effE[fi][b]-Ebar,0);
+  const bestRun=E.indexOf(Math.max(...E));
+  // response table
+  let h=`<table><tr><th>Level</th>${fn.map(x=>`<th>${x}<br><span class="small">S/N (dB)</span></th>`).join('')}${fn.map(x=>`<th>${x}<br><span class="small">Mean</span></th>`).join('')}</tr>`;
+  for(let l=0;l<3;l++){h+=`<tr><td class="lvl">${l+1}</td>${[0,1,2].map(fi=>`<td class="${best[fi]===l?'best':''}">${f(effE[fi][l],2)}</td>`).join('')}${[0,1,2].map(fi=>`<td>${f(effM[fi][l],3)}</td>`).join('')}</tr>`;}
+  h+=`<tr><td>Δ (max−min)</td>${deltaE.map(d=>`<td>${f(d,2)}</td>`).join('')}${effM.map(a=>`<td>${f(Math.max(...a)-Math.min(...a),3)}</td>`).join('')}</tr>`;
+  h+=`<tr><td>Rank</td>${[0,1,2].map(fi=>`<td>${rank.indexOf(fi)+1}</td>`).join('')}<td colspan=3 class="small">by influence on S/N</td></tr></table>`;
+  document.getElementById('d_rtable').innerHTML=h;
+  // kpis
+  document.getElementById('d_kpi').innerHTML=`
+   <div><div class="v">${f(pred,2)} dB</div><div class="l">Predicted S/N at optimum</div></div>
+   <div><div class="v">${f(Math.max(...E),2)} dB</div><div class="l">Best S/N among the 9 runs (run ${bestRun+1})</div></div>
+   <div><div class="v">${f(Ebar,2)} dB</div><div class="l">Grand mean S/N</div></div>`;
+  const setting=best.map((b,fi)=>`<b>${fn[fi]}</b> = ${lv[fi][b]||('level '+(b+1))}`).join(', ');
+  let txt=`<b>Robust setting:</b> ${setting}. Most influential factor on robustness: <b>${fn[rank[0]]}</b> (Δ = ${f(deltaE[rank[0]],2)} dB); least: <b>${fn[rank[2]]}</b> (Δ = ${f(deltaE[rank[2]],2)} dB).`;
+  const inL9=L9.findIndex(r=>r.every((v,fi)=>v===best[fi]+1));
+  txt+= inL9>=0?` This combination is run ${inL9+1} of the array (measured S/N ${f(E[inL9],2)} dB).`:` This combination was not among the 9 runs — confirm it experimentally (prediction ${f(pred,2)} dB).`;
+  if(type==='ntb'){const adj=[0,1,2].sort((a,b)=>(Math.max(...effM[b])-Math.min(...effM[b]))/(deltaE[b]+1e-9)-(Math.max(...effM[a])-Math.min(...effM[a]))/(deltaE[a]+1e-9))[0];
+    txt+=` <b>Adjustment factor candidate:</b> ${fn[adj]} — it shifts the mean (range ${f(Math.max(...effM[adj])-Math.min(...effM[adj]),3)}) more than it changes S/N, so use it to bring the mean onto target ${T}.`;}
+  const lowSN=E.indexOf(Math.min(...E));
+  txt+=` Note run ${bestRun+1} vs run ${lowSN+1}: mean ${f(M[bestRun],2)} vs ${f(M[lowSN],2)}, σ ${f(sd(Y[bestRun]),3)} vs ${f(sd(Y[lowSN]),3)} — the S/N ratio rewards consistency across noise, not just the best average.`;
+  document.getElementById('d_text').innerHTML=txt;
+  document.getElementById('d_runs').innerHTML=`<table><tr><th>Run</th><th>Levels</th><th>Mean</th><th>σ</th><th>Range</th><th>S/N</th></tr>${Y.map((y,i)=>`<tr class="${i===bestRun?'':''}"><td>${i+1}</td><td class="lvl">${L9[i].join('-')}</td><td>${f(mean(y),3)}</td><td>${f(sd(y),3)}</td><td>${f(Math.max(...y)-Math.min(...y),3)}</td><td class="${i===bestRun?'best':''}">${f(E[i],2)}</td></tr>`).join('')}</table>`;
+  // charts: x = 9 categories A1 A2 A3 B1 .. with gaps
+  const labels=[],dE=[],dM=[];
+  [0,1,2].forEach(fi=>{[0,1,2].forEach(l=>{labels.push(`${fn[fi].split(' ')[0]} ${lv[fi][l]||l+1}`);dE.push(effE[fi][l]);dM.push(effM[fi][l]);});if(fi<2){labels.push('');dE.push(null);dM.push(null);}});
+  const mk=(id,old,data,label,color,ref)=>{if(old)old.destroy();
+    return new Chart(document.getElementById(id),{type:'line',data:{labels,datasets:[
+      {label,data,borderColor:color,backgroundColor:color,pointRadius:5,borderWidth:2,spanGaps:false,segment:{borderColor:ctx=>ctx.p0.parsed.y==null||ctx.p1.parsed.y==null?'transparent':color}},
+      {label:'Grand mean',data:labels.map(()=>ref),borderColor:C.muted,borderDash:[4,4],pointRadius:0,borderWidth:1}]},
+     options:{responsive:true,maintainAspectRatio:false,scales:{x:{ticks:{autoSkip:false,maxRotation:45}},y:{title:{display:true,text:label}}},plugins:{legend:{display:true}}}});};
+  snChart=mk('sn_chart',snChart,dE,'S/N ratio η (dB)',C.amber,Ebar);
+  meanChart=mk('mean_chart',meanChart,dM,'Mean '+document.getElementById('d_resp').value,C.teal,mean(M));
+}
+
+/* ================= PAGE 3: concept comparison ================= */
+const CMP=[
+ {resp:'Max cell temperature (°C)',T:45,k:0.5,type:'stb',cond:['Lab baseline','Cold ambient','Hot ambient','Aged TIM','High contact resistance','Worst combined'],A:[40,36,52,48,50,58],B:[43,41,46,45,46,48]},
+ {resp:'Gasket contact pressure (MPa)',T:0.80,k:3000,type:'ntb',cond:['Nominal','−30°C','80°C','Aged 1000 h','Max tolerance stack','Min tolerance stack'],A:[0.80,0.62,0.93,0.68,0.95,0.66],B:[0.84,0.78,0.88,0.80,0.89,0.79]},
+ {resp:'Solder-joint life (cycles)',T:2500,k:0.0002,type:'ltb',cond:['Nominal profile','−40/125°C','Thin board','High ramp rate','Aged 500 h','Worst combined'],A:[2800,1900,2100,1700,2300,1300],B:[2500,2250,2300,2150,2400,2000]}
+];
+let cChart;
+function buildCmp(cond){document.getElementById('c_table').innerHTML=`<tr><th>Noise condition</th><th>Concept A</th><th>Concept B</th></tr>`+[0,1,2,3,4,5].map(i=>`<tr><td><input type="text" id="cc${i}" value="${cond[i]||''}" style="width:170px;text-align:left"></td><td><input type="number" step="any" id="ca${i}"></td><td><input type="number" step="any" id="cb${i}"></td></tr>`).join('');}
+buildCmp([]);
+function loadCmp(i){const e=CMP[i];document.getElementById('c_resp').value=e.resp;document.getElementById('c_T').value=e.T;document.getElementById('c_k').value=e.k;document.getElementById('c_type').value=e.type;buildCmp(e.cond);e.A.forEach((v,j)=>document.getElementById('ca'+j).value=v);e.B.forEach((v,j)=>document.getElementById('cb'+j).value=v);calcCmp();}
+function calcCmp(){
+  const T=parseFloat(document.getElementById('c_T').value),k=parseFloat(document.getElementById('c_k').value),type=document.getElementById('c_type').value;
+  const cond=[],A=[],B=[];
+  for(let i=0;i<6;i++){const a=parseFloat(document.getElementById('ca'+i).value),b=parseFloat(document.getElementById('cb'+i).value);if(!isNaN(a)&&!isNaN(b)){cond.push(document.getElementById('cc'+i).value||('C'+(i+1)));A.push(a);B.push(b);}}
+  if(A.length<2){alert('Enter at least 2 conditions.');return;}
+  const st=y=>({m:mean(y),s:sd(y),r:Math.max(...y)-Math.min(...y),sn:SN(y,type,T),L:k*mean(y.map(v=>(v-T)**2))});
+  const a=st(A),b=st(B);
+  document.getElementById('c_kpi').innerHTML=`
+   <div><div class="v" style="color:${C.red}">${f(a.r,2)}</div><div class="l">Range — A</div></div>
+   <div><div class="v" style="color:${C.blue}">${f(b.r,2)}</div><div class="l">Range — B</div></div>
+   <div><div class="v" style="color:${C.red}">${f(a.sn,2)} dB</div><div class="l">S/N — A</div></div>
+   <div><div class="v" style="color:${C.blue}">${f(b.sn,2)} dB</div><div class="l">S/N — B</div></div>
+   <div><div class="v" style="color:${C.red}">${f(a.L,2)}</div><div class="l">Mean loss k·E[(y−T)²] — A</div></div>
+   <div><div class="v" style="color:${C.blue}">${f(b.L,2)}</div><div class="l">Mean loss — B</div></div>`;
+  const win=b.sn>a.sn?'B':'A',lose=win==='A'?'B':'A';
+  const bestA=type==='ltb'?Math.max(...A):Math.min(...A),bestB=type==='ltb'?Math.max(...B):Math.min(...B);
+  const singleWinner=type==='ltb'?(bestA>bestB?'A':'B'):(bestA<bestB?'A':'B');
+  document.getElementById('c_text').innerHTML=`<b>Taguchi's choice: Concept ${win}</b> (S/N ${f(Math.max(a.sn,b.sn),2)} dB vs ${f(Math.min(a.sn,b.sn),2)} dB). ${singleWinner!==win?`Concept ${singleWinner} has the best single result (${singleWinner==='A'?bestA:bestB}) but a ${f(Math.max(a.r,b.r)/Math.min(a.r,b.r),1)}× wider range across noise — its lab win does not survive the field.`:`Concept ${win} wins on both the best single result and consistency.`} σ: A = ${f(a.s,3)}, B = ${f(b.s,3)}. Mean: A = ${f(a.m,2)}, B = ${f(b.m,2)}.`;
+  if(cChart)cChart.destroy();
+  cChart=new Chart(document.getElementById('c_chart'),{type:'line',data:{labels:cond,datasets:[
+    {label:'Concept A',data:A,borderColor:C.red,backgroundColor:C.red,borderDash:[6,4],pointRadius:6,borderWidth:2,tension:0},
+    {label:'Concept B',data:B,borderColor:C.blue,backgroundColor:C.blue,pointStyle:'rect',pointRadius:7,borderWidth:2,tension:0},
+    {label:'Target',data:cond.map(()=>T),borderColor:C.green,borderDash:[3,3],pointRadius:0,borderWidth:1.5}]},
+   options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    scales:{x:{ticks:{maxRotation:30}},y:{title:{display:true,text:document.getElementById('c_resp').value}}},plugins:{legend:{position:'top'}}}});
+}
+
+/* ---------------- init ---------------- */
+loadQL(0); loadDOE(0); loadCmp(0);
+</script>
+</body>
+</html>

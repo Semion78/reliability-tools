@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>RDT Planner</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,wght@0,600;1,400&display=swap">
+<style>
+/* Layout: sticky control rail on the left, chart stage on the right; stacks on phones. Dark-first lab-notebook palette. */
+:root{
+  --bg:#0f1a2b; --panel:#162540; --panel2:#1c2e4d; --line:#2b4166;
+  --fg:#e8edf5; --muted:#93a3bf; --amber:#e7b04a; --teal:#2ec4a6; --red:#e8626a;
+  --grid:rgba(147,163,191,.14);
+  --display:"Source Serif 4",Georgia,serif; --body:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){
+  --bg:#f3f5f9; --panel:#ffffff; --panel2:#eef2f8; --line:#d3dbe8; --fg:#13213a; --muted:#5a6a86; --amber:#b9821a; --teal:#15907a; --red:#c4434b; --grid:rgba(19,33,58,.1); color-scheme:light }}
+:root[data-theme="light"]{ --bg:#f3f5f9; --panel:#ffffff; --panel2:#eef2f8; --line:#d3dbe8; --fg:#13213a; --muted:#5a6a86; --amber:#b9821a; --teal:#15907a; --red:#c4434b; --grid:rgba(19,33,58,.1); color-scheme:light }
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--body);padding-block:0 32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{max-width:1240px;margin:0 auto;padding:28px 0 18px;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--line)}
+h1{font:600 30px/1.1 var(--display);margin:0;text-wrap:balance}
+h1 small{display:block;font:italic 400 15px/1.4 var(--display);color:var(--muted);margin-top:6px}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{background:none;border:1px solid transparent;color:var(--muted);font:500 13.5px var(--body);padding:8px 14px;border-radius:6px;cursor:pointer;letter-spacing:.01em}
+nav button[aria-selected="true"]{background:var(--panel);border-color:var(--line);color:var(--fg)}
+nav button:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+main{max-width:1240px;margin:22px auto 0;display:grid;grid-template-columns:340px minmax(0,1fr);gap:22px}
+@media (max-width:860px){main{grid-template-columns:1fr}}
+aside{display:flex;flex-direction:column;gap:14px;align-self:start;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;min-width:0}
+.card h2{font:600 11.5px var(--body);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.field{display:grid;grid-template-columns:1fr 92px;gap:8px;align-items:center;margin-bottom:10px}
+.field label{font-size:13.5px}
+.field label span{display:block;color:var(--muted);font-size:12px}
+.field input,.field select{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--fg);font:500 14px var(--mono);padding:7px 9px;border-radius:6px;text-align:right}
+.field input[type=range]{grid-column:1/-1;padding:0;accent-color:var(--amber);height:22px}
+.result{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--panel2);border-radius:8px;padding:10px 12px}
+.stat b{display:block;font:500 26px/1.1 var(--mono);color:var(--amber);font-variant-numeric:tabular-nums}
+.stat.teal b{color:var(--teal)}.stat.red b{color:var(--red)}
+.stat span{font-size:12px;color:var(--muted)}
+.stat.wide{grid-column:1/-1}
+.eq{font:13.5px var(--mono);background:var(--panel2);border-radius:6px;padding:9px 11px;margin-top:10px;overflow-x:auto;white-space:nowrap;color:var(--fg)}
+.eq i{color:var(--amber);font-style:normal}
+.note{font-size:13px;color:var(--muted);margin:10px 0 0;line-height:1.5}
+.warn{border-left:3px solid var(--amber);padding-left:10px}
+section[role=tabpanel]{display:flex;flex-direction:column;gap:18px;min-width:0}
+.stage{position:relative;height:420px}
+@media (max-width:860px){.stage{height:320px}}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:pan-y;cursor:crosshair}
+.field input[aria-invalid="true"]{border-color:var(--red);color:var(--red)}
+.caption{font:italic 400 14px/1.5 var(--display);color:var(--muted);margin:8px 0 0}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:13.5px}
+th{text-align:left;font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:7px 8px;border-bottom:1px solid var(--line);font-family:var(--mono)}
+td:first-child{font-family:var(--body)}
+tr.hl td{background:color-mix(in srgb,var(--amber) 14%,transparent);font-weight:500}
+.tablewrap{overflow-x:auto}
+.examples{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.ex{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;cursor:pointer;text-align:left;color:var(--fg);font:inherit}
+.ex:hover{border-color:var(--amber)}
+.ex .tag{font:500 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--teal)}
+.ex h3{font:600 18px/1.2 var(--display);margin:0}
+.ex p{margin:0;color:var(--muted);font-size:13.5px}
+.ex .kv{font:13px var(--mono);display:flex;gap:14px;flex-wrap:wrap}
+.ex .kv b{color:var(--amber);font-weight:500}
+.verdict{display:inline-block;padding:3px 10px;border-radius:999px;font:500 12px var(--body);letter-spacing:.04em}
+.pass{background:color-mix(in srgb,var(--teal) 20%,transparent);color:var(--teal)}
+.fail{background:color-mix(in srgb,var(--red) 20%,transparent);color:var(--red)}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--panel2);font:500 12px var(--mono)}
+footer{max-width:1240px;margin:28px auto 0;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px}
+@media (prefers-reduced-motion:no-preference){nav button,.ex{transition:border-color .15s,background .15s}}
+</style>
+
+<header>
+  <h1>Reliability Demonstration Test Planner<small>Sample size, demonstrated reliability and operating characteristic for success-run and k-failure plans</small></h1>
+  <nav role="tablist">
+    <button type="button" role="tab" aria-selected="true" data-tab="plan">Plan designer</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="evidence">Evidence curve</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="oc">OC curve &amp; risks</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="time">Test-time trade</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="examples">Worked examples</button>
+  </nav>
+</header>
+
+<main>
+  <aside>
+    <div class="card">
+      <h2>Requirement</h2>
+      <div class="field"><label for="R">Required reliability R<span>at the mission duration</span></label><input id="R" type="number" min="0.5" max="0.9999" step="0.005" value="0.90"><input id="Rs" type="range" min="0.5" max="0.999" step="0.001" value="0.90" aria-label="Required reliability slider"></div>
+      <div class="field"><label for="Cconf">Confidence level C<span>lower bound coverage</span></label><input id="Cconf" type="number" min="0.5" max="0.999" step="0.01" value="0.90"><input id="Cs" type="range" min="0.5" max="0.99" step="0.01" value="0.90" aria-label="Confidence slider"></div>
+      <div class="field"><label for="cAllow">Failures allowed c<span>plan accepts up to c</span></label><input id="cAllow" type="number" min="0" max="10" step="1" value="0"></div>
+      <div class="field"><label for="tm">Mission duration<span>hours, cycles, km&#x2026;</span></label><input id="tm" type="number" min="1" step="100" value="5000"></div>
+    </div>
+    <div class="card">
+      <h2>Observed result</h2>
+      <div class="field"><label for="Nobs">Units tested N<span>each ran the full mission</span></label><input id="Nobs" type="number" min="1" max="2000" step="1" value="22"></div>
+      <div class="field"><label for="fobs">Failures observed f<span>qualifying failures</span></label><input id="fobs" type="number" min="0" max="50" step="1" value="0"></div>
+      <p class="note" id="verdictNote"></p>
+    </div>
+    <div class="card">
+      <h2>Model basis</h2>
+      <p class="note" style="margin:0">Binomial success-run: each unit either completes the mission or not. Samples are assumed independent and representative, with one failure definition applied throughout. No lifetime distribution is assumed unless you open the test-time trade tab.</p>
+    </div>
+  </aside>
+
+  <section role="tabpanel" id="tab-plan">
+    <div class="card">
+      <h2>Required sample size</h2>
+      <div class="result">
+        <div class="stat wide"><b id="Nreq">22</b><span id="NreqLabel">units, each completing the full mission with &#x2264; 0 failures</span></div>
+        <div class="stat teal"><b id="Nc0">22</b><span>if zero failures allowed</span></div>
+        <div class="stat teal"><b id="Nc1">38</b><span>if one failure allowed</span></div>
+      </div>
+      <div class="eq" id="eqN">N = &#x2308; ln(1 &#x2212; C) / ln R &#x2309; = &#x2308; ln(0.10) / ln(0.90) &#x2309; = &#x2308; 21.85 &#x2309; = <i>22</i></div>
+      <p class="note">For c &gt; 0 the plan solves the smallest N with &#x3A3;<sub>k&#x2264;c</sub> C(N,k)(1&#x2212;R)<sup>k</sup>R<sup>N&#x2212;k</sup> &#x2264; 1 &#x2212; C. Allowing failures always costs more units for the same claim.</p>
+    </div>
+    <div class="card">
+      <h2>What the observed result demonstrates</h2>
+      <div class="result">
+        <div class="stat"><b id="RL">90.1%</b><span id="RLlabel">lower reliability bound at 90% confidence</span></div>
+        <div class="stat"><b id="Cach">90.1%</b><span id="Cachlabel">confidence that R &#x2265; 90% given the data</span></div>
+        <div class="stat wide" id="verdictStat"><b id="verdict" style="font-size:20px">Requirement demonstrated</b><span id="verdictSub"></span></div>
+      </div>
+      <div class="eq" id="eqRL">R<sub>L</sub> = (1 &#x2212; C)<sup>1/N</sup> = 0.10<sup>1/22</sup> = <i>0.901</i></div>
+      <p class="note">A passing test demonstrates a lower bound, not the population reliability. Twenty-two survivors say "at least about 90%", not "100%".</p>
+    </div>
+    <div class="card">
+      <h2>Plan table: units needed for this R and C</h2>
+      <div class="tablewrap"><table><thead><tr><th>Failures allowed</th><th>N required</th><th>P(pass) if true R = R<sub>req</sub></th><th>P(pass) if true R = 0.99</th><th>Units per failure allowed</th></tr></thead><tbody id="planTable"></tbody></table></div>
+    </div>
+  </section>
+
+  <section role="tabpanel" id="tab-evidence" hidden>
+    <div class="card">
+      <h2>Demonstrated lower reliability bound vs. number of survivors</h2>
+      <div class="stage"><canvas id="chEvidence"></canvas></div>
+      <p class="caption">Zero failures does not mean 100 percent reliability. The same observation becomes stronger evidence as the sample grows; the dashed line is the requirement, the amber ring is the smallest passing plan. Lower curves show the bound when 1 or 2 failures are observed.</p>
+    </div>
+    <div class="card">
+      <h2>Reading the curve</h2>
+      <div class="tablewrap"><table><thead><tr><th>Survivors (0 failures)</th><th>R<sub>L</sub> at chosen C</th><th>Meets requirement?</th></tr></thead><tbody id="evTable"></tbody></table></div>
+    </div>
+  </section>
+
+  <section role="tabpanel" id="tab-oc" hidden>
+    <div class="card">
+      <h2>Operating characteristic of the planned test</h2>
+      <div class="field" style="grid-template-columns:1fr 92px 1fr 92px;max-width:640px"><label for="Racc">Acceptable R<span>producer's reference</span></label><input id="Racc" type="number" min="0.5" max="0.9999" step="0.005" value="0.99"><label for="Runacc">Unacceptable R<span>consumer's reference</span></label><input id="Runacc" type="number" min="0.5" max="0.9999" step="0.005" value="0.85"></div>
+      <div class="stage"><canvas id="chOC"></canvas></div>
+      <p class="caption">Probability of passing as a function of the true (unknown) mission reliability. A design sitting exactly at the requirement passes a zero-failure plan only about one time in ten, which is the price of a 90% confidence statement.</p>
+    </div>
+    <div class="result">
+      <div class="card"><h2>Producer's risk &#x3B1;</h2><div class="stat red"><b id="alpha">19.8%</b><span id="alphaLabel">chance a design with true R = 0.99 fails this test</span></div></div>
+      <div class="card"><h2>Consumer's risk &#x3B2;</h2><div class="stat red"><b id="beta">2.8%</b><span id="betaLabel">chance a design with true R = 0.85 passes this test</span></div></div>
+    </div>
+    <div class="card"><h2>P(pass) at selected true reliabilities</h2><div class="tablewrap"><table><thead><tr><th>True R</th><th>P(pass)</th><th>P(reject)</th><th>Reading</th></tr></thead><tbody id="ocTable"></tbody></table></div></div>
+  </section>
+
+  <section role="tabpanel" id="tab-time" hidden>
+    <div class="card warn">
+      <h2>Trading units for test time (requires a lifetime model)</h2>
+      <p class="note" style="margin:0 0 12px">The binomial plan says nothing about running fewer units longer. That exchange is only valid under an assumed life distribution. With a Weibull shape &#x3B2; and no failures, running each unit for t<sub>test</sub> instead of the mission t<sub>m</sub> changes the required count by (t<sub>test</sub>/t<sub>m</sub>)<sup>&#x2212;&#x3B2;</sup>. The result is only as trustworthy as &#x3B2;, and it assumes the extended test exercises the same failure mechanisms.</p>
+      <div class="field" style="grid-template-columns:1fr 92px 1fr 92px;max-width:640px"><label for="betaW">Weibull shape &#x3B2;<span>1 = random, &gt;1 = wear-out</span></label><input id="betaW" type="number" min="0.3" max="8" step="0.1" value="2.0"><label for="ratio">Test length ratio t<sub>test</sub>/t<sub>m</sub><span>1 = full mission</span></label><input id="ratio" type="number" min="0.25" max="6" step="0.25" value="2"></div>
+      <div class="result">
+        <div class="stat"><b id="Ntime">6</b><span id="NtimeLabel">units at 2.0&#xD7; mission length, &#x3B2; = 2.0, zero failures</span></div>
+        <div class="stat teal"><b id="hoursTotal">60,000</b><span id="hoursLabel">total unit-hours vs. 110,000 for the full-mission plan</span></div>
+      </div>
+      <div class="eq" id="eqTime">N<sub>ext</sub> = &#x2308; N<sub>0</sub> &#xB7; (t<sub>test</sub>/t<sub>m</sub>)<sup>&#x2212;&#x3B2;</sup> &#x2309; = &#x2308; 21.85 &#xB7; 2.0<sup>&#x2212;2.0</sup> &#x2309; = &#x2308; 5.46 &#x2309; = <i>6</i></div>
+    </div>
+    <div class="card">
+      <h2>Required units vs. test length for several &#x3B2;</h2>
+      <div class="stage"><canvas id="chTime"></canvas></div>
+      <p class="caption">Steep &#x3B2; (wear-out) buys a lot of sample reduction from extra test time; &#x3B2; near 1 buys little. If &#x3B2; is uncertain, the honest plan uses the lowest plausible &#x3B2;, which is the highest curve.</p>
+    </div>
+  </section>
+
+  <section role="tabpanel" id="tab-examples" hidden>
+    <p class="note" style="margin:0 0 4px">Illustrative cases with preloaded data. Click one to load its requirement and observed result into the planner; every tab then updates.</p>
+    <div class="examples" id="examples"></div>
+  </section>
+</main>
+<footer>Binomial success-run demonstration (MIL-STD-781 family lineage). Lower bound solved by bisection on the binomial CDF; charts drawn natively with no external libraries; time trade uses the Weibull equal-damage scaling N&#xB7;(t/t<sub>m</sub>)<sup>&#x3B2;</sup> = const. Illustrative examples only.</footer>
+
+<script>
+// ================= math =================
+function lnC(n,k){let s=0;for(let i=1;i<=k;i++)s+=Math.log(n-k+i)-Math.log(i);return s}
+function binCDF(c,n,p){ // P(X<=c), X ~ Bin(n,p), p = failure probability = 1-R
+  if(p<=0)return 1; if(p>=1)return c>=n?1:0;
+  let s=0;for(let k=0;k<=Math.min(c,n);k++)s+=Math.exp(lnC(n,k)+k*Math.log(p)+(n-k)*Math.log(1-p));return Math.min(1,s)}
+function Nexact(R,C){return Math.log(1-C)/Math.log(R)}
+function Nreq(R,C,c){
+  const n0=Math.max(1,Math.ceil(Nexact(R,C)-1e-9));
+  if(c===0)return n0;
+  const cap=n0*30+500;
+  for(let n=Math.max(n0,c+1);n<=cap;n++){if(binCDF(c,n,1-R)<=1-C)return n}
+  return Infinity}
+function RL(n,f,C){ // lower bound: R such that P(X<=f | n, 1-R) = 1-C
+  if(f>=n)return 0;let lo=0,hi=1;for(let i=0;i<60;i++){const m=(lo+hi)/2;if(binCDF(f,n,1-m)>1-C)hi=m;else lo=m}return lo}
+function confAchieved(n,f,R){return 1-binCDF(f,n,1-R)}
+const pct=(x,d=1)=>(x*100).toFixed(d)+'%';
+const fmt=x=>isFinite(x)?Math.round(x).toLocaleString('en-US'):'\u2014';
+
+// ================= canvas plotter (no libraries) =================
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function niceTicks(min,max,n){const span=max-min||1;const raw=span/n;const mag=Math.pow(10,Math.floor(Math.log10(raw)));const e=raw/mag;
+  const step=(e>=7.5?10:e>=3.5?5:e>=1.5?2:1)*mag;const t=[];for(let v=Math.ceil(min/step-1e-9)*step;v<=max+1e-9;v+=step)t.push(+v.toFixed(10));return t}
+function Plot(canvas){
+  this.cv=canvas;this.spec=null;this.hover=null;
+  const redraw=()=>this.draw();
+  if(window.ResizeObserver)new ResizeObserver(redraw).observe(canvas.parentElement);
+  window.addEventListener('resize',redraw);
+  canvas.addEventListener('pointermove',e=>{const r=canvas.getBoundingClientRect();this.hover={x:e.clientX-r.left,y:e.clientY-r.top};this.draw()});
+  canvas.addEventListener('pointerleave',()=>{this.hover=null;this.draw()});
+}
+Plot.prototype.set=function(spec){this.spec=spec;this.draw()};
+Plot.prototype.draw=function(){
+  const sp=this.spec,cv=this.cv;if(!sp)return;
+  const W=cv.parentElement.clientWidth,H=cv.parentElement.clientHeight;if(!W||!H)return; // hidden tab
+  const dpr=window.devicePixelRatio||1;
+  if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr)}
+  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);
+  const FG=css('--fg'),MUT=css('--muted'),GRID=css('--grid'),PANEL=css('--panel2'),LINE=css('--line');
+  const font=(sz,w)=>`${w||400} ${sz}px ${css('--body')}`;
+  // legend layout
+  g.font=font(12);const items=sp.series.filter(s=>s.label);const lines=[[]];let lx=0;const maxW=W-24;
+  items.forEach(s=>{const w=22+g.measureText(s.label).width+16;if(lx+w>maxW&&lines[lines.length-1].length){lines.push([]);lx=0}lines[lines.length-1].push({s,x:lx});lx+=w});
+  const legH=lines.length*18+8;
+  const P={l:62,r:18,t:legH+8,b:48};const pw=W-P.l-P.r,ph=H-P.t-P.b;if(pw<40||ph<40)return;
+  const X=v=>P.l+(v-sp.x.min)/(sp.x.max-sp.x.min)*pw, Y=v=>P.t+ph-(v-sp.y.min)/(sp.y.max-sp.y.min)*ph;
+  const Xinv=px=>sp.x.min+(px-P.l)/pw*(sp.x.max-sp.x.min);
+  // legend
+  lines.forEach((ln,i)=>ln.forEach(({s,x})=>{const y=10+i*18;g.strokeStyle=s.color;g.fillStyle=s.color;g.lineWidth=2;
+    if(s.points){g.beginPath();g.arc(12+x+4,y+5,4.5,0,7);g.fill()}else{g.setLineDash(s.dash||[]);g.beginPath();g.moveTo(12+x-4,y+5);g.lineTo(12+x+14,y+5);g.stroke();g.setLineDash([])}
+    g.fillStyle=MUT;g.font=font(12);g.textAlign='left';g.textBaseline='middle';g.fillText(s.label,12+x+20,y+5)}));
+  // grid + ticks
+  g.lineWidth=1;g.font=font(11.5);g.fillStyle=MUT;
+  niceTicks(sp.x.min,sp.x.max,Math.max(3,Math.floor(pw/80))).forEach(t=>{const x=X(t);g.strokeStyle=GRID;g.beginPath();g.moveTo(x,P.t);g.lineTo(x,P.t+ph);g.stroke();
+    g.textAlign='center';g.textBaseline='top';g.fillText(sp.x.fmt?sp.x.fmt(t):t,x,P.t+ph+6)});
+  niceTicks(sp.y.min,sp.y.max,Math.max(3,Math.floor(ph/55))).forEach(t=>{const y=Y(t);g.strokeStyle=GRID;g.beginPath();g.moveTo(P.l,y);g.lineTo(P.l+pw,y);g.stroke();
+    g.textAlign='right';g.textBaseline='middle';g.fillText(sp.y.fmt?sp.y.fmt(t):t,P.l-8,y)});
+  g.strokeStyle=LINE;g.strokeRect(P.l+.5,P.t+.5,pw,ph);
+  // axis titles
+  g.fillStyle=MUT;g.font=font(12,500);g.textAlign='center';g.textBaseline='bottom';g.fillText(sp.x.title,P.l+pw/2,H-4);
+  g.save();g.translate(14,P.t+ph/2);g.rotate(-Math.PI/2);g.textBaseline='middle';g.fillText(sp.y.title,0,0);g.restore();
+  // series (clipped)
+  g.save();g.beginPath();g.rect(P.l,P.t,pw,ph);g.clip();
+  sp.series.forEach(s=>{if(!s.data.length)return;g.strokeStyle=s.color;g.fillStyle=s.color;
+    if(s.points){s.data.forEach(p=>{g.beginPath();g.arc(X(p.x),Y(p.y),s.r||5.5,0,7);g.fill()})}
+    else{g.lineWidth=s.width||2.2;g.setLineDash(s.dash||[]);g.beginPath();s.data.forEach((p,i)=>i?g.lineTo(X(p.x),Y(p.y)):g.moveTo(X(p.x),Y(p.y)));g.stroke();g.setLineDash([])}});
+  if(sp.ring){g.strokeStyle=css('--amber');g.lineWidth=2.5;g.beginPath();g.arc(X(sp.ring.x),Y(sp.ring.y),13,0,7);g.stroke()}
+  g.restore();
+  // hover readout
+  const h=this.hover;
+  if(h&&h.x>=P.l&&h.x<=P.l+pw&&h.y>=P.t&&h.y<=P.t+ph){
+    const xv=Xinv(h.x);const rows=[];
+    sp.series.filter(s=>!s.points&&s.label&&s.data.length>2).forEach(s=>{let best=s.data[0];for(const p of s.data)if(Math.abs(p.x-xv)<Math.abs(best.x-xv))best=p;rows.push({s,p:best})});
+    if(rows.length){const xs=X(rows[0].p.x);g.strokeStyle=MUT;g.lineWidth=1;g.setLineDash([3,3]);g.beginPath();g.moveTo(xs,P.t);g.lineTo(xs,P.t+ph);g.stroke();g.setLineDash([]);
+      rows.forEach(r=>{g.fillStyle=r.s.color;g.beginPath();g.arc(X(r.p.x),Y(r.p.y),4,0,7);g.fill()});
+      const head=sp.tip.x(rows[0].p.x);const txt=rows.map(r=>`${r.s.label}: ${sp.tip.y(r.p.y)}`);
+      g.font=font(12,600);let bw=g.measureText(head).width;g.font=font(12);txt.forEach(t=>bw=Math.max(bw,g.measureText(t).width));bw+=20;
+      const bh=22+txt.length*17;let bx=xs+12;if(bx+bw>W-4)bx=xs-12-bw;let by=Math.min(Math.max(P.t+4,h.y-bh/2),P.t+ph-bh);
+      g.fillStyle=PANEL;g.strokeStyle=LINE;g.beginPath();g.roundRect?g.roundRect(bx,by,bw,bh,6):g.rect(bx,by,bw,bh);g.fill();g.stroke();
+      g.fillStyle=FG;g.font=font(12,600);g.textAlign='left';g.textBaseline='top';g.fillText(head,bx+10,by+7);
+      g.font=font(12);txt.forEach((t,i)=>{g.fillStyle=rows[i].s.color;g.fillRect(bx+10,by+27+i*17,8,8);g.fillStyle=FG;g.fillText(t,bx+22,by+24+i*17)})}}
+};
+
+// ================= state & inputs =================
+const $=id=>document.getElementById(id);
+const S={R:.90,C:.90,c:0,tm:5000,N:22,f:0,Racc:.99,Runacc:.85,beta:2,ratio:2};
+const FIELDS={R:['R',0.5,0.9999,false],Cconf:['C',0.5,0.999,false],cAllow:['c',0,10,true],tm:['tm',1,1e9,false],Nobs:['N',1,5000,true],fobs:['f',0,500,true],
+  Racc:['Racc',0.5,0.9999,false],Runacc:['Runacc',0.5,0.9999,false],betaW:['beta',0.3,8,false],ratio:['ratio',0.1,10,false]};
+function readField(id){const [k,lo,hi,isInt]=FIELDS[id];const el=$(id);let v=parseFloat(el.value);
+  const ok=!isNaN(v)&&v>=lo&&v<=hi&&(!isInt||Number.isInteger(v));el.setAttribute('aria-invalid',ok?'false':'true');
+  el.title=ok?'':`Enter ${isInt?'a whole number':'a value'} from ${lo} to ${hi}`;
+  if(ok){S[k]=v;if(id==='R')$('Rs').value=v;if(id==='Cconf')$('Cs').value=v;update()}}
+Object.keys(FIELDS).forEach(id=>{$(id).addEventListener('input',()=>readField(id));$(id).addEventListener('change',()=>readField(id))});
+$('Rs').addEventListener('input',e=>{S.R=parseFloat(e.target.value);$('R').value=S.R.toFixed(3);$('R').setAttribute('aria-invalid','false');update()});
+$('Cs').addEventListener('input',e=>{S.C=parseFloat(e.target.value);$('Cconf').value=S.C.toFixed(2);$('Cconf').setAttribute('aria-invalid','false');update()});
+
+// ================= tabs (wired before any drawing so they always work) =================
+const plots={};
+function showTab(id){
+  document.querySelectorAll('[role=tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===id)));
+  document.querySelectorAll('[role=tabpanel]').forEach(p=>{p.hidden=(p.id!=='tab-'+id)});
+  requestAnimationFrame(()=>Object.values(plots).forEach(p=>p.draw()));
+  try{localStorage.setItem('rdt-tab',id)}catch(e){}}
+document.querySelectorAll('[role=tab]').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+
+// ================= update =================
+function update(){
+  const {R,C,c,tm,N,f}=S;const amber=css('--amber'),teal=css('--teal'),red=css('--red'),fg=css('--fg'),muted=css('--muted');
+  const n0=Nreq(R,C,0),n1=Nreq(R,C,1),nc=Nreq(R,C,c),ne=Nexact(R,C);
+  // ---- plan designer
+  $('Nreq').textContent=fmt(nc);
+  $('NreqLabel').textContent=`units, each completing ${fmt(tm)} of mission with \u2264 ${c} failure${c===1?'':'s'}, to show R \u2265 ${pct(R)} at ${pct(C,0)} confidence`;
+  $('Nc0').textContent=fmt(n0);$('Nc1').textContent=fmt(n1);
+  $('eqN').innerHTML=c===0?`N = \u2308 ln(1 \u2212 C) / ln R \u2309 = \u2308 ln(${(1-C).toFixed(3)}) / ln(${R.toFixed(3)}) \u2309 = \u2308 ${ne.toFixed(2)} \u2309 = <i>${n0}</i>`
+    :`smallest N with \u03A3<sub>k\u2264${c}</sub> C(N,k)(${(1-R).toFixed(3)})<sup>k</sup>(${R.toFixed(3)})<sup>N\u2212k</sup> \u2264 ${(1-C).toFixed(3)} \u2192 <i>${fmt(nc)}</i> &nbsp;(zero-failure plan: ${n0})`;
+  const rl=RL(N,f,C),ca=confAchieved(N,f,R),pass=rl>=R-1e-9&&f<=c;
+  $('RL').textContent=pct(rl);$('RLlabel').textContent=`lower reliability bound at ${pct(C,0)} confidence, ${N} units / ${f} failure${f===1?'':'s'}`;
+  $('Cach').textContent=ca>0.9995?'>99.9%':pct(ca);$('Cachlabel').textContent=`confidence that R \u2265 ${pct(R)} given this result`;
+  $('verdict').textContent=pass?'Requirement demonstrated':'Not demonstrated';$('verdict').style.color=pass?teal:red;
+  const need=Nreq(R,C,f);
+  $('verdictSub').textContent=pass?`Evidence supports R \u2265 ${pct(rl)} at ${pct(C,0)} confidence for the ${fmt(tm)} mission. It does not establish the exact population reliability.`
+    :(f>c?`${f} failure${f===1?'':'s'} exceeds the ${c} allowed by the plan. With ${f} failure${f===1?'':'s'}, ${fmt(need)} units would be needed to demonstrate ${pct(R)} at ${pct(C,0)}. The data support only R \u2265 ${pct(rl)}.`
+    :`${N} units are too few: ${fmt(need)} are needed with ${f} failure${f===1?'':'s'}, or accept the weaker claim R \u2265 ${pct(rl)}.`);
+  $('eqRL').innerHTML=f===0?`R<sub>L</sub> = (1 \u2212 C)<sup>1/N</sup> = ${(1-C).toFixed(3)}<sup>1/${N}</sup> = <i>${rl.toFixed(4)}</i>`
+    :`R<sub>L</sub> solves \u03A3<sub>k\u2264${f}</sub> C(${N},k)(1\u2212R)<sup>k</sup>R<sup>${N}\u2212k</sup> = ${(1-C).toFixed(3)} \u2192 <i>${rl.toFixed(4)}</i>`;
+  $('verdictNote').innerHTML=`<span class="verdict ${pass?'pass':'fail'}">${pass?'PASS':'FAIL'}</span> &nbsp; R<sub>L</sub> = ${pct(rl)} vs. required ${pct(R)}`;
+  let rows='';for(let k=0;k<=5;k++){const n=Nreq(R,C,k);
+    rows+=isFinite(n)?`<tr class="${k===c?'hl':''}"><td>${k}</td><td>${fmt(n)}</td><td>${pct(binCDF(k,n,1-R))}</td><td>${pct(binCDF(k,n,0.01))}</td><td>${(n/(k+1)).toFixed(1)}</td></tr>`
+      :`<tr><td>${k}</td><td>\u2014</td><td>\u2014</td><td>\u2014</td><td>\u2014</td></tr>`}
+  $('planTable').innerHTML=rows;
+
+  // ---- evidence curve
+  const maxN=Math.max(60,Math.ceil(Math.max(n0,N)*1.3));const step=Math.max(1,Math.floor(maxN/300));
+  const curve=ff=>{const d=[];for(let n=ff+1;n<=maxN;n+=step)d.push({x:n,y:RL(n,ff,C)*100});return d};
+  plots.E.set({x:{min:0,max:maxN,title:'Units completing the mission without failure, N'},y:{min:0,max:100,title:'Lower reliability bound (%)',fmt:v=>v+'%'},
+    tip:{x:v=>`N = ${v}`,y:v=>v.toFixed(1)+'%'},ring:{x:n0,y:RL(n0,0,C)*100},
+    series:[{label:`0 failures (C = ${pct(C,0)})`,data:curve(0),color:fg,width:2.6},
+      {label:'1 failure',data:curve(1),color:muted,dash:[6,4],width:1.7},
+      {label:'2 failures',data:curve(2),color:muted,dash:[2,3],width:1.5},
+      {label:`Requirement ${pct(R)}`,data:[{x:0,y:R*100},{x:maxN,y:R*100}],color:amber,dash:[8,5],width:1.6},
+      {label:null,data:[5,10,22,45].filter(n=>n<=maxN).map(n=>({x:n,y:RL(n,0,C)*100})),color:teal,points:true,r:5},
+      {label:`Observed: ${N} units, ${f} failed`,data:[{x:N,y:rl*100}],color:pass?teal:red,points:true,r:7}]});
+  const refN=[3,5,10,15,22,30,45,60,100];let ev='';
+  refN.forEach(n=>{const r=RL(n,0,C);ev+=`<tr class="${n===n0?'hl':''}"><td>${n}</td><td>${pct(r)}</td><td>${r>=R-1e-9?'Yes':'No'}</td></tr>`});
+  if(!refN.includes(n0))ev+=`<tr class="hl"><td>${n0} (minimum)</td><td>${pct(RL(n0,0,C))}</td><td>Yes</td></tr>`;
+  $('evTable').innerHTML=ev;
+
+  // ---- OC curve
+  const nOC=isFinite(nc)?nc:n0;const ppass=r=>binCDF(c,nOC,1-r);
+  const lo=Math.max(0.5,Math.min(S.Runacc-0.03,R-0.1));const oc=[];for(let i=0;i<=200;i++){const r=lo+(1-lo)*i/200;oc.push({x:r*100,y:ppass(r)*100})}
+  const a=1-ppass(S.Racc),b=ppass(S.Runacc);
+  plots.O.set({x:{min:lo*100,max:100,title:'True mission reliability (%)',fmt:v=>v+'%'},y:{min:0,max:100,title:'Probability of passing (%)',fmt:v=>v+'%'},
+    tip:{x:v=>`True R = ${v.toFixed(2)}%`,y:v=>v.toFixed(1)+'%'},
+    series:[{label:`P(pass), N = ${nOC}, c = ${c}`,data:oc,color:fg,width:2.6},
+      {label:`Requirement ${pct(R)}`,data:[{x:R*100,y:0},{x:R*100,y:100}],color:amber,dash:[8,5],width:1.6},
+      {label:`At requirement: ${pct(ppass(R),0)}`,data:[{x:R*100,y:ppass(R)*100}],color:amber,points:true,r:6},
+      {label:`Producer's risk \u03B1 = ${pct(a)}`,data:[{x:S.Racc*100,y:(1-a)*100}],color:teal,points:true,r:6},
+      {label:`Consumer's risk \u03B2 = ${pct(b)}`,data:[{x:S.Runacc*100,y:b*100}],color:red,points:true,r:6}]});
+  $('alpha').textContent=pct(a);$('alphaLabel').textContent=`chance a design with true R = ${pct(S.Racc)} is rejected by the ${nOC}-unit, ${c}-failure plan`;
+  $('beta').textContent=pct(b);$('betaLabel').textContent=`chance a design with true R = ${pct(S.Runacc)} is accepted by the same plan`;
+  let ot='';[0.80,0.85,R,0.95,0.97,0.99,0.995].sort((x,y)=>x-y).filter((v,i,arr)=>i===0||Math.abs(v-arr[i-1])>1e-6).forEach(r=>{const p=ppass(r);
+    const read=Math.abs(r-R)<1e-6?'exactly at requirement':r<R?(p>0.2?'bad design, often passes':'bad design, usually rejected'):(p<0.5?'good design, likely rejected':'good design, likely passes');
+    ot+=`<tr class="${Math.abs(r-R)<1e-6?'hl':''}"><td>${pct(r)}</td><td>${pct(p)}</td><td>${pct(1-p)}</td><td>${read}</td></tr>`});
+  $('ocTable').innerHTML=ot;
+
+  // ---- test-time trade
+  const nextRaw=ne*Math.pow(S.ratio,-S.beta),next=Math.max(1,Math.ceil(nextRaw-1e-9)),hours=next*S.ratio*tm,hours0=n0*tm;
+  $('Ntime').textContent=fmt(next);$('NtimeLabel').textContent=`units at ${S.ratio.toFixed(2)}\u00D7 mission length (${fmt(S.ratio*tm)} each), \u03B2 = ${S.beta.toFixed(1)}, zero failures`;
+  $('hoursTotal').textContent=fmt(hours);$('hoursLabel').textContent=`total unit-exposure vs. ${fmt(hours0)} for the ${n0}-unit full-mission plan (${hours<hours0?'\u2212':'+'}${pct(Math.abs(hours-hours0)/hours0,0)})`;
+  $('eqTime').innerHTML=`N<sub>ext</sub> = \u2308 N<sub>0</sub> \u00B7 (t<sub>test</sub>/t<sub>m</sub>)<sup>\u2212\u03B2</sup> \u2309 = \u2308 ${ne.toFixed(2)} \u00B7 ${S.ratio.toFixed(2)}<sup>\u2212${S.beta.toFixed(1)}</sup> \u2309 = \u2308 ${nextRaw.toFixed(2)} \u2309 = <i>${next}</i>`;
+  const betas=[1,1.5,2,3].concat([S.beta]).filter((v,i,ar)=>ar.findIndex(w=>Math.abs(w-v)<1e-9)===i).sort((x,y)=>x-y);const cols=[muted,teal,amber,red];
+  const tSeries=betas.map((bt,i)=>{const d=[];for(let r=0.5;r<=6.0001;r+=0.05)d.push({x:r,y:Math.max(1,Math.ceil(ne*Math.pow(r,-bt)-1e-9))});
+    const mine=Math.abs(bt-S.beta)<1e-9;return {label:`\u03B2 = ${bt}${mine?' (selected)':''}`,data:d,color:mine?fg:cols[i%4],width:mine?2.8:1.6,dash:mine?[]:[5,3]}});
+  tSeries.push({label:'Your plan',data:[{x:Math.min(6,Math.max(0.5,S.ratio)),y:next}],color:amber,points:true,r:7});
+  plots.T.set({x:{min:0.5,max:6,title:'Test length as a multiple of the mission (t_test / t_m)',fmt:v=>v+'\u00D7'},y:{min:0,max:Math.ceil(Math.max(ne*1.15,next*1.15,10)),title:'Units required (zero failures)'},
+    tip:{x:v=>`${v.toFixed(2)}\u00D7 mission`,y:v=>`${v} units`},series:tSeries});
+}
+
+// ================= examples =================
+const EX=[
+ {tag:'Automotive \u00B7 article case',title:'EV battery coolant pump',desc:'90% of pumps must survive 5,000 h at 90% confidence. Zero-failure plan. All 22 completed the mission.',R:.90,C:.90,c:0,tm:5000,N:22,f:0,Racc:.99,Runacc:.85,beta:2,ratio:2},
+ {tag:'Fuel cell \u00B7 stricter claim',title:'PEM stack humidifier membrane',desc:'99% reliability over 8,000 h at 90% confidence drives the sample count to 230. Team tested 230, saw none fail.',R:.99,C:.90,c:0,tm:8000,N:230,f:0,Racc:.998,Runacc:.97,beta:1.5,ratio:1.5},
+ {tag:'Electronics \u00B7 one failure allowed',title:'Board-to-board connector, 500 mating cycles',desc:'R = 0.95 at C = 0.90 with one failure tolerated needs 77 units. Test ran 77 and recorded exactly one intermittent contact.',R:.95,C:.90,c:1,tm:500,N:77,f:1,Racc:.99,Runacc:.90,beta:3,ratio:2},
+ {tag:'Failed demonstration',title:'Coolant pump, early build',desc:'Same 90/90 requirement, but 2 of 22 pumps leaked before 5,000 h. The plan is failed; the data still bound what was shown.',R:.90,C:.90,c:0,tm:5000,N:22,f:2,Racc:.99,Runacc:.85,beta:2,ratio:2},
+ {tag:'Under-sampled success',title:'Thermal fuse, 12-unit pilot',desc:'Twelve survivors and no failures feels convincing, but at 90% confidence it only demonstrates R \u2265 82.5%. Shows why N matters.',R:.90,C:.90,c:0,tm:10000,N:12,f:0,Racc:.99,Runacc:.85,beta:1,ratio:1},
+ {tag:'Lower confidence, same R',title:'Actuator bushing at 80% confidence',desc:'Dropping C from 0.90 to 0.80 cuts the zero-failure plan from 22 to 16 units. Cheaper test, weaker statement.',R:.90,C:.80,c:0,tm:3000,N:16,f:0,Racc:.98,Runacc:.85,beta:2.5,ratio:3},
+];
+$('examples').innerHTML=EX.map((e,i)=>{const n=Nreq(e.R,e.C,e.c),rl=RL(e.N,e.f,e.C),p=rl>=e.R-1e-9&&e.f<=e.c;
+ return `<button type="button" class="ex" data-i="${i}"><span class="tag">${e.tag}</span><h3>${e.title}</h3><p>${e.desc}</p><div class="kv"><span>R <b>${pct(e.R)}</b></span><span>C <b>${pct(e.C,0)}</b></span><span>c <b>${e.c}</b></span><span>N<sub>req</sub> <b>${n}</b></span></div><div class="kv"><span>Tested <b>${e.N}</b></span><span>Failed <b>${e.f}</b></span><span>R<sub>L</sub> <b>${pct(rl)}</b></span><span class="verdict ${p?'pass':'fail'}">${p?'PASS':'FAIL'}</span></div></button>`}).join('');
+$('examples').addEventListener('click',ev=>{const b=ev.target.closest('.ex');if(!b)return;const e=EX[+b.dataset.i];
+ Object.assign(S,{R:e.R,C:e.C,c:e.c,tm:e.tm,N:e.N,f:e.f,Racc:e.Racc,Runacc:e.Runacc,beta:e.beta,ratio:e.ratio});
+ const set={R:e.R,Rs:e.R,Cconf:e.C,Cs:e.C,cAllow:e.c,tm:e.tm,Nobs:e.N,fobs:e.f,Racc:e.Racc,Runacc:e.Runacc,betaW:e.beta,ratio:e.ratio};
+ Object.entries(set).forEach(([id,v])=>{$(id).value=v;$(id).setAttribute('aria-invalid','false')});
+ update();showTab('plan');window.scrollTo({top:0,behavior:'smooth'})});
+
+// ================= boot =================
+plots.E=new Plot($('chEvidence'));plots.O=new Plot($('chOC'));plots.T=new Plot($('chTime'));
+update();
+let saved=null;try{saved=localStorage.getItem('rdt-tab')}catch(e){}
+showTab(saved&&$('tab-'+saved)?saved:'plan');
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',update)}catch(e){}
+new MutationObserver(update).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+</script>
+
+</html>

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Reliability Engineering Tools · Semion Gengrinovich</title>
+<meta name="description" content="Free interactive reliability engineering tools: demonstration test planning, OC curves, ALT and Miner's rule, stress–strength Monte Carlo, Mann-Kendall trend test, DOE and Gage R&R, Taguchi robust design and fault tree analysis. Each runs in the browser with worked examples.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,wght@0,600;1,400&display=swap">
+<style>
+/* Layout: one column, header + grouped tool cards in a responsive grid. Palette follows the tools: navy, amber, teal. */
+:root{
+  --bg:#0f1a2b; --panel:#162540; --panel2:#1c2e4d; --line:#2b4166;
+  --fg:#e8edf5; --muted:#93a3bf; --amber:#e7b04a; --teal:#2ec4a6;
+  --display:"Source Serif 4",Georgia,serif; --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root{--bg:#f3f5f9;--panel:#ffffff;--panel2:#eef2f8;--line:#d3dbe8;--fg:#13213a;--muted:#5a6a86;--amber:#9c6c10;--teal:#11806c;color-scheme:light}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 var(--body)}
+.wrap{max-width:1120px;margin:0 auto;padding-block:40px 56px;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
+header{border-bottom:1px solid var(--line);padding-bottom:26px;margin-bottom:30px}
+.eyebrow{font:500 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--teal);margin:0 0 10px}
+h1{font:600 clamp(30px,4.6vw,44px)/1.1 var(--display);margin:0;text-wrap:balance}
+.lede{font-size:18px;color:var(--muted);max-width:68ch;margin:14px 0 0}
+.lede b{color:var(--fg);font-weight:500}
+.meta{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:18px;font-size:14px}
+.meta a{color:var(--amber);text-decoration:none;border-bottom:1px solid transparent}
+.meta a:hover{border-color:var(--amber)}
+.meta span{color:var(--muted)}
+h2{font:600 12px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:34px 0 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card:hover{border-color:var(--amber)}
+.card h3{font:600 21px/1.2 var(--display);margin:0}
+.card h3 a{color:var(--fg);text-decoration:none}
+.card h3 a::after{content:" →";color:var(--amber)}
+.card p{margin:0;color:var(--muted);font-size:14.5px}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:4px}
+.tags span{font:500 11.5px var(--mono);background:var(--panel2);border-radius:999px;padding:2px 9px;color:var(--muted)}
+.links{display:flex;gap:16px;font-size:13.5px}
+.links a{color:var(--teal);text-decoration:none}
+.links a:hover{text-decoration:underline}
+a:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:4px}
+footer{margin-top:44px;border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font-size:13.5px;max-width:80ch}
+footer p{margin:6px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Free · runs in your browser · worked examples included</p>
+    <h1>Reliability Engineering Tools</h1>
+    <p class="lede">Interactive calculators that go with my weekly LinkedIn articles on reliability engineering. Each tool opens with <b>preloaded worked examples</b>, so you can see the method before you enter your own data. Nothing is uploaded: every calculation runs on your computer.</p>
+    <div class="meta">
+      <span>By Semion Gengrinovich</span>
+      <a href="https://www.linkedin.com/in/semion-gengrinovich-19235243/" target="_blank" rel="noopener">Follow on LinkedIn</a>
+      <span>A new method every week</span>
+    </div>
+  </header>
+
+  <h2>Test planning and demonstration</h2>
+  <div class="grid">
+    <article class="card">
+      <h3><a href="tools/rdt-planner.html">RDT Planner</a></h3>
+      <p>Sample size for success-run and k-failure demonstration tests, the reliability a test result actually demonstrates, OC curve with producer's and consumer's risk, and the units-versus-test-time trade under a Weibull assumption.</p>
+      <div class="links"><a href="https://www.linkedin.com/feed/update/urn:li:activity:7522341754960961536/" target="_blank" rel="noopener">Read the article</a></div>
+      <div class="tags"><span>binomial</span><span>R &amp; C</span><span>OC curve</span></div>
+    </article>
+    <article class="card">
+      <h3><a href="tools/fixed-duration-test-planner.html">Fixed-Duration Test Planner</a></h3>
+      <p>Plan a time-based demonstration test: choose any three of test duration, allowable failures, discrimination ratio, α and β, and the Poisson equations give the other two.</p>
+      <div class="links"><a href="https://www.linkedin.com/feed/update/urn:li:activity:7510352987962200064/" target="_blank" rel="noopener">See the demo</a></div>
+      <div class="tags"><span>Poisson</span><span>MTBF</span><span>α / β</span></div>
+    </article>
+    <article class="card">
+      <h3><a href="tools/oc-curve.html">OC Curve: Accept / Reject Batch</a></h3>
+      <p>Design a lot-acceptance or demonstration sampling plan from AQL and RQL, see the plan's real risks, then decide a batch from its observed defect count.</p>
+      <div class="links"><a href="https://www.linkedin.com/feed/update/urn:li:activity:7507816354666876928/" target="_blank" rel="noopener">See the demo</a></div>
+      <div class="tags"><span>sampling plan</span><span>AQL / RQL</span></div>
+    </article>
+  </div>
+
+  <h2>Life data, ALT and stress–strength</h2>
+  <div class="grid">
+    <article class="card">
+      <h3><a href="tools/alt-miners-rule.html">ALT &amp; Miner's Rule Workbench</a></h3>
+      <p>Fit Weibull per stress level with failures and suspensions, project R50 and R·C life–stress lines (inverse power, Arrhenius, exponential), then accumulate damage over a duty cycle with Miner's rule.</p>
+      <div class="links"><a href="https://www.linkedin.com/feed/update/urn:li:activity:7502799148761366529/" target="_blank" rel="noopener">See the demo</a></div>
+      <div class="tags"><span>Weibull MLE</span><span>life–stress</span><span>damage</span></div>
+    </article>
+    <article class="card">
+      <h3><a href="tools/stress-strength-monte-carlo.html">Stress–Strength Interference Console</a></h3>
+      <p>Monte Carlo reliability for two independent load and strength distributions: interference plot, safety-margin distribution and convergence of the failure probability with a 95% band.</p>
+      <div class="links"><a href="https://www.linkedin.com/feed/update/urn:li:activity:7500262410453368833/" target="_blank" rel="noopener">See the demo</a></div>
+      <div class="tags"><span>Monte Carlo</span><span>interference</span></div>
+    </article>
+  </div>
+
+  <h2>Field data</h2>
+  <div class="grid">
+    <article class="card">
+      <h3><a href="tools/mann-kendall.html">Mann-Kendall Trend Test</a></h3>
+      <p>Non-parametric test for a monotonic trend in field returns or test metrics, with the Theil-Sen robust slope. Type, paste or load Excel / CSV data.</p>
+      <div class="links"><a href="https://www.linkedin.com/feed/update/urn:li:activity:7505335835496583168/" target="_blank" rel="noopener">See the demo</a></div>
+      <div class="tags"><span>trend</span><span>Theil-Sen</span><span>warranty</span></div>
+    </article>
+  </div>
+
+  <h2>Experiments and robust design</h2>
+  <div class="grid">
+    <article class="card">
+      <h3><a href="tools/doe-grr-workbench.html">DOE &amp; Gage R&amp;R Workbench</a></h3>
+      <p>Plan a Taguchi or full-factorial experiment for up to five factors at two or three levels, read main effects and interactions, and run a gauge R&amp;R study on the same engine.</p>
+      <div class="links"><a href="https://www.linkedin.com/feed/update/urn:li:activity:7515427051298852864/" target="_blank" rel="noopener">See the demo</a></div>
+      <div class="tags"><span>orthogonal arrays</span><span>GR&amp;R</span></div>
+    </article>
+    <article class="card">
+      <h3><a href="tools/taguchi-robust-design.html">Taguchi Robust Design</a></h3>
+      <p>Quadratic quality loss, an L9 inner/outer-array experiment with signal-to-noise ratios and main effects, and a robustness comparison of two design concepts across noise conditions.</p>
+      <div class="links"><a href="https://www.linkedin.com/feed/update/urn:li:activity:7519796379494412288/" target="_blank" rel="noopener">Read the article</a></div>
+      <div class="tags"><span>S/N ratio</span><span>L9</span><span>quality loss</span></div>
+    </article>
+  </div>
+
+  <h2>Risk analysis</h2>
+  <div class="grid">
+    <article class="card">
+      <h3><a href="tools/fault-tree-lab.html">Fault Tree Lab</a></h3>
+      <p>Build a fault tree, flip gates between AND and OR, attach probabilities and see the top-event probability, minimal cut sets and single-point failures update live. Export PNG, SVG or JSON.</p>
+      <div class="links"><a href="https://www.linkedin.com/feed/update/urn:li:activity:7512187576959582208/" target="_blank" rel="noopener">Read the article</a></div>
+      <div class="tags"><span>FTA</span><span>cut sets</span></div>
+    </article>
+  </div>
+
+  <footer>
+    <p>The examples in each tool are illustrative and not field data from any company. The tools are teaching aids: check results against your own analysis before using them for a release decision.</p>
+    <p>Questions, a bug, or a method you'd like to see as a tool? Message me on <a href="https://www.linkedin.com/in/semion-gengrinovich-19235243/" target="_blank" rel="noopener" style="color:var(--amber)">LinkedIn</a>.</p>
+  </footer>
+</div>
+</body>
+</html>
