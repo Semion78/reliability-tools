@@ -13,6 +13,7 @@ Free interactive reliability engineering tools by Semion Gengrinovich. Each tool
 | DOE & Gage R&R Workbench | tools/doe-grr-workbench.html |
 | Taguchi Robust Design | tools/taguchi-robust-design.html |
 | Fault Tree Lab | tools/fault-tree-lab.html |
+| ANOVA Workbench | tools/anova-workbench.html |
 
 **Interactive book** — *Designing Accelerated Reliability Tests for New Hardware*, chapters 1–4 with interactive figures and narration: `alt-book/index.html` (sources and build script in `alt-book/src/`).
 
