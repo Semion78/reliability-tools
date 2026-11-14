@@ -1,0 +1,23 @@
+Section 1.5. Reliability Is a Life-Cycle Program, Not a Test Event.
+
+Bertsche's reliability-methods roadmap lays out a product's reliability activities across six life-cycle stages: planning, then conception, then design, then production, then field usage, then recycling, with a different toolkit, qualitative and quantitative, appropriate at each stage. Planning starts with fuzzy data and accumulated know-how; conception is where target-setting and specifications happen; design is where F M E A, FTA, and Weibull or exponential life modeling do the heavy lifting; production shifts to statistical process control and quality audits; field usage is where data collection and early-warning systems take over; and end-of-life feeds recycling-potential and remaining-lifetime analysis.
+
+Interactive figure. A strip of six life-cycle stages: planning, conception, design, production, field usage and recycling. Tapping a stage shows the reliability toolkit used there.
+
+This book's six parts are a direct implementation of the design-and-verification slice of that roadmap, sequenced deliberately:
+
+Part I, Requirements & Functional Definition. You cannot define a failure, a duty cycle, or a test until you've defined what the product must do and where it must survive.
+
+Part II, Duty Cycle Development. Every acceleration factor, every D F M E A occurrence rating, and every test spec you'll ever write is only as good as the usage assumption underneath it.
+
+Part III, D F M E A & Risk Matrices. Before you can decide what to stress and how hard, you need a disciplined, ranked list of what can actually go wrong, and why severity and occurrence get decided before detection (Chapter 11 makes this a central argument, not a footnote).
+
+Part IV, Defining Stresses. This is where duty cycle (Part II) and risk (Part III) get translated into an actual stress level, a life-stress model, and a test acceleration factor, grounded in real material properties rather than assumption.
+
+Part V, Test Program Design. Matching test type (functional, durability, A L T, environmental, shipping or storage, screening) to the failure mode and bathtub region it's meant to catch.
+
+Part VI, Closing the Loop. Field data, done right, doesn't just fix the current product, it rewrites the D F M E A, corrects the duty-cycle assumptions, and prevents the same recall statistic that opened this chapter from happening to your product.
+
+Interactive figure. Six cards, one for each part of the book, in pipeline order. Tapping a card skips that part and shows what goes wrong downstream as a result.
+
+Skipping a step, or doing them out of order, the single most common failure pattern this book will call out repeatedly, is how organizations end up running expensive, statistically rigorous accelerated life tests against a duty cycle nobody validated, on a failure mode the D F M E A never flagged as high-risk, verified against a requirement that was too vague to test in the first place. The test itself can be executed flawlessly and still tell you nothing useful, because the input to it was wrong three steps earlier.

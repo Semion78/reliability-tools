@@ -1,0 +1,7 @@
+Section 3.1. The Tree Structure Underneath Every F M E A.
+
+Every well-formed F M E A has the same underlying shape, and it's worth making that shape explicit before you ever open a worksheet. A system decomposes into elements; each element has one or more functions; each function has one or more potential failure modes; each failure mode has its own potential effects and its own potential causes. This is a tree, not a flat list, and the discipline of building that tree correctly, level by level, is what Chapter 9's D F M E A work will assume is already in place.
+
+Interactive figure. An expandable tree using this chapter's infusion pump. The system at the top branches into five elements. Opening the drive coupling element reveals its function, then its failure mode, slip under vibration, and beneath that its effect and its cause.
+
+The practical implication for this chapter: decomposition isn't a formality you rush through to get to the real analysis. The tree's top levels, the system, subassembly, and component boundaries you choose right now, determine every failure mode that can be discovered later. A failure mode can only be found within a box, or explicitly at a joint between boxes. If a function doesn't clearly belong to any box, or belongs ambiguously to two, it will very likely never get analyzed by anyone, which is exactly the mechanism behind the interface statistic that opened this chapter.

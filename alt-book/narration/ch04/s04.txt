@@ -1,0 +1,25 @@
+Section 4.3. Design Reviews and Checklists: Verifying the Requirement Was Actually Met.
+
+Where qualitative methods fit.
+
+Bertsche's overview of reliability methods (Figure 11.6) places design reviews and checklists among the qualitative methods available to a reliability program, distinct from the quantitative methods (block diagrams, life-stress models, statistical test planning) that occupy most of this book. Qualitative methods are not a lesser substitute for quantitative rigor, they are what confirms, at defined checkpoints, that the quantitative work is actually being carried into the design rather than living only in a requirements document that nobody rechecks.
+
+What makes a design review effective rather than ceremonial.
+
+O'Connor describes an effective design review as a team-based technical exercise, not a status meeting. The review team should include people who did not write the design, reliability engineers, manufacturing and quality representatives, and, where relevant, service and field personnel, precisely because the people closest to a design are the least likely to see its blind spots. A design review that consists only of the design team presenting to itself tends to confirm what the team already believes rather than surface what it has missed.
+
+O'Connor also warns explicitly against the checklist becoming a stolid march through a list of questions that substitutes for genuine engineering judgment. A checklist is a memory aid for an engineer who is already thinking critically about the design, not a replacement for that thinking. Three practical rules keep a checklist in the first category:
+
+Use checklists as working tools in the design office, not as items to be formally addressed only in review meetings. A checklist that only appears at the review meeting arrives too late to influence the design it is meant to check.
+
+Keep checklists relevant and current. A checklist copied unchanged from a previous, different program accumulates irrelevant items and loses credibility, and stops being updated when it stops matching the product actually being designed.
+
+Avoid vague, generic questions in favor of specific ones. O'Connor's own example contrasts Has maintenance been considered?, a question any designer can answer yes to without having considered anything specific, with What access is provided for lubrication?, which forces a concrete answer that can be checked against the actual drawing.
+
+A typical hardware program runs design reviews at a small number of defined milestones rather than continuously: an initial design review before detailed design is released, a review at the completion of development testing, and a final review of production-standard drawings before tooling commitment. Each of these checkpoints is a natural place to re-verify that the P-diagram's control factors were actually implemented as specified and that the noise factors identified earlier still match the design's intended use.
+
+Interactive figure. A card that flips between a vague checklist question, has maintenance been considered, and a specific one, what access is provided for lubrication. Below it are the three checklist rules and a strip of the three design-review milestones: initial design review, review after development testing, and final review of production-standard drawings.
+
+Design Review Based on Failure Modes (D R B F M).
+
+For evolutionary designs, a new part derived from a proven one, rather than a clean-sheet design, a related technique, Design Review Based on Failure Modes (D R B F M), focuses the review specifically on what changed relative to the proven baseline and what new failure modes that specific change could introduce. D R B F M is a natural complement to the P-diagram approach: a change to a control factor (a new material, a tightened tolerance) or a change in the noise environment (a new duty cycle, a new mounting location) is exactly the kind of change D R B F M asks a team to interrogate before assuming the proven baseline's reliability history still applies.

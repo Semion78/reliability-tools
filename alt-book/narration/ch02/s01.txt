@@ -1,0 +1,9 @@
+Section 2.1. The Problem With As Reliable As Possible.
+
+Reliability requirements fail in two opposite ways, and both are common enough to have become clichés inside engineering organizations.
+
+The first is the vague requirement: as reliable as possible, high reliability is to be a feature of the design, the target reliability is to be 99 percent. None of these statements can be verified, disagreed with, or designed against. A statement that cannot fail an audit cannot pass one either, it simply floats above the process, unfalsifiable, while the actual design decisions get made on other grounds (cost, schedule, familiarity) because there is no testable target to check them against.
+
+The second is the unrealistic requirement: an achievable-sounding number attached to a system too complex to plausibly hit it, or a requirement copied from a previous, unrelated product's spec without re-derivation. Will not fail under the specified operating conditions is a legitimate requirement for a simple mechanical part; the same sentence attached to a complex electronic system with thousands of failure opportunities is not a credible design parameter, and everyone downstream, quietly, without saying so, treats it as decorative rather than binding.
+
+Both failure modes have the same practical effect: the requirement stops functioning as a requirement. The rest of this chapter is about writing the kind of requirement that survives contact with a skeptical design review, a skeptical test engineer, and, eventually, a skeptical customer holding a failed part.

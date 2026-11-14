@@ -14,4 +14,6 @@ Free interactive reliability engineering tools by Semion Gengrinovich. Each tool
 | Taguchi Robust Design | tools/taguchi-robust-design.html |
 | Fault Tree Lab | tools/fault-tree-lab.html |
 
+**Interactive book** — *Designing Accelerated Reliability Tests for New Hardware*, chapters 1–4 with interactive figures and narration: `alt-book/index.html` (sources and build script in `alt-book/src/`).
+
 Published with GitHub Pages: Settings → Pages → Deploy from branch `main`, folder `/ (root)`.

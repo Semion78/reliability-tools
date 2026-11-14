@@ -1,0 +1,5 @@
+Where We're Headed.
+
+This chapter's P-diagram exercise produced a noise-factor list for the gearbox, torque spikes, ambient temperature range, contamination ingress, lubricant degradation, manufacturing variation, and installation misalignment. Those noise factors are not yet a test plan. They are raw ingredients: qualitative statements that a source of variation exists, without yet a magnitude, a frequency, a duration, or a statistical distribution attached to any of them.
+
+Part II of this book (Chapters 5 to 7) takes exactly this kind of noise-factor list and turns it into a quantified duty cycle: how often does the torque spike occur and how large is it, what is the actual ambient temperature distribution at the installation sites the product will see, how does contamination accumulate over a real maintenance interval. Chapter 5 begins that process by defining what a duty cycle is and what data sources, field data, standards, physical testing, and engineering judgment, are available to build one from scratch when, as is common, no field data yet exists for a new design.

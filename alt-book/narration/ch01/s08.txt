@@ -1,0 +1,3 @@
+Where We're Headed.
+
+Chapter 2 starts where every real program has to start: turning a customer's vague expectation (it should be reliable, it should last the life of the product) into a requirement that is specific enough to design against, specific enough to disagree with, and specific enough to eventually test.

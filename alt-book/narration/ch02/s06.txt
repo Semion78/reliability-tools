@@ -1,0 +1,13 @@
+Common Pitfalls.
+
+Vague or unrealistic requirements that nobody actually designs against, because nobody can, they're either unfalsifiable (as reliable as possible) or implausible enough to be silently ignored.
+
+Wrong currency. Stating a time-based requirement for a product whose damage accumulates in cycles, distance, or switch operations, or reusing a 24-hour per day operating assumption for a product that's powered a fraction of the time, as the worked example shows can silently understate the real requirement by an order of magnitude or more.
+
+Ambiguous or incomplete failure definitions, discovered for the first time during a warranty dispute rather than settled in advance, the leaking-seal problem from section 2.2.
+
+Interface and unit inconsistencies between subsystems or suppliers that individually meet their own specifications perfectly, the Ariane 5 and Mars Climate Orbiter pattern that opened this chapter. A specification review that only checks each requirement in isolation, and never checks that units and formats agree across interfaces, will not catch this class of failure.
+
+Omitting misuse, storage, and dormant conditions from the environmental description, on the assumption that normal use covers everything the designer needs to know.
+
+Copying a requirement from a previous, unrelated product instead of re-deriving it from this product's actual usage data and duty cycle.

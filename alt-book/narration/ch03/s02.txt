@@ -1,0 +1,11 @@
+Section 3.2. Defining the System Before Drawing Its Structure.
+
+Before decomposition can be structured sensibly, the system itself needs a proper definition, not just a name, but a stated set of missions, operational modes, environmental profiles, and function times. This mirrors and extends what Chapter 2's requirements work already started:
+
+Mission functions and operational modes, what the system (and each major function within it) is actually supposed to do, stated from the highest system level down to the lowest level that will be analyzed. A device that behaves differently in different modes (standby versus active, charging versus discharging, priming versus delivering) needs each mode identified explicitly, because a failure mode in one mode may not exist, or may look completely different, in another.
+
+Environmental profiles per mission phase, Chapter 2 already established that the environmental description must be complete; here, the requirement is to tie specific environmental conditions to specific operational phases, since a product rarely sees the same environment throughout its use.
+
+Mission time, a quantitative statement of how long each function actually needs to operate, distinguished from total calendar time. This is the same distinction Chapter 2's worked example turned on (operating hours versus calendar hours), now generalized to every function in the system rather than just the top-level box.
+
+This system definition step is what a functional block diagram documents, a diagram of the operational relationships and interdependencies between functional entities, built from engineering data and schematics, distinct from (though related to) the reliability block diagram covered next.

@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chapter 2 — From Customer Needs to Testable Requirements | Designing Accelerated Reliability Tests for New Hardware</title>
+<style>:root{--bg:#0b1426;--panel:#121f3a;--panel2:#18294a;--ink:#e6ecf7;--mute:#93a3bf;--amber:#f5a524;--teal:#2dd4bf;--rose:#fb7185;--blue:#7aa2ff;--line:#263a63;--fs:18px}
+html.light{--bg:#f7f5ef;--panel:#ffffff;--panel2:#f0ede3;--ink:#1a2336;--mute:#5b6880;--amber:#b86e00;--teal:#0b8577;--rose:#c8334f;--blue:#2f55c8;--line:#dcd7c8}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:var(--fs)/1.7 Georgia,"Iowan Old Style","Times New Roman",serif}
+a{color:var(--teal)}button,select,input{font:inherit}
+.ui,.top,.toc,.player,.widget,table,.tick,.chips,.cards,h1,h2,h3,.kicker{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.top{position:sticky;top:0;z-index:30;display:flex;gap:10px;align-items:center;padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--line);font-size:14px}
+.top .ttl{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--mute)}.top .ttl b{color:var(--ink)}
+.btn{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 11px;cursor:pointer;font-size:14px;text-decoration:none;display:inline-block}
+.btn:hover{border-color:var(--teal)}.btn.on{background:var(--teal);color:#06231f;border-color:var(--teal);font-weight:600}
+.btn.amber{background:var(--amber);color:#201400;border-color:var(--amber);font-weight:700}
+#bar{position:fixed;top:0;left:0;height:3px;background:var(--amber);z-index:40;width:0}
+.wrap{display:flex;max-width:1240px;margin:0 auto}
+.toc{width:270px;flex:none;position:sticky;top:48px;height:calc(100vh - 48px);overflow:auto;padding:18px 12px 120px;font-size:14px;border-right:1px solid var(--line)}
+.toc a{display:block;padding:6px 10px;border-radius:8px;color:var(--mute);text-decoration:none;line-height:1.35;margin:2px 0}
+.toc a:hover{color:var(--ink);background:var(--panel)}.toc a.cur{color:var(--ink);background:var(--panel2);border-left:3px solid var(--amber)}
+main{flex:1;min-width:0;padding:26px 34px 170px;max-width:860px}
+.kicker{color:var(--teal);text-transform:uppercase;letter-spacing:.12em;font-size:13px;font-weight:700}
+h1{font-size:2.1em;line-height:1.15;margin:.2em 0 .7em}
+h2{font-size:1.45em;line-height:1.25;margin:2.2em 0 .6em;padding-top:.6em;border-top:1px solid var(--line)}
+h3{font-size:1.12em;margin:1.6em 0 .4em;color:var(--teal)}
+p,li{margin:.7em 0}ul,ol{padding-left:1.3em}
+.seg{border-radius:6px;transition:background .2s,box-shadow .2s;scroll-margin-top:90px}
+.seg.now{background:color-mix(in srgb,var(--amber) 14%,transparent);box-shadow:-6px 0 0 color-mix(in srgb,var(--amber) 14%,transparent),-9px 0 0 var(--amber)}
+section.ex{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:14px;padding:4px 24px 14px;margin:2.2em 0}
+section.pit{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--rose);border-radius:14px;padding:4px 24px 14px;margin:2.2em 0}
+section.ex h2,section.pit h2{border:0;margin-top:.8em}section.src{font-size:.85em;color:var(--mute)}
+sup.fn a{text-decoration:none;font-family:sans-serif;font-size:.72em;background:var(--panel2);border-radius:9px;padding:1px 5px;margin-left:1px}
+.tw{overflow-x:auto;margin:1.2em 0;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:.84em;line-height:1.45}
+th{background:var(--panel2);color:var(--teal);text-align:left;padding:10px 12px;font-size:.9em;text-transform:uppercase;letter-spacing:.04em}
+td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:top}tr:hover td{background:color-mix(in srgb,var(--teal) 6%,transparent)}
+td:first-child{font-weight:600}
+.formula{font-family:"Cambria Math",Cambria,Georgia,serif;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:10px;padding:12px 18px;margin:1em 0;overflow-x:auto;font-size:1.02em}
+.note{font-family:sans-serif;font-size:.8em;color:var(--mute);border:1px dashed var(--line);border-radius:10px;padding:8px 12px;margin:.8em 0}
+.widget{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin:1.6em 0;font-size:15px;line-height:1.5}
+.widget .wt{font-weight:700;font-size:1.02em;margin-bottom:2px}.widget .wh{color:var(--mute);font-size:.88em;margin-bottom:10px}
+.wt:before{content:"◆ ";color:var(--amber)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+.sl{display:grid;grid-template-columns:minmax(120px,210px) 1fr 96px;gap:10px;align-items:center;margin:6px 0;font-size:.9em}
+.sl b{color:var(--amber);text-align:right;font-variant-numeric:tabular-nums}input[type=range]{width:100%;accent-color:var(--teal)}
+input[type=number],select{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 8px}
+.chartbox{position:relative}.chartbox svg{width:100%;height:auto;display:block;touch-action:pan-y}
+.grid{stroke:var(--line);stroke-width:1}.tick{fill:var(--mute);font-size:11px}.axl{fill:var(--mute);font-size:12px}.bandl{font-size:11px;font-weight:700}
+.tip{position:absolute;pointer-events:none;background:var(--bg);border:1px solid var(--teal);border-radius:10px;padding:8px 10px;font-size:12.5px;line-height:1.4;max-width:260px;display:none;z-index:5;box-shadow:0 6px 20px #0006}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:10px 0}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px}.stat b{display:block;font-size:1.5em;color:var(--amber);font-variant-numeric:tabular-nums;line-height:1.2}.stat span{color:var(--mute);font-size:.82em}
+.stat.t b{color:var(--teal)}.stat.r b{color:var(--rose)}
+.bars .br{display:grid;grid-template-columns:minmax(110px,200px) 1fr minmax(90px,auto);gap:10px;align-items:center;margin:5px 0;font-size:.88em}
+.bars .trk{height:16px;background:var(--bg);border-radius:8px;overflow:hidden}.bars .fill{height:100%;border-radius:8px;transition:width .3s}
+.bars .v{font-variant-numeric:tabular-nums;color:var(--mute);white-space:nowrap}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:10px 0}
+.card{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;font-size:.9em;transition:transform .15s,border-color .15s}
+.card:hover{transform:translateY(-2px);border-color:var(--teal)}.card.on{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber)}
+.card .n{font-size:.75em;color:var(--teal);font-weight:700;text-transform:uppercase;letter-spacing:.08em}.card h4{margin:.2em 0;font-size:1em}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.chip{border:1px solid var(--line);background:var(--bg);border-radius:20px;padding:4px 11px;font-size:.84em;cursor:pointer}
+.chip.on{border-color:var(--amber);color:var(--amber)}.chip.ok{border-color:var(--teal);color:var(--teal)}.chip.bad{border-color:var(--rose);color:var(--rose)}.chip.off{opacity:.35}
+.out{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:.92em;min-height:44px}
+.out b{color:var(--amber)}.warn{color:var(--rose)}.good{color:var(--teal)}
+.defs span.ph{border-bottom:2px dashed var(--teal);cursor:pointer;padding:0 2px;border-radius:4px}.defs span.ph.on{background:var(--amber);color:#201400;border-color:var(--amber)}
+.dots{display:grid;gap:5px;max-width:330px}.dots i{aspect-ratio:1;border-radius:50%;background:var(--line);display:block}.dots i.a{background:var(--amber)}.dots i.t{background:var(--teal)}
+.hoq td,.hoq th{text-align:center;padding:6px 4px;font-size:.8em}.hoq td:first-child,.hoq th:first-child{text-align:left}
+.hoq td.c{cursor:pointer;font-weight:700;user-select:none}.hoq td.c9{background:color-mix(in srgb,var(--amber) 45%,transparent)}.hoq td.c3{background:color-mix(in srgb,var(--amber) 22%,transparent)}.hoq td.c1{background:color-mix(in srgb,var(--amber) 8%,transparent)}
+.hoq tr.tot td{font-weight:700;color:var(--teal);border-top:2px solid var(--teal)}
+details.tree{margin:4px 0 4px 16px;border-left:2px solid var(--line);padding-left:10px}details.tree summary{cursor:pointer}details.tree .lv{font-size:.72em;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;margin-right:6px}
+.pd{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:10px;align-items:stretch}.pd .bx{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px}.pd .bx h5{margin:0 0 6px;font-size:.78em;text-transform:uppercase;letter-spacing:.08em;color:var(--teal)}
+.pd .mid{display:flex;align-items:center;justify-content:center;text-align:center;font-weight:700;border:2px solid var(--amber);min-height:80px}
+.player{position:fixed;left:0;right:0;bottom:0;z-index:35;background:var(--panel);border-top:1px solid var(--line);padding:8px 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px}
+.player .pp{width:44px;height:44px;border-radius:50%;font-size:18px;padding:0}.player .lbl{flex:1;min-width:140px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.player select{max-width:190px;font-size:13px}.badge{border:1px solid var(--teal);color:var(--teal);border-radius:12px;padding:2px 9px;font-size:12px}.badge.s{border-color:var(--amber);color:var(--amber)}
+#hov{position:absolute;display:none;z-index:20;width:28px;height:28px;border-radius:50%;padding:0;font-size:12px}
+.navf{display:flex;justify-content:space-between;gap:10px;margin-top:3em;font-family:sans-serif}
+@media(max-width:900px){.toc{position:fixed;left:0;top:48px;background:var(--bg);z-index:25;transform:translateX(-100%);transition:transform .2s}.toc.open{transform:none}main{padding:18px 16px 190px}.pd{grid-template-columns:1fr}.sl{grid-template-columns:1fr 1fr 80px}}
+@media print{.top,.toc,.player,#bar,#hov{display:none}body{background:#fff;color:#000}}
+
+#tips{display:none;position:fixed;right:14px;bottom:76px;z-index:36;width:min(460px,calc(100vw - 28px));max-height:70vh;overflow:auto;background:var(--panel);border:1px solid var(--teal);border-radius:14px;padding:14px 16px;font-size:13.5px;line-height:1.5;box-shadow:0 10px 40px #0008}#tips p{margin:.5em 0}
+</style></head><body>
+<div id="bar"></div>
+<header class="top"><button class="btn" id="menu" aria-label="Contents">☰</button><a class="btn" href="index.html">Library</a>
+<span class="ttl"><b>Chapter 2</b> · From Customer Needs to Testable Requirements</span>
+<button class="btn" id="fminus" aria-label="Smaller text">A−</button><button class="btn" id="fplus" aria-label="Larger text">A+</button><button class="btn" id="theme" aria-label="Light or dark">◐</button></header>
+<div class="wrap"><nav class="toc" aria-label="Sections"></nav><main>
+<div class="kicker">Part I · Requirements &amp; Functional Definition</div><h1>Chapter 2 — From Customer Needs to Testable Requirements</h1>
+<section id="s0" class="">
+<p class="seg " >In June 1996, the first Ariane 5 rocket self-destructed 37 seconds after launch. The root cause traced back to a specification detail: the guidance computer and the inertial measurement unit used different numeric bit formats, a known inconsistency that had never caused a failure on the earlier Ariane 4 — because Ariane 4 never flew fast enough to trigger it. Ariane 5's greater thrust produced a velocity value the inertial unit's format couldn't hold, the resulting overflow was treated as flight data, and the guidance system commanded a course correction for a problem that didn't exist. Three years later, NASA's Mars Climate Orbiter was lost for an equally mundane reason: one subsystem's software produced thrust data in pound-force units while the interfacing system expected newtons.<sup class="fn"><a href="#src-1" title="O&#x27;Connor &amp; Kleyner, Practical Reliability Engineering, 5th ed., Ch. 10 (Ariane 5 and NASA Mars Polar/Climate Orbiter specification-error examples).">1</a></sup></p>
+<p class="seg " >Neither failure was caused by a component that broke. Both were caused by a requirement — an interface specification — that was ambiguous, incomplete, or inconsistent in exactly the way that let two correct pieces of engineering fail to work together. This is the uncomfortable truth Chapter 1's Rule of Ten was pointing at: the cheapest possible place to prevent a catastrophic failure is in the wording of a requirement, and the most expensive possible place to discover that the wording was wrong is after launch. This chapter is about doing that work at the cheap end.</p>
+</section>
+<section id="s1" class="">
+<h2 class="seg " >2.1 The Problem With "As Reliable As Possible"</h2>
+<p class="seg " >Reliability requirements fail in two opposite ways, and both are common enough to have become clichés inside engineering organizations.</p>
+<p class="seg " >The first is the <strong>vague requirement</strong>: "as reliable as possible," "high reliability is to be a feature of the design," "the target reliability is to be 99%." None of these statements can be verified, disagreed with, or designed against. A statement that cannot fail an audit cannot pass one either — it simply floats above the process, unfalsifiable, while the actual design decisions get made on other grounds (cost, schedule, familiarity) because there is no testable target to check them against.<sup class="fn"><a href="#src-2" title="O&#x27;Connor &amp; Kleyner, §17.6 (vague requirements: &quot;as reliable as possible,&quot; etc.).">2</a></sup></p>
+<p class="seg " >The second is the <strong>unrealistic requirement</strong>: an achievable-sounding number attached to a system too complex to plausibly hit it, or a requirement copied from a previous, unrelated product's spec without re-derivation. "Will not fail under the specified operating conditions" is a legitimate requirement for a simple mechanical part; the same sentence attached to a complex electronic system with thousands of failure opportunities is not a credible design parameter, and everyone downstream — quietly, without saying so — treats it as decorative rather than binding.<sup class="fn"><a href="#src-3" title="O&#x27;Connor &amp; Kleyner, §17.6 (unrealistic requirements).">3</a></sup></p>
+<p class="seg " >Both failure modes have the same practical effect: the requirement stops functioning as a requirement. The rest of this chapter is about writing the kind of requirement that survives contact with a skeptical design review, a skeptical test engineer, and — eventually — a skeptical customer holding a failed part.</p>
+</section>
+<section id="s2" class="">
+<h2 class="seg " >2.2 What a Reliability Specification Must Actually Contain</h2>
+<p class="seg " >A reliability specification that will hold up has four components, and all four have to be present or the specification has a hole that will surface later, usually during a dispute about whether something counts as a failure.<sup class="fn"><a href="#src-4" title="O&#x27;Connor &amp; Kleyner, §17.6 (the reliability specification&#x27;s required contents).">4</a></sup></p>
+<div class="seg widget" data-w="speccards"></div>
+<p class="seg " ><strong>1. A definition of failure, tied to function.</strong> This sounds trivial and isn't. Consider a leaking seal: is it a failure? The honest answer is "it depends" — on the leak rate, on whether it can be corrected by a routine adjustment, on whether it affects function under normal conditions versus some other condition the product will also see. A diode installed to clip voltage transients can fail without affecting any functional test you'd normally run, and only matters the one time a transient actually occurs. The specification's job is to remove this ambiguity in advance, in writing, rather than let it get argued out later — usually during a warranty dispute, which is the single worst time to be defining terms for the first time.<sup class="fn"><a href="#src-5" title="O&#x27;Connor &amp; Kleyner, §17.6.1 (Definition of Failure — the leaking-seal and transient-diode examples).">5</a></sup></p>
+<p class="seg " ><strong>2. A full description of the environments the product will face</strong> — not just "in service," but storage, transport, handling, maintenance, and foreseeable misuse. Automotive and defense programs often use a named standard for this (GMW3172 for automotive validation, UK Defence Standard 00-40 for reliability specifications generally) precisely because writing a complete environmental description from a blank page is easy to get wrong by omission.<sup class="fn"><a href="#src-6" title="O&#x27;Connor &amp; Kleyner, §17.6.2 (Environmental Specifications; GMW3172, UK Defence Standard 00-40).">6</a></sup> If the designer isn't told about a condition, the designer isn't designing against it — no matter how "obvious" that condition seems to someone who's used the product for years.</p>
+<p class="seg " ><strong>3. A stated reliability requirement, in a verifiable form</strong>, which is the subject of §2.3 below.</p>
+<p class="seg " ><strong>4. A verification method</strong> — how the requirement will actually be confirmed: test bench conditions, test duration, sample size, pass/fail criteria. A requirement with no verification method attached is really just an aspiration.</p>
+<p class="seg " >Put together, these four elements form what a usable requirements document actually looks like in practice — not prose, but a structured catalogue: functional and environmental conditions, then failure definition, then the reliability requirement itself (expressed as a failure rate, a B10 life, or similar), then the verification method.<sup class="fn"><a href="#src-7" title="Bertsche, Reliability in Automotive and Mechanical Engineering, §11.2.1, Fig. 11.4 (Requirement catalogue chapter: Reliability).">7</a></sup> Every chapter of this book from here forward assumes a requirement built this way exists — Part III's DFMEA work depends on failure being already defined; Part IV's stress work depends on the environmental description being complete; Part V's test design depends on the verification method being specified up front rather than improvised later.</p>
+</section>
+<section id="s3" class="">
+<h2 class="seg " >2.3 Choosing the Right "Currency" for the Requirement</h2>
+<p class="seg " >A reliability requirement has to be stated in units that actually match how the product accumulates damage and how its use will actually be measured. Getting this wrong is one of the most common — and most avoidable — mistakes in requirements writing: specifying a time-between-failures for a product whose usage will only ever be measured in distance traveled, or specifying hours for a component whose life is really governed by switch reversals, sequencing operations, or record/playback cycles.<sup class="fn"><a href="#src-8" title="O&#x27;Connor &amp; Kleyner, §17.6.3 (Stating the Reliability Requirement — currency/units matching duty cycle).">8</a></sup> A switch doesn't wear out on a clock; it wears out on operations. Say "hours" instead of "cycles" and you've written a requirement nobody can actually verify against the way the product is used.</p>
+<p class="seg " >The common reliability metrics and when each one fits:<sup class="fn"><a href="#src-9" title="O&#x27;Connor &amp; Kleyner, Ch. 14, §14.2 (Reliability Metrics: R(t), MTBF/MTTF, BX-life, PPM).">9</a></sup></p>
+<ul><li class="seg " ><strong>R(t)</strong> — probability of survival to time/distance/cycles <em>t</em>. The most general form; a spec might read "R(5 years) ≥ 0.98."</li><li class="seg " ><strong>B10 life</strong> (or more generally BX life) — the life at which X% of the population is expected to have failed (B10 = 90% reliability point). Popular because it's intuitive to non-specialists and maps cleanly onto warranty-period thinking.</li><li class="seg " ><strong>MTBF / MTTF</strong> — mean time between/to failure, valid for constant-failure-rate (exponential) behavior. Frequently *mis*used — MTBF is often read by non-specialists as "how long until it breaks," when it's actually a population-average statistic that says nothing about any individual unit's expected life, especially once wear-out (Chapter 1's bathtub curve, Region 3) starts to dominate.</li><li class="seg " ><strong>PPM</strong> (parts per million failed by time <em>t</em>) — more common in production quality contexts, but usable as a time-dependent reliability metric too.</li></ul>
+<p class="seg " >These forms convert into each other under a stated distribution assumption. A worked conversion: if a product's initial requirement is stated as <strong>B10 life = 5 years</strong>, and failures are assumed exponentially distributed (constant failure rate), then R(5 yrs) = 0.90 = exp(−5/MTTF), which solves to MTTF ≈ 47.5 years, giving a failure rate λ = 1/47.5 ≈ 0.021 failures/year — or, assuming 24-hour/day operation, λ ≈ 2.4×10⁻⁶ failures per hour.<sup class="fn"><a href="#src-10" title="O&#x27;Connor &amp; Kleyner, Ch. 14, Example 14.1 (B10-to-MTTF-to-failure-rate conversion).">10</a></sup> Notice the buried assumption in that last step: <em>24-hour/day operation</em>. That assumption is fine for a server or an always-on appliance. It is wrong — sometimes by two orders of magnitude — for anything that spends most of its calendar life switched off, in a customer's garage, in a drawer, or idling. The main worked example below exists specifically to show what happens when that assumption gets made correctly versus carelessly.</p>
+<div class="seg widget" data-w="convert"></div>
+</section>
+<section id="s4" class="">
+<h2 class="seg " >2.4 Where the Number Actually Comes From: Usage Data, Not Guesswork</h2>
+<p class="seg " >Before any of the conversions in §2.3 mean anything, someone has to answer a prior question: what usage level is this requirement even being written against? "The life of the vehicle" is not a number. It becomes one only when it's grounded in how the population of actual customers uses the product — and the right way to do that is with real usage-distribution data, not a single "average" assumption.</p>
+<p class="seg " >A documented industry case makes this concrete. A vehicle manufacturer analyzed dealership repair records across several European markets, converting sales-to-repair distance data into annual driving-distance figures. The result fit a lognormal distribution (μ = 3.867, σ = 0.603): an average annual driving distance of 20,600 km, a median of 17,200 km — and a 95th-percentile driver at 46,000 km per year. The manufacturer then built the engine reliability specification for its Tier 2 supplier around the <strong>95th-percentile figure, not the average</strong>, because a requirement written to the average driver leaves the top 5% of the customer population — not a small number of people, across a large production volume — under-specified from day one.<sup class="fn"><a href="#src-11" title="O&#x27;Connor &amp; Kleyner, §7.3.3 (European passenger-car annual driving-distance case: lognormal distribution, percentile-based engine reliability specification for a Tier 2 supplier).">11</a></sup> This is the same percentile-selection logic Chapter 1's opening statistic depends on, and it's the same logic Part II will return to in far more depth when we build full duty cycles rather than single design-life numbers.</p>
+<div class="seg widget" data-w="lognormal"></div>
+</section>
+<section id="s5" class="ex">
+<h2 class="seg " >Real-World Example: Turning "Must Last the Life of the Vehicle" Into a Testable Requirement</h2>
+<p class="seg " ><strong>The scenario.</strong> An OEM tells its electronic control unit (ECU) supplier that the unit "must last the life of the vehicle." Nothing about that sentence can be designed against, tested against, or disputed if it turns out to be wrong. The requirements engineer's job is to turn it into something that can be all three.</p>
+<p class="seg " ><strong>Step 1 — Establish the usage basis.</strong> Following the logic (and the real distribution figures) from §2.4, the program adopts the 95th-percentile driver as its design population — the same choice the cited OEM case made, for the same reason: a requirement sized to the average driver silently fails the top of the customer distribution. Combined with a 12-year ownership assumption (a typical automotive design-life target), this gives a total distance-based usage assumption. <em>(In a real program this step would be refined further using the product's own duty-cycle work in Part II rather than assumed constant year over year — flagged here as a simplification, not a final answer.)</em></p>
+<p class="seg " ><strong>Step 2 — State the requirement in a verifiable form.</strong> The program states the requirement as <strong>B10 life ≥ 12 years</strong>, reliability-verified at R(12 yrs) ≥ 0.90, under a stated environmental and functional description (per §2.2) — not "the life of the vehicle."</p>
+<p class="seg " ><strong>Step 3 — Convert to the correct currency.</strong> This is where the 24-hour/day assumption from §2.3's worked conversion has to be checked rather than reused blindly. An ECU is only powered when the vehicle is running, not continuously. Using the same exponential-distribution math as the earlier conversion:</p>
+<div class="seg formula" >R(12 yrs) = 0.90 = exp(−12 / MTTF)  →  MTTF = 12 / −ln(0.90) = 12 / 0.1054 ≈ <strong>113.9 years</strong></div>
+<div class="seg formula" >λ<sub>calendar</sub> = 1 / MTTF ≈ <strong>0.00878 failures / year</strong></div>
+<p class="seg " >If the product's actual average engine-on time is roughly 400 hours/year (a representative passenger-vehicle usage figure, not the 8,760 hours/year that "24-hour operation" would assume), the requirement converts to an <strong>operating-hour</strong> failure rate — the currency the design team can actually engineer against:</p>
+<div class="seg formula" >λ<sub>operating</sub> = 0.00878 failures / year ÷ 400 operating-hours / year ≈ <strong>2.20 × 10⁻⁵ failures per operating hour</strong></div>
+<p class="seg " >Had the team lazily reused the 24-hour/day assumption from §2.3 instead of checking it, the resulting target would have been roughly 22 times more lenient than the real requirement — a hole in the specification that would not surface until field data started arriving, years later, at exactly the cost point the Rule of Ten warns about.</p>
+<p class="seg " ><strong>Step 4 — Apportion the system target across subsystems.</strong> A system-level failure-rate target isn't directly testable at the subsystem level — someone has to decide how much of that 2.20×10⁻⁵/hr budget each subassembly is allowed to consume. For a series reliability structure (the normal case for an ECU: any one subsystem's failure fails the unit), the system failure rate is the <strong>sum</strong> of the subsystem failure rates.<sup class="fn"><a href="#src-12" title="Bertsche, §11.2.1 and §2.3 (Boolean/series-system reliability apportionment: system failure quota as the sum of subsystem failure quotas).">12</a></sup> Using engineering judgment on relative complexity and criticality — a first-pass apportionment, later refined with the prediction methods previewed in Part IV — the program splits the budget:</p>
+<div class="seg tw" ><table><tr><th>Subsystem</th><th>Share of budget</th><th>Allocated λ (failures/operating-hr)</th><th>Equivalent B10 (operating hours)</th></tr><tr><td>Power supply / regulation</td><td>25%</td><td>5.49 × 10⁻⁶</td><td>≈ 19,200</td></tr><tr><td>MCU / digital core</td><td>20%</td><td>4.39 × 10⁻⁶</td><td>≈ 24,000</td></tr><tr><td>Sensor interface</td><td>20%</td><td>4.39 × 10⁻⁶</td><td>≈ 24,000</td></tr><tr><td>Output driver / relay stage</td><td>25%</td><td>5.49 × 10⁻⁶</td><td>≈ 19,200</td></tr><tr><td>Connector / harness interface</td><td>10%</td><td>2.20 × 10⁻⁶</td><td>≈ 47,900</td></tr><tr><td><strong>System total</strong></td><td><strong>100%</strong></td><td><strong>2.20 × 10⁻⁵</strong></td><td><em>(system B10 ≈ 4,790 operating-hrs, ≈ 12 yrs at 400 hrs/yr)</em></td></tr></table></div>
+<div class="seg widget" data-w="ecuapp"></div>
+<p class="seg " >Each row is now a testable, subsystem-level requirement that a component or module engineer can actually design and validate against — traceable back through the apportionment math to the system target, and back through that to the OEM's original sentence. This table is also the direct input to Chapter 3's functional decomposition and reliability block diagram work, and every "B10 (operating hours)" figure in the right-hand column becomes a candidate acceleration-test target once Part IV converts it into an actual stress and test duration.</p>
+<p class="seg " ><strong>The outcome.</strong> What started as an unfalsifiable sentence is now five numbers that five different engineers can be held to, that a test lab can design a demonstration test around (Part V), and that a field-data comparison can eventually validate or correct (Part VI) — closing the loop this book keeps returning to.</p>
+</section>
+<section id="s6" class="pit">
+<h2 class="seg " >Common Pitfalls</h2>
+<ul><li class="seg " ><strong>Vague or unrealistic requirements</strong> that nobody actually designs against, because nobody can — they're either unfalsifiable ("as reliable as possible") or implausible enough to be silently ignored.</li><li class="seg " ><strong>Wrong currency.</strong> Stating a time-based requirement for a product whose damage accumulates in cycles, distance, or switch operations — or reusing a 24-hour/day operating assumption for a product that's powered a fraction of the time, as the worked example shows can silently understate the real requirement by an order of magnitude or more.</li><li class="seg " ><strong>Ambiguous or incomplete failure definitions</strong>, discovered for the first time during a warranty dispute rather than settled in advance — the leaking-seal problem from §2.2.</li><li class="seg " ><strong>Interface and unit inconsistencies</strong> between subsystems or suppliers that individually meet their own specifications perfectly — the Ariane 5 and Mars Climate Orbiter pattern that opened this chapter. A specification review that only checks each requirement in isolation, and never checks that units and formats agree across interfaces, will not catch this class of failure.</li><li class="seg " ><strong>Omitting misuse, storage, and dormant conditions</strong> from the environmental description, on the assumption that "normal use" covers everything the designer needs to know.</li><li class="seg " ><strong>Copying a requirement from a previous, unrelated product</strong> instead of re-deriving it from this product's actual usage data and duty cycle.</li></ul>
+</section>
+<section id="s7" class="">
+<h2 class="seg " >Where We're Headed</h2>
+<p class="seg " >The apportionment table above assumed a functional structure — five named subsystems in series — without actually justifying where those boundaries come from or what happens at the interfaces between them. Chapter 3 builds that structure properly: the system/subassembly/component decomposition, the reliability block diagram, and why the interfaces between blocks deserve as much attention as the blocks themselves.</p>
+</section>
+<section id="s8" class="src">
+<h2>Sources for this chapter</h2>
+<ol><li id="src-1">O'Connor &amp; Kleyner, <em>Practical Reliability Engineering</em>, 5th ed., Ch. 10 (Ariane 5 and NASA Mars Polar/Climate Orbiter specification-error examples).</li><li id="src-2">O'Connor &amp; Kleyner, §17.6 (vague requirements: "as reliable as possible," etc.).</li><li id="src-3">O'Connor &amp; Kleyner, §17.6 (unrealistic requirements).</li><li id="src-4">O'Connor &amp; Kleyner, §17.6 (the reliability specification's required contents).</li><li id="src-5">O'Connor &amp; Kleyner, §17.6.1 (Definition of Failure — the leaking-seal and transient-diode examples).</li><li id="src-6">O'Connor &amp; Kleyner, §17.6.2 (Environmental Specifications; GMW3172, UK Defence Standard 00-40).</li><li id="src-7">Bertsche, <em>Reliability in Automotive and Mechanical Engineering</em>, §11.2.1, Fig. 11.4 (Requirement catalogue chapter: Reliability).</li><li id="src-8">O'Connor &amp; Kleyner, §17.6.3 (Stating the Reliability Requirement — currency/units matching duty cycle).</li><li id="src-9">O'Connor &amp; Kleyner, Ch. 14, §14.2 (Reliability Metrics: R(t), MTBF/MTTF, BX-life, PPM).</li><li id="src-10">O'Connor &amp; Kleyner, Ch. 14, Example 14.1 (B10-to-MTTF-to-failure-rate conversion).</li><li id="src-11">O'Connor &amp; Kleyner, §7.3.3 (European passenger-car annual driving-distance case: lognormal distribution, percentile-based engine reliability specification for a Tier 2 supplier).</li><li id="src-12">Bertsche, §11.2.1 and §2.3 (Boolean/series-system reliability apportionment: system failure quota as the sum of subsystem failure quotas).</li></ol>
+</section>
+<div class="navf"><a class="btn" href="chapter-01.html">← Chapter 1</a><a class="btn" href="chapter-03.html">Chapter 3 →</a></div>
+</main></div>
+<div id="tips" class="ui" role="dialog" aria-label="Getting a more natural voice"><button class="btn" id="tipsx" style="float:right">Close</button>
+<b>Getting a more natural voice</b><p>The player uses the voices installed in your browser, best first. Voices marked ★ sound much closer to a human reader than Basic ones.</p>
+<p><b>Mac.</b> System Settings → Accessibility → Spoken Content → System Voice → Manage Voices. Under English, download a voice marked Premium or Enhanced (Ava, Zoe, Evan, Nathan, Allison, Samantha, Daniel, Serena). Quit and reopen the browser, then choose it in the voice list.</p>
+<p><b>iPhone / iPad.</b> Settings → Accessibility → Spoken Content → Voices → English, download a Premium or Enhanced voice, then reload this page.</p>
+<p><b>Microsoft Edge</b> (Mac or Windows) includes free Natural voices such as Aria, Jenny, Guy and Andrew, with nothing to install. They need an internet connection.</p>
+<p><b>Chrome.</b> The Google voices are a step above Basic; downloaded Mac voices also appear here.</p>
+<p>If a ★ voice still sounds rushed, set the speed to 0.9×.</p></div>
+<button class="btn amber" id="hov" title="Read aloud from here" aria-label="Read aloud from here">▶</button>
+<div class="player ui" role="region" aria-label="Audio narration">
+<button class="btn" id="pprev" aria-label="Previous passage">⏮</button><button class="btn amber pp" id="pp" aria-label="Play">▶</button><button class="btn" id="pnext" aria-label="Next passage">⏭</button>
+<span class="lbl" id="plbl">Listen to this chapter — formulas and figures are described in words</span>
+<span class="badge" id="pbadge">Browser voice</span>
+<select id="prate" aria-label="Speed"><option value="0.8">0.8×</option><option value="0.9">0.9×</option><option value="1" selected>1×</option><option value="1.1">1.1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option></select>
+<select id="pvoice" aria-label="Voice"></select><button class="btn" id="ptips" title="How to get a more natural voice">Better voice</button>
+<button class="btn" id="phere" title="Start reading at the passage on screen">Read from here</button><button class="btn" id="pscript" title="Download the narration script for studio text-to-speech">Script</button></div>
+<script>const CH={"id": "ch02", "title": "Chapter 2 \u2014 From Customer Needs to Testable Requirements"};const NARR=[{"s": 0, "t": "In June 1996, the first Ariane 5 rocket self-destructed 37 seconds after launch. The root cause traced back to a specification detail: the guidance computer and the inertial measurement unit used different numeric bit formats, a known inconsistency that had never caused a failure on the earlier Ariane 4, because Ariane 4 never flew fast enough to trigger it. Ariane 5's greater thrust produced a velocity value the inertial unit's format couldn't hold, the resulting overflow was treated as flight data, and the guidance system commanded a course correction for a problem that didn't exist. Three years later, NASA's Mars Climate Orbiter was lost for an equally mundane reason: one subsystem's software produced thrust data in pound-force units while the interfacing system expected newtons."}, {"s": 0, "t": "Neither failure was caused by a component that broke. Both were caused by a requirement, an interface specification, that was ambiguous, incomplete, or inconsistent in exactly the way that let two correct pieces of engineering fail to work together. This is the uncomfortable truth Chapter 1's Rule of Ten was pointing at: the cheapest possible place to prevent a catastrophic failure is in the wording of a requirement, and the most expensive possible place to discover that the wording was wrong is after launch. This chapter is about doing that work at the cheap end."}, {"s": 1, "t": "Section 2.1. The Problem With As Reliable As Possible."}, {"s": 1, "t": "Reliability requirements fail in two opposite ways, and both are common enough to have become clichés inside engineering organizations."}, {"s": 1, "t": "The first is the vague requirement: as reliable as possible, high reliability is to be a feature of the design, the target reliability is to be 99 percent. None of these statements can be verified, disagreed with, or designed against. A statement that cannot fail an audit cannot pass one either, it simply floats above the process, unfalsifiable, while the actual design decisions get made on other grounds (cost, schedule, familiarity) because there is no testable target to check them against."}, {"s": 1, "t": "The second is the unrealistic requirement: an achievable-sounding number attached to a system too complex to plausibly hit it, or a requirement copied from a previous, unrelated product's spec without re-derivation. Will not fail under the specified operating conditions is a legitimate requirement for a simple mechanical part; the same sentence attached to a complex electronic system with thousands of failure opportunities is not a credible design parameter, and everyone downstream, quietly, without saying so, treats it as decorative rather than binding."}, {"s": 1, "t": "Both failure modes have the same practical effect: the requirement stops functioning as a requirement. The rest of this chapter is about writing the kind of requirement that survives contact with a skeptical design review, a skeptical test engineer, and, eventually, a skeptical customer holding a failed part."}, {"s": 2, "t": "Section 2.2. What a Reliability Specification Must Actually Contain."}, {"s": 2, "t": "A reliability specification that will hold up has four components, and all four have to be present or the specification has a hole that will surface later, usually during a dispute about whether something counts as a failure."}, {"s": 2, "t": "Interactive figure. Four cards name the four components of a reliability specification: failure definition, environments, the reliability requirement, and the verification method. Tapping a card shows what it must contain and which later part of the book depends on it."}, {"s": 2, "t": "1. A definition of failure, tied to function. This sounds trivial and isn't. Consider a leaking seal: is it a failure? The honest answer is it depends, on the leak rate, on whether it can be corrected by a routine adjustment, on whether it affects function under normal conditions versus some other condition the product will also see. A diode installed to clip voltage transients can fail without affecting any functional test you'd normally run, and only matters the one time a transient actually occurs. The specification's job is to remove this ambiguity in advance, in writing, rather than let it get argued out later, usually during a warranty dispute, which is the single worst time to be defining terms for the first time."}, {"s": 2, "t": "2. A full description of the environments the product will face, not just in service, but storage, transport, handling, maintenance, and foreseeable misuse. Automotive and defense programs often use a named standard for this (GMW3172 for automotive validation, UK Defence Standard 00-40 for reliability specifications generally) precisely because writing a complete environmental description from a blank page is easy to get wrong by omission. If the designer isn't told about a condition, the designer isn't designing against it, no matter how obvious that condition seems to someone who's used the product for years."}, {"s": 2, "t": "3. A stated reliability requirement, in a verifiable form, which is the subject of section 2.3 below."}, {"s": 2, "t": "4. A verification method, how the requirement will actually be confirmed: test bench conditions, test duration, sample size, pass or fail criteria. A requirement with no verification method attached is really just an aspiration."}, {"s": 2, "t": "Put together, these four elements form what a usable requirements document actually looks like in practice, not prose, but a structured catalogue: functional and environmental conditions, then failure definition, then the reliability requirement itself (expressed as a failure rate, a B ten life, or similar), then the verification method. Every chapter of this book from here forward assumes a requirement built this way exists, Part III's D F M E A work depends on failure being already defined; Part IV's stress work depends on the environmental description being complete; Part V's test design depends on the verification method being specified up front rather than improvised later."}, {"s": 3, "t": "Section 2.3. Choosing the Right Currency for the Requirement."}, {"s": 3, "t": "A reliability requirement has to be stated in units that actually match how the product accumulates damage and how its use will actually be measured. Getting this wrong is one of the most common, and most avoidable, mistakes in requirements writing: specifying a time-between-failures for a product whose usage will only ever be measured in distance traveled, or specifying hours for a component whose life is really governed by switch reversals, sequencing operations, or record or playback cycles. A switch doesn't wear out on a clock; it wears out on operations. Say hours instead of cycles and you've written a requirement nobody can actually verify against the way the product is used."}, {"s": 3, "t": "The common reliability metrics and when each one fits:"}, {"s": 3, "t": "R of t: the probability of survival to time, distance or cycles t. The most general form. A specification might read: R of 5 years is at least 0.98."}, {"s": 3, "t": "B ten life (or more generally B X life), the life at which X percent of the population is expected to have failed (B ten equals 90 percent reliability point). Popular because it's intuitive to non-specialists and maps cleanly onto warranty-period thinking."}, {"s": 3, "t": "MTBF or MTTF, mean time between or to failure, valid for constant-failure-rate (exponential) behavior. Frequently misused, MTBF is often read by non-specialists as how long until it breaks, when it's actually a population-average statistic that says nothing about any individual unit's expected life, especially once wear-out (Chapter 1's bathtub curve, Region 3) starts to dominate."}, {"s": 3, "t": "PPM (parts per million failed by time t), more common in production quality contexts, but usable as a time-dependent reliability metric too."}, {"s": 3, "t": "These forms convert into each other under a stated distribution assumption. A worked conversion. Suppose a product's initial requirement is stated as a B ten life of 5 years, and failures are assumed exponentially distributed, meaning a constant failure rate. Then the reliability at 5 years is 0.90, and that equals e to the power of minus 5 divided by the M T T F. Solving gives an M T T F of about 47.5 years. The failure rate lambda is one divided by 47.5, about 0.021 failures per year. Assuming 24-hour-per-day operation, lambda is about 2.4 times ten to the minus 6 failures per hour. Notice the buried assumption in that last step: 24-hour-per-day operation. That assumption is fine for a server or an always-on appliance. It is wrong, sometimes by two orders of magnitude, for anything that spends most of its calendar life switched off, in a customer's garage, in a drawer, or idling. The main worked example below exists specifically to show what happens when that assumption gets made correctly versus carelessly."}, {"s": 3, "t": "Interactive figure. A converter between the forms of a reliability requirement. You enter a B-life percentage, a life, and how many hours per year the product is powered. It returns the mean time to failure and the failure rate per calendar year and per operating hour, and draws the survival curve: reliability starts at one and decays exponentially, passing through 0.90 at the B ten life. Three worked examples are preloaded. The first reproduces the conversion just described: B ten of 5 years, always on, giving 47.5 years and 2.4 times ten to the minus 6 per hour. The second is this chapter's control unit: B ten of 12 years at 400 powered hours per year. The third is the infusion pump of chapter 3, stated directly as 5,000 operating hours."}, {"s": 4, "t": "Section 2.4. Where the Number Actually Comes From: Usage Data, Not Guesswork."}, {"s": 4, "t": "Before any of the conversions in section 2.3 mean anything, someone has to answer a prior question: what usage level is this requirement even being written against? The life of the vehicle is not a number. It becomes one only when it's grounded in how the population of actual customers uses the product, and the right way to do that is with real usage-distribution data, not a single average assumption."}, {"s": 4, "t": "A documented industry case makes this concrete. A vehicle manufacturer analyzed dealership repair records across several European markets, converting sales-to-repair distance data into annual driving-distance figures. The result fit a lognormal distribution (mu equals 3.867, sigma equals 0.603): an average annual driving distance of 20,600 kilometres, a median of 17,200 kilometres, and a 95th-percentile driver at 46,000 kilometres per year. The manufacturer then built the engine reliability specification for its Tier 2 supplier around the 95th-percentile figure, not the average, because a requirement written to the average driver leaves the top 5 percent of the customer population, not a small number of people, across a large production volume, under-specified from day one. This is the same percentile-selection logic Chapter 1's opening statistic depends on, and it's the same logic Part II will return to in far more depth when we build full duty cycles rather than single design-life numbers."}, {"s": 4, "t": "Interactive figure. The chart shows how annual driving distance is spread across the driver population. The curve rises steeply to a peak at around twelve thousand kilometres a year, then falls away in a long tail to the right that is still visible beyond sixty thousand. That long tail is the point: the median driver covers 17,200 kilometres, the average is 20,600, but the 95th-percentile driver covers about 46,000, nearly three times the median. A slider moves a vertical marker along the curve; the area to its left is the share of customers the requirement covers. At the 95th percentile and twelve years of ownership the design distance is roughly 560,000 kilometres."}, {"s": 5, "t": "Real-World Example: Turning Must Last the Life of the Vehicle Into a Testable Requirement."}, {"s": 5, "t": "The scenario. An OEM tells its electronic control unit (E C U) supplier that the unit must last the life of the vehicle. Nothing about that sentence can be designed against, tested against, or disputed if it turns out to be wrong. The requirements engineer's job is to turn it into something that can be all three."}, {"s": 5, "t": "Step 1, Establish the usage basis. Following the logic (and the real distribution figures) from section 2.4, the program adopts the 95th-percentile driver as its design population, the same choice the cited OEM case made, for the same reason: a requirement sized to the average driver silently fails the top of the customer distribution. Combined with a 12-year ownership assumption (a typical automotive design-life target), this gives a total distance-based usage assumption. (In a real program this step would be refined further using the product's own duty-cycle work in Part II rather than assumed constant year over year, flagged here as a simplification, not a final answer.)"}, {"s": 5, "t": "Step 2. State the requirement in a verifiable form. The program states the requirement as a B ten life of at least 12 years, verified as a reliability at 12 years of at least 0.90, under a stated environmental and functional description as set out in section 2.2. Not, the life of the vehicle."}, {"s": 5, "t": "Step 3, Convert to the correct currency. This is where the 24-hour per day assumption from section 2.3's worked conversion has to be checked rather than reused blindly. An E C U is only powered when the vehicle is running, not continuously. Using the same exponential-distribution math as the earlier conversion:"}, {"s": 5, "t": "First formula. The reliability at 12 years is 0.90, and it equals e to the power of minus 12 divided by the M T T F. Rearranging, the M T T F equals 12 divided by the negative natural logarithm of 0.90. That logarithm is 0.1054, so the M T T F is about 113.9 years. Notice how far that is from 12 years: a B ten life of 12 years needs a mean life nearly ten times longer."}, {"s": 5, "t": "Second formula. The calendar failure rate, lambda, is one divided by the M T T F: about 0.00878 failures per year."}, {"s": 5, "t": "If the product's actual average engine-on time is roughly 400 hours per year (a representative passenger-vehicle usage figure, not the 8,760 hours per year that 24-hour operation would assume), the requirement converts to an operating-hour failure rate, the currency the design team can actually engineer against:"}, {"s": 5, "t": "Third formula. The operating-hour failure rate is the calendar rate, 0.00878 failures per year, divided by 400 operating hours per year. The result is about 2.20 times ten to the minus 5 failures per operating hour. In plain terms: about 22 failures for every million hours of running."}, {"s": 5, "t": "Had the team lazily reused the 24-hour per day assumption from section 2.3 instead of checking it, the resulting target would have been roughly 22 times more lenient than the real requirement, a hole in the specification that would not surface until field data started arriving, years later, at exactly the cost point the Rule of Ten warns about."}, {"s": 5, "t": "Step 4, Apportion the system target across subsystems. A system-level failure-rate target isn't directly testable at the subsystem level, someone has to decide how much of that 2.20 times ten to the minus 5 over hour budget each subassembly is allowed to consume. For a series reliability structure (the normal case for an E C U: any one subsystem's failure fails the unit), the system failure rate is the sum of the subsystem failure rates. Using engineering judgment on relative complexity and criticality, a first-pass apportionment, later refined with the prediction methods previewed in Part IV, the program splits the budget:"}, {"s": 5, "t": "The table splits the system budget across five subsystems. Power supply and regulation receives 25 percent of the budget: 5.49 times ten to the minus 6 failures per operating hour, equivalent to a B ten of about 19,200 operating hours. The microcontroller and digital core receives 20 percent: 4.39 times ten to the minus 6, a B ten of about 24,000 hours. The sensor interface also receives 20 percent, with the same figures. The output driver and relay stage receives 25 percent, the same as the power supply. The connector and harness interface receives 10 percent: 2.20 times ten to the minus 6, a B ten of about 47,900 hours. The five shares add up to the system total of 2.20 times ten to the minus 5, which is a system B ten of about 4,790 operating hours, or 12 years at 400 hours per year. Notice the pattern: the smaller a block's share of the failure budget, the longer the life it must demonstrate."}, {"s": 5, "t": "Interactive figure. The apportionment table as a set of sliders and bars, one per subsystem. Dragging a share changes that block's allocated failure rate and its equivalent B ten life. Give a block a smaller share and its bar shortens while its required life grows. If the shares add up to more than one hundred percent, the figure warns that the system would miss its target."}, {"s": 5, "t": "Each row is now a testable, subsystem-level requirement that a component or module engineer can actually design and validate against, traceable back through the apportionment math to the system target, and back through that to the OEM's original sentence. This table is also the direct input to Chapter 3's functional decomposition and reliability block diagram work, and every B ten (operating hours) figure in the right-hand column becomes a candidate acceleration-test target once Part IV converts it into an actual stress and test duration."}, {"s": 5, "t": "The outcome. What started as an unfalsifiable sentence is now five numbers that five different engineers can be held to, that a test lab can design a demonstration test around (Part V), and that a field-data comparison can eventually validate or correct (Part VI), closing the loop this book keeps returning to."}, {"s": 6, "t": "Common Pitfalls."}, {"s": 6, "t": "Vague or unrealistic requirements that nobody actually designs against, because nobody can, they're either unfalsifiable (as reliable as possible) or implausible enough to be silently ignored."}, {"s": 6, "t": "Wrong currency. Stating a time-based requirement for a product whose damage accumulates in cycles, distance, or switch operations, or reusing a 24-hour per day operating assumption for a product that's powered a fraction of the time, as the worked example shows can silently understate the real requirement by an order of magnitude or more."}, {"s": 6, "t": "Ambiguous or incomplete failure definitions, discovered for the first time during a warranty dispute rather than settled in advance, the leaking-seal problem from section 2.2."}, {"s": 6, "t": "Interface and unit inconsistencies between subsystems or suppliers that individually meet their own specifications perfectly, the Ariane 5 and Mars Climate Orbiter pattern that opened this chapter. A specification review that only checks each requirement in isolation, and never checks that units and formats agree across interfaces, will not catch this class of failure."}, {"s": 6, "t": "Omitting misuse, storage, and dormant conditions from the environmental description, on the assumption that normal use covers everything the designer needs to know."}, {"s": 6, "t": "Copying a requirement from a previous, unrelated product instead of re-deriving it from this product's actual usage data and duty cycle."}, {"s": 7, "t": "Where We're Headed."}, {"s": 7, "t": "The apportionment table above assumed a functional structure, five named subsystems in series, without actually justifying where those boundaries come from or what happens at the interfaces between them. Chapter 3 builds that structure properly: the system or subassembly or component decomposition, the reliability block diagram, and why the interfaces between blocks deserve as much attention as the blocks themselves."}];</script>
+<script>/* Shared helpers: DOM, formatting, charts, controls. No dependencies. */
+const W = {};
+function el(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  for (const k in (attrs || {})) {
+    if (k === 'class') e.className = attrs[k];
+    else if (k === 'html') e.innerHTML = attrs[k];
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), attrs[k]);
+    else e.setAttribute(k, attrs[k]);
+  }
+  kids.flat().forEach(c => { if (c != null) e.append(c.nodeType ? c : document.createTextNode(c)); });
+  return e;
+}
+function S(tag, attrs, text) {
+  const e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const k in (attrs || {})) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  return e;
+}
+const SUPS = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+function sci(v, d) {
+  if (!isFinite(v) || v === 0) return String(v);
+  const e = Math.floor(Math.log10(Math.abs(v)));
+  let m = (v / Math.pow(10, e)).toFixed(d == null ? 2 : d), ex = e;
+  if (+m >= 10) { m = (+m / 10).toFixed(d == null ? 2 : d); ex++; }
+  const s = String(Math.abs(ex)).split('').map(c => SUPS[+c]).join('');
+  return m + ' × 10' + (ex < 0 ? '⁻' : '') + s;
+}
+function num(v, p) {
+  if (!isFinite(v)) return '–';
+  const a = Math.abs(v);
+  if (a >= 1000) return Math.round(v).toLocaleString('en-US');
+  if (a === 0) return '0';
+  if (a < 0.001) return sci(v);
+  return String(+v.toPrecision(p || 3));
+}
+function head(root, title, hint) { root.append(el('div', { class: 'wt' }, title), el('div', { class: 'wh' }, hint || '')); }
+function slider(label, min, max, step, val, fmt, cb) {
+  const b = el('b', {}, ''), inp = el('input', { type: 'range', min, max, step, value: val, 'aria-label': label });
+  const root = el('label', { class: 'sl' }, el('span', {}, label), inp, b);
+  const show = () => { b.textContent = (fmt || num)(+inp.value); };
+  inp.addEventListener('input', () => { show(); cb && cb(+inp.value); });
+  show();
+  return { el: root, get v() { return +inp.value; }, set(v) { inp.value = v; show(); } };
+}
+function presetBar(list, label) {
+  const row = el('div', { class: 'row' }, el('span', { style: 'color:var(--mute);font-size:.85em' }, label || 'Worked examples:'));
+  const btns = list.map(([name, fn]) => {
+    const b = el('button', { class: 'btn', onclick: () => { btns.forEach(x => x.classList.remove('on')); b.classList.add('on'); fn(); } }, name);
+    row.append(b); return b;
+  });
+  row.pick = i => btns[i].click();
+  row.clear = () => btns.forEach(x => x.classList.remove('on'));
+  return row;
+}
+function stats(items) { return el('div', { class: 'stats' }, items.map(([v, l, c]) => el('div', { class: 'stat ' + (c || '') }, el('b', {}, v), el('span', {}, l)))); }
+function setStats(host, items) { host.replaceChildren(...stats(items).children); }
+function barChart(host, items, o) {
+  o = o || {};
+  const max = o.max || Math.max(...items.map(i => i.value), 1e-300);
+  host.classList.add('bars');
+  host.replaceChildren(...items.map(i => el('div', { class: 'br', title: i.note || '' },
+    el('span', {}, i.label),
+    el('div', { class: 'trk' }, el('div', { class: 'fill', style: `width:${Math.max(1, 100 * i.value / max)}%;background:${i.color || 'var(--teal)'}` })),
+    el('span', { class: 'v' }, i.text != null ? i.text : (o.fmt || num)(i.value)))));
+}
+function dotGrid(n, cols, cls) {
+  const g = el('div', { class: 'dots', style: `grid-template-columns:repeat(${cols},1fr)` });
+  for (let i = 0; i < n; i++) g.append(el('i', { class: cls(i) || '' }));
+  return g;
+}
+/* Interactive SVG line chart with hover read-out. draw({series,x:[a,b],y:[a,b],bands,marks,vlines,xticks}) */
+function lineChart(host, o) {
+  o = o || {};
+  const Wd = o.w || 680, H = o.h || 320, m = { l: 62, r: 18, t: 18, b: 46 };
+  host.classList.add('chartbox');
+  const svg = S('svg', { viewBox: `0 0 ${Wd} ${H}`, role: 'img', 'aria-label': o.aria || 'chart' });
+  const tip = el('div', { class: 'tip' });
+  host.append(svg, tip);
+  let d = null, cursor = null;
+  const fx = v => o.xlog ? Math.log10(v) : v, fy = v => o.ylog ? Math.log10(v) : v;
+  const X = v => m.l + (fx(v) - fx(d.x[0])) / (fx(d.x[1]) - fx(d.x[0])) * (Wd - m.l - m.r);
+  const Y = v => { v = Math.min(Math.max(v, d.y[0]), d.y[1]); return H - m.b - (fy(v) - fy(d.y[0])) / (fy(d.y[1]) - fy(d.y[0])) * (H - m.t - m.b); };
+  const invX = px => { const f = (px - m.l) / (Wd - m.l - m.r), v = fx(d.x[0]) + f * (fx(d.x[1]) - fx(d.x[0])); return o.xlog ? Math.pow(10, v) : v; };
+  function ticks(a, b, log) {
+    const r = [];
+    if (log) { for (let e = Math.ceil(Math.log10(a) - 1e-9); e <= Math.log10(b) + 1e-9; e++) r.push(Math.pow(10, e)); return r; }
+    const span = b - a, st = Math.pow(10, Math.floor(Math.log10(span / 5))), k = [1, 2, 5, 10].find(q => span / (st * q) <= 6) || 10, s = st * k;
+    for (let v = Math.ceil(a / s - 1e-9) * s; v <= b + 1e-9; v += s) r.push(+v.toPrecision(10));
+    return r;
+  }
+  function yAt(s, xv) {
+    const p = s.pts; if (xv < p[0][0] || xv > p[p.length - 1][0]) return null;
+    for (let i = 1; i < p.length; i++) if (xv <= p[i][0]) { const f = (xv - p[i - 1][0]) / (p[i][0] - p[i - 1][0] || 1); return p[i - 1][1] + f * (p[i][1] - p[i - 1][1]); }
+    return null;
+  }
+  function draw(nd) {
+    d = nd; svg.replaceChildren();
+    (d.bands || []).forEach(b => {
+      svg.append(S('rect', { x: X(b.x0), y: m.t, width: Math.max(0, X(b.x1) - X(b.x0)), height: H - m.t - m.b, fill: b.color, opacity: .12 }));
+      if (b.label) svg.append(S('text', { x: (X(b.x0) + X(b.x1)) / 2, y: m.t + 14, 'text-anchor': 'middle', class: 'bandl', fill: b.color }, b.label));
+    });
+    const xt = d.xticks || ticks(d.x[0], d.x[1], o.xlog).map(v => [v, (o.xfmt || num)(v)]);
+    xt.forEach(([v, l]) => svg.append(S('line', { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, class: 'grid' }), S('text', { x: X(v), y: H - m.b + 16, 'text-anchor': 'middle', class: 'tick' }, l)));
+    ticks(d.y[0], d.y[1], o.ylog).forEach(v => svg.append(S('line', { x1: m.l, x2: Wd - m.r, y1: Y(v), y2: Y(v), class: 'grid' }), S('text', { x: m.l - 8, y: Y(v) + 4, 'text-anchor': 'end', class: 'tick' }, (o.yfmt || num)(v))));
+    if (o.xlab) svg.append(S('text', { x: (m.l + Wd - m.r) / 2, y: H - 8, 'text-anchor': 'middle', class: 'axl' }, o.xlab));
+    if (o.ylab) svg.append(S('text', { x: 14, y: (m.t + H - m.b) / 2, 'text-anchor': 'middle', class: 'axl', transform: `rotate(-90 14 ${(m.t + H - m.b) / 2})` }, o.ylab));
+    d.series.forEach(s => {
+      const path = s.pts.map((p, i) => (i ? 'L' : 'M') + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1)).join('');
+      if (s.fill) svg.append(S('path', { d: path + `L${X(s.pts[s.pts.length - 1][0])} ${H - m.b}L${X(s.pts[0][0])} ${H - m.b}Z`, fill: s.color, opacity: .15 }));
+      svg.append(S('path', { d: path, fill: 'none', stroke: s.color, 'stroke-width': s.width || 2.5, 'stroke-dasharray': s.dash || '', 'stroke-linejoin': 'round' }));
+      if (s.dots) s.pts.forEach(p => svg.append(S('circle', { cx: X(p[0]), cy: Y(p[1]), r: 5, fill: s.color })));
+    });
+    (d.vlines || []).forEach(v => { svg.append(S('line', { x1: X(v.x), x2: X(v.x), y1: m.t, y2: H - m.b, stroke: v.color || 'var(--amber)', 'stroke-width': 2, 'stroke-dasharray': '5 4' })); if (v.label) svg.append(S('text', { x: X(v.x) + 5, y: m.t + 28, class: 'bandl', fill: v.color || 'var(--amber)' }, v.label)); });
+    (d.marks || []).forEach(k => { svg.append(S('circle', { cx: X(k.x), cy: Y(k.y), r: 6, fill: k.color || 'var(--amber)', stroke: 'var(--bg)', 'stroke-width': 2 })); if (k.label) svg.append(S('text', { x: X(k.x) + 9, y: Y(k.y) - 8, class: 'bandl', fill: k.color || 'var(--amber)' }, k.label)); });
+    cursor = S('line', { y1: m.t, y2: H - m.b, stroke: 'var(--ink)', 'stroke-width': 1, opacity: 0 }); svg.append(cursor);
+  }
+  function move(e) {
+    if (!d) return;
+    const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) / r.width * Wd;
+    if (px < m.l || px > Wd - m.r) return leave();
+    let xv = invX(px); if (o.snap) xv = Math.round(xv);
+    cursor.setAttribute('x1', X(xv)); cursor.setAttribute('x2', X(xv)); cursor.setAttribute('opacity', .5);
+    let h = '<b>' + (o.tipHead ? o.tipHead(xv) : (o.xlab || 'x') + ': ' + (o.xfmt || num)(xv)) + '</b>';
+    d.series.forEach(s => { if (s.noTip) return; const y = yAt(s, xv); if (y != null) h += `<br><span style="color:${s.color}">●</span> ${s.name}: ${(o.yfmt || num)(y)}`; });
+    if (o.tipExtra) h += o.tipExtra(xv);
+    tip.innerHTML = h; tip.style.display = 'block';
+    const lx = e.clientX - r.left;
+    tip.style.left = (lx > r.width * .6 ? lx - tip.offsetWidth - 12 : lx + 12) + 'px'; tip.style.top = '10px';
+  }
+  function leave() { tip.style.display = 'none'; if (cursor) cursor.setAttribute('opacity', 0); }
+  svg.addEventListener('pointermove', move); svg.addEventListener('pointerdown', move); svg.addEventListener('pointerleave', leave);
+  return { draw };
+}
+/* Reliability-budget apportionment (series system, exponential): used in chapters 2 and 3 */
+function apportion(root, cfg) {
+  const LN = -Math.log(0.9);
+  const out = el('div', {}), bars = el('div', {}), sls = el('div', {});
+  let items = [];
+  function render() {
+    const tot = items.reduce((a, i) => a + i.s.v, 0);
+    barChart(bars, items.map(i => { const lam = cfg.total * i.s.v / 100; return { label: i.name, value: i.s.v, color: i.hot ? 'var(--amber)' : 'var(--teal)', text: i.s.v > 0 ? `λ ${sci(lam)} · B10 ≈ ${num(Math.round(LN / lam / 10) * 10)} h` : 'no budget' }; }), { max: 40 });
+    const ok = Math.abs(tot - 100) < 0.05;
+    out.innerHTML = `Shares total <b class="${ok ? 'good' : 'warn'}">${tot.toFixed(1)}%</b> of the system budget λ = <b>${sci(cfg.total)}</b> failures per operating hour (system B10 ≈ ${num(Math.round(LN / cfg.total / 10) * 10)} h). ` +
+      (ok ? 'In a series system the block failure rates add up to the system rate, so every share given to one block is taken from the others.' : `<span class="warn">${tot > 100 ? 'The blocks together are allowed more failures than the system target permits — the system would miss its B10.' : 'Part of the budget is unallocated — some block could be given an easier target.'}</span>`);
+  }
+  function load(list) {
+    items = list.map(([name, share, hot]) => ({ name, hot, s: slider(name, 0, 50, 0.1, share, v => v.toFixed(1) + '%', render) }));
+    sls.replaceChildren(...items.map(i => i.s.el)); render();
+  }
+  const pb = presetBar(cfg.presets.map(p => [p.name, () => { load(p.items); p.on && p.on(); }]));
+  root.append(pb, sls, bars, el('div', { class: 'out' }, out));
+  pb.pick(cfg.start || 0);
+}
+/* inverse standard normal (Acklam) */
+function invNorm(p) {
+  const a = [-39.69683028665376, 220.9460984245205, -275.9285104469687, 138.3577518672690, -30.66479806614716, 2.506628277459239],
+    b = [-54.47609879822406, 161.5858368580409, -155.6989798598866, 66.80131188771972, -13.28068155288572],
+    c = [-0.007784894002430293, -0.3223964580411365, -2.400758277161838, -2.549732539343734, 4.374664141464968, 2.938163982698783],
+    dd = [0.007784695709041462, 0.3224671290700398, 2.445134137142996, 3.754408661907416];
+  let q, r;
+  if (p < 0.02425) { q = Math.sqrt(-2 * Math.log(p)); return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((dd[0] * q + dd[1]) * q + dd[2]) * q + dd[3]) * q + 1); }
+  if (p > 1 - 0.02425) return -invNorm(1 - p);
+  q = p - 0.5; r = q * q;
+  return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q / (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
+}
+
+/* Chapter 2 interactive elements */
+W.speccards = r => {
+  head(r, 'The four components of a reliability specification', 'Tap a card. A missing card is a hole that surfaces later, usually in a dispute.');
+  const C = [['Failure definition', 'Tied to function. Is a leaking seal a failure? It depends on leak rate, on whether a routine adjustment corrects it, on the condition it occurs in. Settle it in writing, in advance.', 'Feeds Part III — DFMEA needs failure already defined.'],
+  ['Environments', 'Not just in service: storage, transport, handling, maintenance and foreseeable misuse. If the designer is not told about a condition, the designer is not designing against it.', 'Feeds Part IV — stress definition needs a complete environmental description.'],
+  ['Reliability requirement', 'A stated number in a verifiable form — R(t), B10 life, failure rate — in the currency that matches how the product accumulates damage.', 'Section 2.3 below.'],
+  ['Verification method', 'Test bench conditions, duration, sample size, pass/fail criteria. Without it the requirement is an aspiration.', 'Feeds Part V — test design needs the method specified up front.']];
+  const out = el('div', { class: 'out' });
+  const cards = C.map((c, i) => el('div', { class: 'card', onclick: () => { cards.forEach(x => x.classList.remove('on')); cards[i].classList.add('on'); out.innerHTML = `<b>${i + 1}. ${c[0]}.</b> ${c[1]}<br><span class="good">${c[2]}</span>`; } }, el('div', { class: 'n' }, 'Component ' + (i + 1)), el('h4', {}, c[0])));
+  r.append(el('div', { class: 'cards' }, cards), out); cards[0].click();
+};
+W.convert = r => {
+  head(r, 'Requirement currency converter — B-life, MTTF and failure rate', 'Exponential (constant failure rate) assumption, as in the chapter. Hover the survival curve.');
+  const X = el('input', { type: 'number', min: 1, max: 60, step: 1, value: 10, style: 'width:70px' }), L = el('input', { type: 'number', min: 0.1, step: 'any', value: 12, style: 'width:100px' });
+  const U = el('select', {}, el('option', { value: 'y' }, 'calendar years'), el('option', { value: 'h' }, 'operating hours')), HY = el('input', { type: 'number', min: 1, max: 8760, step: 1, value: 400, style: 'width:90px' });
+  const st = el('div', { class: 'stats' }), out = el('div', { class: 'out' }), c = el('div', {}), hyrow = el('span', {}, ' · powered ', HY, ' hours per year');
+  const ch = lineChart(c, { ylab: 'Reliability R(t)', yfmt: v => v.toFixed(2), h: 260 });
+  const up = () => {
+    const x = Math.min(60, Math.max(1, +X.value || 10)) / 100, life = Math.max(1e-9, +L.value || 1), hy = Math.min(8760, Math.max(1, +HY.value || 8760)), k = -Math.log(1 - x), yrs = U.value === 'y';
+    hyrow.style.display = yrs ? '' : 'none';
+    const mttf = life / k, lam = k / life, unit = yrs ? 'years' : 'h';
+    const items = [[num(mttf, 4) + ' ' + unit, 'MTTF = life ÷ −ln(R)'], [yrs ? num(lam, 3) : sci(lam), yrs ? 'λ, failures per calendar year' : 'λ, failures per operating hour', 't']];
+    if (yrs) {
+      items.push([sci(lam / hy), 'λ, failures per operating hour', 'r']);
+      const ratio = 8760 / hy;
+      out.innerHTML = hy >= 8760 ? 'Unit runs 24 hours a day: calendar and operating time are the same currency.' : `Reusing a 24-hour/day assumption would give λ = <b>${sci(lam / 8760)}</b> per hour and pretend the unit accumulates ${num(Math.round(8760 * life))} operating hours over ${num(life)} years. It really sees only <b>${num(Math.round(hy * life))} h</b>, so that target is about <b class="warn">${num(ratio, 3)} times too lenient</b> for the hours the unit actually runs.`;
+    } else out.innerHTML = `Requirement already stated in operating hours: R(${num(life)} h) = ${(1 - x).toFixed(2)}.`;
+    setStats(st, items);
+    const pts = []; for (let i = 0; i <= 100; i++) { const t = 3 * life * i / 100; pts.push([t, Math.exp(-lam * t)]); }
+    ch.draw({ x: [0, 3 * life], y: [0, 1], series: [{ name: 'R(t) = exp(−λt)', color: 'var(--teal)', pts, fill: true }], marks: [{ x: life, y: 1 - x, label: `B${Math.round(x * 100)} = ${num(life)} ${unit}` }], vlines: [{ x: mttf <= 3 * life ? mttf : -1, label: 'MTTF', color: 'var(--rose)' }].filter(v => v.x > 0) });
+  };
+  [X, L, U, HY].forEach(i => i.addEventListener('input', up));
+  const set = (x, l, u, h) => () => { X.value = x; L.value = l; U.value = u; HY.value = h; up(); };
+  const pb = presetBar([['§2.3: B10 = 5 years, always on', set(10, 5, 'y', 8760)], ['ECU: B10 = 12 years, 400 h/year', set(10, 12, 'y', 400)], ['Infusion pump: B10 = 5,000 h', set(10, 5000, 'h', 8760)]]);
+  r.append(pb, el('div', { class: 'row' }, 'B', X, '% life = ', L, U, hyrow), st, out, c); pb.pick(1);
+};
+W.lognormal = r => {
+  head(r, 'Annual driving distance — why the specification uses the 95th percentile', 'Lognormal population from the chapter\'s European passenger-car case. Drag the percentile.');
+  const mu = Math.log(17.2), sg = 0.603, c = el('div', {}), st = el('div', { class: 'stats' });
+  const pdf = x => Math.exp(-Math.pow(Math.log(x) - mu, 2) / (2 * sg * sg)) / (x * sg * Math.sqrt(2 * Math.PI));
+  const ch = lineChart(c, { xlab: 'Annual distance, thousand km', ylab: 'Share of drivers (density)', yfmt: v => v.toFixed(3), h: 270 });
+  const pts = []; for (let x = 0.5; x <= 80; x += 0.5) pts.push([x, pdf(x)]);
+  let p, y;
+  const up = () => {
+    const q = Math.exp(mu + sg * invNorm(p.v / 100));
+    ch.draw({ x: [0, 80], y: [0, 0.05], series: [{ name: 'All drivers', color: 'var(--teal)', pts, width: 2 }, { name: 'Covered by requirement', color: 'var(--amber)', pts: pts.filter(k => k[0] <= q), fill: true, width: 0.1, noTip: true }], vlines: [{ x: q, label: p.v + 'th percentile' }] });
+    setStats(st, [[num(Math.round(q * 100) * 10) + ' km', `annual distance of the ${p.v}th-percentile driver`], [num(Math.round(q * y.v / 10) * 10000) + ' km', `over ${y.v} years at that rate`, 't'], [(100 - p.v) + '%', 'of customers drive more than the requirement assumes', 'r']]);
+  };
+  p = slider('Design percentile', 5, 99, 1, 95, v => v + 'th', up); y = slider('Ownership period', 5, 20, 1, 12, v => v + ' years', up);
+  const pb = presetBar([['Median driver (50th)', () => { p.set(50); up(); }], ['Mean distance (≈ 62nd)', () => { p.set(62); up(); }], ['Chapter choice (95th)', () => { p.set(95); up(); }]]);
+  r.append(pb, p.el, y.el, c, st, el('div', { class: 'note' }, 'Editor\'s check: the curve uses μ = ln(17.2) = 2.845 (distance in thousand km) with σ = 0.603, which reproduces the median of 17,200 km, the mean of 20,600 km and the 95th percentile of about 46,000 km stated in the text. The μ = 3.867 printed in the text does not reproduce those three figures and should be checked against the source.')); pb.pick(2);
+};
+W.ecuapp = r => {
+  head(r, 'Apportioning the ECU budget across five subsystems', 'Drag a share and watch the allocated failure rate and equivalent B10. The preset reproduces the chapter table.');
+  apportion(r, { total: -Math.log(0.9) / 12 / 400, presets: [
+    { name: 'Chapter split 25/20/20/25/10', items: [['Power supply / regulation', 25], ['MCU / digital core', 20], ['Sensor interface', 20], ['Output driver / relay stage', 25], ['Connector / harness interface', 10]] },
+    { name: 'Equal split', items: [['Power supply / regulation', 20], ['MCU / digital core', 20], ['Sensor interface', 20], ['Output driver / relay stage', 20], ['Connector / harness interface', 20]] },
+    { name: 'Connector under-budgeted', items: [['Power supply / regulation', 27], ['MCU / digital core', 22], ['Sensor interface', 22], ['Output driver / relay stage', 27], ['Connector / harness interface', 2, 1]] }] });
+};
+
+/* Reader shell: table of contents, progress, theme, and hybrid narration (MP3 if present, browser voice otherwise). */
+(function () {
+  const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+  const LS = { get(k, d) { try { const v = localStorage.getItem('alt.' + k); return v == null ? d : v; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem('alt.' + k, v); } catch (e) { } } };
+
+  // widgets
+  $$('.widget[data-w]').forEach(r => { try { W[r.dataset.w](r); } catch (e) { r.append('Interactive element failed to load: ' + e.message); console.error(e); } });
+
+  // theme + font size
+  const setTheme = t => { document.documentElement.classList.toggle('light', t === 'light'); LS.set('theme', t); };
+  setTheme(LS.get('theme', 'dark'));
+  $('#theme').onclick = () => setTheme(document.documentElement.classList.contains('light') ? 'dark' : 'light');
+  let fs = +LS.get('fs', 18);
+  const setFs = v => { fs = Math.min(24, Math.max(14, v)); document.documentElement.style.setProperty('--fs', fs + 'px'); LS.set('fs', fs); };
+  setFs(fs); $('#fminus').onclick = () => setFs(fs - 1); $('#fplus').onclick = () => setFs(fs + 1);
+  $('#menu').onclick = () => $('.toc').classList.toggle('open');
+
+  // table of contents + scroll progress
+  const secs = $$('main section'), toc = $('.toc');
+  secs.forEach((s, i) => { const h = s.querySelector('h2'); const a = el('a', { href: '#' + s.id, onclick: () => toc.classList.remove('open') }, h ? h.textContent : 'Opening'); toc.append(a); s._a = a; });
+  function onScroll() {
+    const h = document.documentElement, p = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight);
+    $('#bar').style.width = (100 * p) + '%'; LS.set('pct.' + CH.id, Math.round(100 * p));
+    let c = secs[0]; secs.forEach(s => { if (s.getBoundingClientRect().top < 140) c = s; });
+    secs.forEach(s => s._a.classList.toggle('cur', s === c));
+  }
+  addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+  // ---------- narration ----------
+  const segs = $$('.seg'), N = NARR.length, synth = window.speechSynthesis;
+  const bPlay = $('#pp'), lbl = $('#plbl'), badge = $('#pbadge'), selV = $('#pvoice'), selR = $('#prate');
+  let cur = -1, playing = false, token = 0, mode = 'tts', audio = null, chunks = [], ci = 0, rate = +LS.get('rate', 1);
+  selR.value = String(rate); selR.onchange = () => { rate = +selR.value; LS.set('rate', rate); if (audio) audio.playbackRate = rate; if (playing && mode === 'tts') { token++; synth.cancel(); playing = true; speakChunk(); } };
+  const secSegs = {}; NARR.forEach((n, i) => (secSegs[n.s] = secSegs[n.s] || []).push(i));
+  const mp3 = {};
+  function probe(sec) {
+    if (mp3[sec] !== undefined) return Promise.resolve(mp3[sec]);
+    return new Promise(res => {
+      const a = new Audio(); let done = false;
+      const fin = ok => { if (done) return; done = true; mp3[sec] = ok ? a : false; res(mp3[sec]); };
+      a.preload = 'metadata'; a.addEventListener('loadedmetadata', () => fin(true)); a.addEventListener('error', () => fin(false)); setTimeout(() => fin(false), 2500);
+      a.src = 'audio/' + CH.id + '/s' + String(sec).padStart(2, '0') + '.mp3';
+    });
+  }
+  const NOVELTY = /^(albert|bad news|bahh|bells|boing|bubbles|cellos|deranged|good news|hysterical|jester|organ|pipe organ|superstar|trinoids|whisper|wobble|zarvox|fred|junior|kathy|ralph|eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley|princess)\b/i;
+  const tier = v => /natural|neural|online/i.test(v.name) ? 4 : /premium/i.test(v.name) ? 3 : /enhanced|google/i.test(v.name) ? 2 : 1;
+  const TIER = { 4: 'Natural', 3: 'Premium', 2: 'Enhanced', 1: 'Basic' };
+  let best = 0;
+  function voices() {
+    if (!synth) return;
+    const vs = synth.getVoices().filter(v => /^en/i.test(v.lang) && !NOVELTY.test(v.name));
+    const score = v => tier(v) * 10 + (/samantha|ava|zoe|evan|nathan|allison|daniel|serena|aria|jenny|guy|andrew|emma|brian/i.test(v.name) ? 4 : 0) + (/en[-_](US|GB)/i.test(v.lang) ? 2 : 0) + (v.default ? 1 : 0);
+    vs.sort((a, b) => score(b) - score(a));
+    best = vs.length ? tier(vs[0]) : 0;
+    const saved = LS.get('voice', '');
+    selV.replaceChildren(...vs.map(v => el('option', { value: v.name }, (tier(v) > 1 ? '★ ' : '') + v.name.replace(/Microsoft |Online |\(Natural\) ?|- English.*$|\((Premium|Enhanced)\)/g, '').trim() + ' · ' + TIER[tier(v)] + ' · ' + v.lang.replace('_', '-'))));
+    if (vs.some(v => v.name === saved)) selV.value = saved;
+    const tb = $('#ptips'); if (tb) tb.classList.toggle('amber', best < 2);
+  }
+  if (synth) { voices(); synth.onvoiceschanged = voices; }
+  selV.onchange = () => { LS.set('voice', selV.value); if (playing && mode === 'tts') { token++; synth.cancel(); playing = true; speakChunk(); } };
+  function split(t) {
+    const out = [];
+    t.replace(/([.!?]["')\]]*)\s+(?=[A-Z0-9(])/g, '$1\u0001').split('\u0001').forEach(sn => {
+      if (sn.length <= 240) return out.push(sn);
+      let b = ''; sn.replace(/([,;:])\s/g, '$1\u0001').split('\u0001').forEach(p => { if ((b + ' ' + p).length > 200 && b) { out.push(b); b = p; } else b = b ? b + ' ' + p : p; }); if (b) out.push(b);
+    });
+    const m = []; out.forEach(x => { if (m.length && (m[m.length - 1] + ' ' + x).length < 60) m[m.length - 1] += ' ' + x; else m.push(x); });
+    return m.filter(x => x.trim());
+  }
+  function mark(scroll) {
+    segs.forEach((s, i) => s.classList.toggle('now', i === cur));
+    if (cur < 0) return;
+    const sec = secs[NARR[cur].s], h = sec && sec.querySelector('h2');
+    lbl.textContent = (h ? h.textContent : 'Opening') + ' · ' + (cur + 1) + ' / ' + N;
+    if (scroll !== false) segs[cur].scrollIntoView({ block: 'center', behavior: 'smooth' });
+    LS.set('seg.' + CH.id, cur);
+  }
+  function ui() { bPlay.textContent = playing ? '❚❚' : '▶'; bPlay.setAttribute('aria-label', playing ? 'Pause' : 'Play'); badge.textContent = mode === 'mp3' ? 'Studio audio' : 'Browser voice'; badge.classList.toggle('s', mode === 'mp3'); selV.style.display = mode === 'mp3' ? 'none' : ''; }
+  function halt() { token++; if (audio) { audio.pause(); audio.ontimeupdate = audio.onended = null; } if (synth) synth.cancel(); }
+  function stop() { halt(); playing = false; ui(); }
+  function playFrom(i) {
+    if (i < 0 || i >= N) return stop();
+    halt(); cur = i; playing = true; mark(); const my = token, sec = NARR[i].s;
+    probe(sec).then(a => {
+      if (my !== token) return;
+      if (a) {
+        mode = 'mp3'; audio = a; ui();
+        const idx = secSegs[sec], len = idx.map(k => NARR[k].t.length), tot = len.reduce((x, y) => x + y, 0);
+        let before = 0; for (const k of idx) { if (k === i) break; before += NARR[k].t.length; }
+        a.playbackRate = rate; a.currentTime = a.duration * before / tot;
+        a.ontimeupdate = () => { let f = a.currentTime / a.duration * tot, k = 0; while (k < idx.length - 1 && f > len[k]) { f -= len[k]; k++; } if (idx[k] !== cur) { cur = idx[k]; mark(); } };
+        a.onended = () => { const nx = idx[idx.length - 1] + 1; nx < N ? playFrom(nx) : stop(); };
+        a.play().catch(() => { mp3[sec] = false; playFrom(i); });
+      } else {
+        mode = 'tts'; ui();
+        if (!synth) { lbl.textContent = 'This browser has no built-in voice. Add MP3 files to the audio folder to enable narration.'; playing = false; ui(); return; }
+        chunks = split(NARR[i].t); ci = 0; speakChunk();
+      }
+    });
+  }
+  function speakChunk() {
+    if (ci >= chunks.length) { const my2 = token, hd = /^H\d$/.test(segs[cur].tagName); return setTimeout(() => { if (my2 === token && playing) playFrom(cur + 1); }, hd ? 650 : 380); }
+    const u = new SpeechSynthesisUtterance(chunks[ci]), my = token;
+    const v = synth.getVoices().find(x => x.name === selV.value); if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'en-US';
+    u.rate = rate; u.pitch = 1;
+    const t0 = Date.now(), fail = () => { stop(); lbl.textContent = 'The browser voice is not available here. Try another voice, or add MP3 files to the audio folder.'; };
+    u.onend = () => { if (my !== token || !playing) return; if (Date.now() - t0 < 80 && chunks[ci].length > 40) return fail(); ci++; speakChunk(); };
+    u.onerror = e => { if (my !== token) return; if (e.error === 'interrupted' || e.error === 'canceled') return; fail(); };
+    window._u = u; synth.speak(u);
+  }
+  function firstVisible() { const i = segs.findIndex(s => s.getBoundingClientRect().top > 60); return i < 0 ? 0 : i; }
+  bPlay.onclick = () => {
+    if (playing) { halt(); playing = false; ui(); return; }
+    if (cur < 0) return playFrom(firstVisible());
+    if (mode === 'mp3' || !chunks.length) return playFrom(cur);
+    playing = true; ui(); speakChunk();
+  };
+  $('#pprev').onclick = () => playFrom(Math.max(0, (cur < 0 ? firstVisible() : cur) - 1));
+  $('#pnext').onclick = () => playFrom(Math.min(N - 1, (cur < 0 ? firstVisible() : cur) + 1));
+  const tips = $('#tips'); $('#ptips').onclick = () => { tips.style.display = tips.style.display === 'block' ? 'none' : 'block'; }; $('#tipsx').onclick = () => { tips.style.display = 'none'; };
+  $('#phere').onclick = () => playFrom(firstVisible());
+  $('#pscript').onclick = () => {
+    let t = CH.title + ' — narration script\nOne block per audio file. Save each as MP3 with the file name shown and upload to the audio folder.\n';
+    Object.keys(secSegs).forEach(s => { const h = secs[s] && secs[s].querySelector('h2'); t += '\n\n===== audio/' + CH.id + '/s' + String(s).padStart(2, '0') + '.mp3 — ' + (h ? h.textContent : 'Opening') + ' =====\n\n' + secSegs[s].map(k => NARR[k].t).join('\n\n'); });
+    const a = el('a', { href: URL.createObjectURL(new Blob([t], { type: 'text/plain' })), download: CH.id + '-narration.txt' }); document.body.append(a); a.click(); a.remove();
+  };
+  // start reading from any paragraph: hover button or double-click
+  const hov = $('#hov'); let hi = -1;
+  segs.forEach((s, i) => {
+    s.addEventListener('mouseenter', () => { hi = i; const r = s.getBoundingClientRect(); hov.style.display = 'block'; hov.style.top = (r.top + scrollY + 2) + 'px'; hov.style.left = Math.max(2, r.left + scrollX - 36) + 'px'; });
+    s.addEventListener('dblclick', e => { if (e.target.closest('.widget')) return; playFrom(i); });
+  });
+  hov.onclick = () => { if (hi >= 0) playFrom(hi); };
+  addEventListener('keydown', e => { if (e.target.matches('input,select,textarea,button')) return; if (e.code === 'Space') { e.preventDefault(); bPlay.click(); } });
+  addEventListener('beforeunload', () => { if (synth) synth.cancel(); });
+  ui();
+})();
+</script></body></html>

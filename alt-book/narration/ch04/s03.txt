@@ -1,0 +1,25 @@
+Section 4.2. The P-Diagram: Separating What You Control From What You Merely Survive.
+
+Why a boundary tool is needed.
+
+Q F D answers which requirements matter most. It does not answer a different, equally important question: for a given design element, what actually determines whether it will meet those requirements in the field? The parameter diagram, P-diagram, is the tool that answers that question, and it is the single most important bridge between requirements definition and the D F M E A and duty-cycle work that follows in Parts II and III of this book.
+
+A P-diagram forces a design team to draw a boundary around a system, subsystem, or component and then classify everything that crosses that boundary into exactly four categories:
+
+Signal or Intent (Input): what the design element is supposed to receive or respond to, the intended input.
+
+Control Factors: the parameters the design team can specify and control, material selection, geometry, tolerances, surface treatment, process parameters. These are the knobs a design engineer actually turns.
+
+Noise Factors: everything that affects the output but that the design team cannot fully control, environmental variation, customer usage variation, manufacturing variation, wear or degradation over time, and interactions between adjacent systems. Taguchi's framework, as O'Connor presents it, treats these noise factors as unavoidable sources of variation that a robust design must be insensitive to, rather than variation the team can simply specify away.
+
+Output or Response: what the design element actually produces, split into the Ideal Function (what it is supposed to do) and the Error States (the ways it can fail to do that).
+
+Porter's treatment of this structure, presented as an IPCO diagram (Inputs, Noise Factors or Assumptions, Controls, Output), applies the same four-box logic to test methods and to the D F M E A process itself, not only to hardware designs. That generality is worth noting here because it previews exactly how the P-diagram is used later in the book: Part III (Chapters 8 to 9) uses the same control or noise split to structure D F M E A cause analysis, and Part IV uses the noise-factor list as the starting inventory of stresses that accelerated tests must reproduce.
+
+Why the control or noise split changes what gets tested.
+
+The reason a P-diagram belongs in the requirements chapter, rather than waiting for the D F M E A chapter, is that the classification decision, is this a control factor or a noise factor?, determines what kind of verification activity is appropriate long before a D F M E A session ever convenes.
+
+A control factor is something the design specifies. Verification of a control factor is fundamentally a design-review and drawing-check activity (Section 4.3): did the design actually implement the specified material, tolerance, or geometry? A noise factor is something the design cannot specify away and must instead be made robust against, or, when robustness is insufficient, must be explicitly tested against. Verification of a noise factor requires a test that reproduces or bounds that noise, which is precisely the accelerated test planning this book exists to teach. Taguchi's robustness framing, illustrated in O'Connor's signal-to-noise examples, makes the same point quantitatively: a design's quality is measured not by its output at one nominal condition but by how little its output varies as noise factors vary around that nominal condition. A gap in the noise-factor list at the P-diagram stage is therefore not a paperwork gap, it is a gap in the test plan that will not be discovered until a field failure forces the team to ask why didn't we test for that?
+
+This is the mechanism behind the chapter's real-world example below: a P-diagram exercise conducted properly, with the right people in the room, finds noise factors that a test plan built from control factors alone would never surface.

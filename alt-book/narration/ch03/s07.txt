@@ -1,0 +1,11 @@
+Common Pitfalls.
+
+Treating the R B D as a picture of the hardware rather than a picture of the failure logic for a specific failure definition, the free-wheel clutch example in section 3.4 shows how badly this can mislead if the same diagram is reused across different failure modes.
+
+Decomposing to a level of detail nobody will act on, instead of scoping deliberately (section 3.3) to the elements that plausibly limit system life.
+
+Leaving interfaces undrawn. If a connection, coupling, or handoff between two blocks isn't explicitly represented in the block diagram, assume, regardless of anyone's stated intention, that no one is analyzing it.
+
+Assigning subsystem ownership by physical hardware rather than by function, which is exactly how an interface like a drive coupling ends up belonging to neither adjoining team.
+
+Reusing a prior product's decomposition or R B D wholesale without re-checking whether this product's failure modes, mission profile, or operational modes actually match the old structure.

@@ -1,0 +1,29 @@
+Real-World Example: Turning Must Last the Life of the Vehicle Into a Testable Requirement.
+
+The scenario. An OEM tells its electronic control unit (E C U) supplier that the unit must last the life of the vehicle. Nothing about that sentence can be designed against, tested against, or disputed if it turns out to be wrong. The requirements engineer's job is to turn it into something that can be all three.
+
+Step 1, Establish the usage basis. Following the logic (and the real distribution figures) from section 2.4, the program adopts the 95th-percentile driver as its design population, the same choice the cited OEM case made, for the same reason: a requirement sized to the average driver silently fails the top of the customer distribution. Combined with a 12-year ownership assumption (a typical automotive design-life target), this gives a total distance-based usage assumption. (In a real program this step would be refined further using the product's own duty-cycle work in Part II rather than assumed constant year over year, flagged here as a simplification, not a final answer.)
+
+Step 2. State the requirement in a verifiable form. The program states the requirement as a B ten life of at least 12 years, verified as a reliability at 12 years of at least 0.90, under a stated environmental and functional description as set out in section 2.2. Not, the life of the vehicle.
+
+Step 3, Convert to the correct currency. This is where the 24-hour per day assumption from section 2.3's worked conversion has to be checked rather than reused blindly. An E C U is only powered when the vehicle is running, not continuously. Using the same exponential-distribution math as the earlier conversion:
+
+First formula. The reliability at 12 years is 0.90, and it equals e to the power of minus 12 divided by the M T T F. Rearranging, the M T T F equals 12 divided by the negative natural logarithm of 0.90. That logarithm is 0.1054, so the M T T F is about 113.9 years. Notice how far that is from 12 years: a B ten life of 12 years needs a mean life nearly ten times longer.
+
+Second formula. The calendar failure rate, lambda, is one divided by the M T T F: about 0.00878 failures per year.
+
+If the product's actual average engine-on time is roughly 400 hours per year (a representative passenger-vehicle usage figure, not the 8,760 hours per year that 24-hour operation would assume), the requirement converts to an operating-hour failure rate, the currency the design team can actually engineer against:
+
+Third formula. The operating-hour failure rate is the calendar rate, 0.00878 failures per year, divided by 400 operating hours per year. The result is about 2.20 times ten to the minus 5 failures per operating hour. In plain terms: about 22 failures for every million hours of running.
+
+Had the team lazily reused the 24-hour per day assumption from section 2.3 instead of checking it, the resulting target would have been roughly 22 times more lenient than the real requirement, a hole in the specification that would not surface until field data started arriving, years later, at exactly the cost point the Rule of Ten warns about.
+
+Step 4, Apportion the system target across subsystems. A system-level failure-rate target isn't directly testable at the subsystem level, someone has to decide how much of that 2.20 times ten to the minus 5 over hour budget each subassembly is allowed to consume. For a series reliability structure (the normal case for an E C U: any one subsystem's failure fails the unit), the system failure rate is the sum of the subsystem failure rates. Using engineering judgment on relative complexity and criticality, a first-pass apportionment, later refined with the prediction methods previewed in Part IV, the program splits the budget:
+
+The table splits the system budget across five subsystems. Power supply and regulation receives 25 percent of the budget: 5.49 times ten to the minus 6 failures per operating hour, equivalent to a B ten of about 19,200 operating hours. The microcontroller and digital core receives 20 percent: 4.39 times ten to the minus 6, a B ten of about 24,000 hours. The sensor interface also receives 20 percent, with the same figures. The output driver and relay stage receives 25 percent, the same as the power supply. The connector and harness interface receives 10 percent: 2.20 times ten to the minus 6, a B ten of about 47,900 hours. The five shares add up to the system total of 2.20 times ten to the minus 5, which is a system B ten of about 4,790 operating hours, or 12 years at 400 hours per year. Notice the pattern: the smaller a block's share of the failure budget, the longer the life it must demonstrate.
+
+Interactive figure. The apportionment table as a set of sliders and bars, one per subsystem. Dragging a share changes that block's allocated failure rate and its equivalent B ten life. Give a block a smaller share and its bar shortens while its required life grows. If the shares add up to more than one hundred percent, the figure warns that the system would miss its target.
+
+Each row is now a testable, subsystem-level requirement that a component or module engineer can actually design and validate against, traceable back through the apportionment math to the system target, and back through that to the OEM's original sentence. This table is also the direct input to Chapter 3's functional decomposition and reliability block diagram work, and every B ten (operating hours) figure in the right-hand column becomes a candidate acceleration-test target once Part IV converts it into an actual stress and test duration.
+
+The outcome. What started as an unfalsifiable sentence is now five numbers that five different engineers can be held to, that a test lab can design a demonstration test around (Part V), and that a field-data comparison can eventually validate or correct (Part VI), closing the loop this book keeps returning to.

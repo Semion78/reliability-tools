@@ -1,0 +1,3 @@
+Where We're Headed.
+
+The infusion pump example leaned on engineering judgment to set the initial 30 over 25 over 30 over 15 apportionment, a reasonable starting point, but not yet a rigorous one. Chapter 4 covers the tools that replace judgment calls like that with a structured process: Quality Function Deployment for tracing design features back to customer-weighted requirements, and the P-diagram for formally separating what the design controls from what it merely has to survive, the direct input to the D F M E A work in Part III.

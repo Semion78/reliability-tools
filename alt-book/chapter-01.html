@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chapter 1 — Why Accelerated Reliability Testing Matters | Designing Accelerated Reliability Tests for New Hardware</title>
+<style>:root{--bg:#0b1426;--panel:#121f3a;--panel2:#18294a;--ink:#e6ecf7;--mute:#93a3bf;--amber:#f5a524;--teal:#2dd4bf;--rose:#fb7185;--blue:#7aa2ff;--line:#263a63;--fs:18px}
+html.light{--bg:#f7f5ef;--panel:#ffffff;--panel2:#f0ede3;--ink:#1a2336;--mute:#5b6880;--amber:#b86e00;--teal:#0b8577;--rose:#c8334f;--blue:#2f55c8;--line:#dcd7c8}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:var(--fs)/1.7 Georgia,"Iowan Old Style","Times New Roman",serif}
+a{color:var(--teal)}button,select,input{font:inherit}
+.ui,.top,.toc,.player,.widget,table,.tick,.chips,.cards,h1,h2,h3,.kicker{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.top{position:sticky;top:0;z-index:30;display:flex;gap:10px;align-items:center;padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--line);font-size:14px}
+.top .ttl{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--mute)}.top .ttl b{color:var(--ink)}
+.btn{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 11px;cursor:pointer;font-size:14px;text-decoration:none;display:inline-block}
+.btn:hover{border-color:var(--teal)}.btn.on{background:var(--teal);color:#06231f;border-color:var(--teal);font-weight:600}
+.btn.amber{background:var(--amber);color:#201400;border-color:var(--amber);font-weight:700}
+#bar{position:fixed;top:0;left:0;height:3px;background:var(--amber);z-index:40;width:0}
+.wrap{display:flex;max-width:1240px;margin:0 auto}
+.toc{width:270px;flex:none;position:sticky;top:48px;height:calc(100vh - 48px);overflow:auto;padding:18px 12px 120px;font-size:14px;border-right:1px solid var(--line)}
+.toc a{display:block;padding:6px 10px;border-radius:8px;color:var(--mute);text-decoration:none;line-height:1.35;margin:2px 0}
+.toc a:hover{color:var(--ink);background:var(--panel)}.toc a.cur{color:var(--ink);background:var(--panel2);border-left:3px solid var(--amber)}
+main{flex:1;min-width:0;padding:26px 34px 170px;max-width:860px}
+.kicker{color:var(--teal);text-transform:uppercase;letter-spacing:.12em;font-size:13px;font-weight:700}
+h1{font-size:2.1em;line-height:1.15;margin:.2em 0 .7em}
+h2{font-size:1.45em;line-height:1.25;margin:2.2em 0 .6em;padding-top:.6em;border-top:1px solid var(--line)}
+h3{font-size:1.12em;margin:1.6em 0 .4em;color:var(--teal)}
+p,li{margin:.7em 0}ul,ol{padding-left:1.3em}
+.seg{border-radius:6px;transition:background .2s,box-shadow .2s;scroll-margin-top:90px}
+.seg.now{background:color-mix(in srgb,var(--amber) 14%,transparent);box-shadow:-6px 0 0 color-mix(in srgb,var(--amber) 14%,transparent),-9px 0 0 var(--amber)}
+section.ex{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:14px;padding:4px 24px 14px;margin:2.2em 0}
+section.pit{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--rose);border-radius:14px;padding:4px 24px 14px;margin:2.2em 0}
+section.ex h2,section.pit h2{border:0;margin-top:.8em}section.src{font-size:.85em;color:var(--mute)}
+sup.fn a{text-decoration:none;font-family:sans-serif;font-size:.72em;background:var(--panel2);border-radius:9px;padding:1px 5px;margin-left:1px}
+.tw{overflow-x:auto;margin:1.2em 0;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:.84em;line-height:1.45}
+th{background:var(--panel2);color:var(--teal);text-align:left;padding:10px 12px;font-size:.9em;text-transform:uppercase;letter-spacing:.04em}
+td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:top}tr:hover td{background:color-mix(in srgb,var(--teal) 6%,transparent)}
+td:first-child{font-weight:600}
+.formula{font-family:"Cambria Math",Cambria,Georgia,serif;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:10px;padding:12px 18px;margin:1em 0;overflow-x:auto;font-size:1.02em}
+.note{font-family:sans-serif;font-size:.8em;color:var(--mute);border:1px dashed var(--line);border-radius:10px;padding:8px 12px;margin:.8em 0}
+.widget{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin:1.6em 0;font-size:15px;line-height:1.5}
+.widget .wt{font-weight:700;font-size:1.02em;margin-bottom:2px}.widget .wh{color:var(--mute);font-size:.88em;margin-bottom:10px}
+.wt:before{content:"◆ ";color:var(--amber)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+.sl{display:grid;grid-template-columns:minmax(120px,210px) 1fr 96px;gap:10px;align-items:center;margin:6px 0;font-size:.9em}
+.sl b{color:var(--amber);text-align:right;font-variant-numeric:tabular-nums}input[type=range]{width:100%;accent-color:var(--teal)}
+input[type=number],select{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 8px}
+.chartbox{position:relative}.chartbox svg{width:100%;height:auto;display:block;touch-action:pan-y}
+.grid{stroke:var(--line);stroke-width:1}.tick{fill:var(--mute);font-size:11px}.axl{fill:var(--mute);font-size:12px}.bandl{font-size:11px;font-weight:700}
+.tip{position:absolute;pointer-events:none;background:var(--bg);border:1px solid var(--teal);border-radius:10px;padding:8px 10px;font-size:12.5px;line-height:1.4;max-width:260px;display:none;z-index:5;box-shadow:0 6px 20px #0006}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:10px 0}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px}.stat b{display:block;font-size:1.5em;color:var(--amber);font-variant-numeric:tabular-nums;line-height:1.2}.stat span{color:var(--mute);font-size:.82em}
+.stat.t b{color:var(--teal)}.stat.r b{color:var(--rose)}
+.bars .br{display:grid;grid-template-columns:minmax(110px,200px) 1fr minmax(90px,auto);gap:10px;align-items:center;margin:5px 0;font-size:.88em}
+.bars .trk{height:16px;background:var(--bg);border-radius:8px;overflow:hidden}.bars .fill{height:100%;border-radius:8px;transition:width .3s}
+.bars .v{font-variant-numeric:tabular-nums;color:var(--mute);white-space:nowrap}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:10px 0}
+.card{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;font-size:.9em;transition:transform .15s,border-color .15s}
+.card:hover{transform:translateY(-2px);border-color:var(--teal)}.card.on{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber)}
+.card .n{font-size:.75em;color:var(--teal);font-weight:700;text-transform:uppercase;letter-spacing:.08em}.card h4{margin:.2em 0;font-size:1em}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.chip{border:1px solid var(--line);background:var(--bg);border-radius:20px;padding:4px 11px;font-size:.84em;cursor:pointer}
+.chip.on{border-color:var(--amber);color:var(--amber)}.chip.ok{border-color:var(--teal);color:var(--teal)}.chip.bad{border-color:var(--rose);color:var(--rose)}.chip.off{opacity:.35}
+.out{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:.92em;min-height:44px}
+.out b{color:var(--amber)}.warn{color:var(--rose)}.good{color:var(--teal)}
+.defs span.ph{border-bottom:2px dashed var(--teal);cursor:pointer;padding:0 2px;border-radius:4px}.defs span.ph.on{background:var(--amber);color:#201400;border-color:var(--amber)}
+.dots{display:grid;gap:5px;max-width:330px}.dots i{aspect-ratio:1;border-radius:50%;background:var(--line);display:block}.dots i.a{background:var(--amber)}.dots i.t{background:var(--teal)}
+.hoq td,.hoq th{text-align:center;padding:6px 4px;font-size:.8em}.hoq td:first-child,.hoq th:first-child{text-align:left}
+.hoq td.c{cursor:pointer;font-weight:700;user-select:none}.hoq td.c9{background:color-mix(in srgb,var(--amber) 45%,transparent)}.hoq td.c3{background:color-mix(in srgb,var(--amber) 22%,transparent)}.hoq td.c1{background:color-mix(in srgb,var(--amber) 8%,transparent)}
+.hoq tr.tot td{font-weight:700;color:var(--teal);border-top:2px solid var(--teal)}
+details.tree{margin:4px 0 4px 16px;border-left:2px solid var(--line);padding-left:10px}details.tree summary{cursor:pointer}details.tree .lv{font-size:.72em;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;margin-right:6px}
+.pd{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:10px;align-items:stretch}.pd .bx{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px}.pd .bx h5{margin:0 0 6px;font-size:.78em;text-transform:uppercase;letter-spacing:.08em;color:var(--teal)}
+.pd .mid{display:flex;align-items:center;justify-content:center;text-align:center;font-weight:700;border:2px solid var(--amber);min-height:80px}
+.player{position:fixed;left:0;right:0;bottom:0;z-index:35;background:var(--panel);border-top:1px solid var(--line);padding:8px 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px}
+.player .pp{width:44px;height:44px;border-radius:50%;font-size:18px;padding:0}.player .lbl{flex:1;min-width:140px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.player select{max-width:190px;font-size:13px}.badge{border:1px solid var(--teal);color:var(--teal);border-radius:12px;padding:2px 9px;font-size:12px}.badge.s{border-color:var(--amber);color:var(--amber)}
+#hov{position:absolute;display:none;z-index:20;width:28px;height:28px;border-radius:50%;padding:0;font-size:12px}
+.navf{display:flex;justify-content:space-between;gap:10px;margin-top:3em;font-family:sans-serif}
+@media(max-width:900px){.toc{position:fixed;left:0;top:48px;background:var(--bg);z-index:25;transform:translateX(-100%);transition:transform .2s}.toc.open{transform:none}main{padding:18px 16px 190px}.pd{grid-template-columns:1fr}.sl{grid-template-columns:1fr 1fr 80px}}
+@media print{.top,.toc,.player,#bar,#hov{display:none}body{background:#fff;color:#000}}
+
+#tips{display:none;position:fixed;right:14px;bottom:76px;z-index:36;width:min(460px,calc(100vw - 28px));max-height:70vh;overflow:auto;background:var(--panel);border:1px solid var(--teal);border-radius:14px;padding:14px 16px;font-size:13.5px;line-height:1.5;box-shadow:0 10px 40px #0008}#tips p{margin:.5em 0}
+</style></head><body>
+<div id="bar"></div>
+<header class="top"><button class="btn" id="menu" aria-label="Contents">☰</button><a class="btn" href="index.html">Library</a>
+<span class="ttl"><b>Chapter 1</b> · Why Accelerated Reliability Testing Matters</span>
+<button class="btn" id="fminus" aria-label="Smaller text">A−</button><button class="btn" id="fplus" aria-label="Larger text">A+</button><button class="btn" id="theme" aria-label="Light or dark">◐</button></header>
+<div class="wrap"><nav class="toc" aria-label="Sections"></nav><main>
+<div class="kicker">Part 0 · Introduction</div><h1>Chapter 1 — Why Accelerated Reliability Testing Matters</h1>
+<section id="s0" class="">
+<p class="seg " >In the ten years from 1998 to 2006, the number of safety-related recall campaigns recorded by Germany's Federal Motor Vehicle Bureau (Kraftfahrt-Bundesamt) roughly tripled — from 55 to 167 — and the associated cost rose by a factor of eight.<sup class="fn"><a href="#src-1" title="Bertsche, Reliability in Automotive and Mechanical Engineering, Ch. 1, Fig. 1.2 (Kraftfahrt-Bundesamt recall data, 1998–2006).">1</a></sup> Nothing about vehicles got fundamentally more dangerous in that decade. What changed was complexity: more electronics, more sensors, more software, more integration, delivered on shorter timelines and tighter budgets — the same pressures that now define product development in nearly every hardware industry, not just automotive.</p>
+<div class="seg widget" data-w="recall"></div>
+<p class="seg " >That single statistic captures the argument for this entire book. Reliability problems are not random bad luck. They are the predictable output of a development process that either builds reliability in deliberately, from the requirements stage forward, or discovers it by accident, in the field, at the worst possible time and the highest possible cost.</p>
+<p class="seg " >This chapter sets up why that is true, gives you the vocabulary and mental models the rest of the book builds on, and shows how the six topics you already know you need — requirements, duty cycle, DFMEA and risk, stress definition, test design, and field-failure closure — are not six separate subjects. They are one pipeline, and the pipeline only works in order.</p>
+</section>
+<section id="s1" class="">
+<h2 class="seg " >1.1 What "Reliability" Actually Means</h2>
+<p class="seg " >Engineers use the word "reliable" loosely in conversation, but the working definition this book uses is the formal one: <strong>reliability is the probability that a product does not fail under stated functional and environmental conditions during a defined period of time</strong> (VDI Guideline 4001).<sup class="fn"><a href="#src-2" title="Bertsche, Ch. 1 (VDI Guideline 4001 reliability definition).">2</a></sup> Every word in that sentence is load-bearing, and every one of them maps to a part of this book:</p>
+<div class="seg widget" data-w="defmap"></div>
+<ul><li class="seg " ><strong>"Stated functional and environmental conditions"</strong> — this is Part I. If you haven't defined what the product must do and where it will live, you cannot define what "failure" even means.</li><li class="seg " ><strong>"Defined period of time"</strong> — this is Part II. Time, for a mechanical or electrical product, is almost never wall-clock hours; it's a duty cycle expressed in the units that actually damage the product (cycles, miles, switch reversals, thermal excursions).</li><li class="seg " ><strong>"Does not fail"</strong> — this is Part III. Before you can test for failure, you have to have systematically enumerated what failure looks like, how it happens, and how bad each mode is — which is exactly what a DFMEA and a risk matrix are for.</li><li class="seg " ><strong>"Probability"</strong> — this is Parts IV and V. Probability of failure is driven by the stresses the product actually experiences relative to its capability, which is why stress definition and test design are inseparable.</li><li class="seg " >The whole definition is a moving target — new failure modes, new usage patterns, new production variation appear after launch — which is why Part VI (field failure analysis, DFMEA updates, production feedback) closes the loop back to the beginning.</li></ul>
+<p class="seg " >Reliability, in other words, is not a single test you run at the end of a program. It's a property that gets designed in or designed out, chapter by chapter, starting at the requirements stage — which is why this book is organized as a pipeline rather than a list of independent techniques.</p>
+</section>
+<section id="s2" class="">
+<h2 class="seg " >1.2 Why Customers — and Therefore Your Business — Care More Than You Might Assume</h2>
+<p class="seg " >It is tempting to treat reliability as a cost center that competes with schedule and features. Customer research says otherwise. In a 2007 German automotive purchase-decision survey (DAT-Report), buyers rated reliability among the single most important criteria in the decision to buy a car — tied for first place with fuel consumption, and rated as more important than price, design, standard equipment, or resale value.<sup class="fn"><a href="#src-3" title="Bertsche, Ch. 1, Fig. 1.1 (DAT-Report 2007 car purchase criteria survey).">3</a></sup> Only price ever edges it out, and only sometimes.</p>
+<p class="seg " >This is not an automotive-specific finding — it generalizes to any product where a failure costs the customer more than the purchase price alone (downtime, inconvenience, repair hassle, or — in safety-critical products — worse). The scale of the exposure is real money, not just goodwill: warranty and guarantee costs alone can run <strong>8–12% of a manufacturer's annual turnover</strong>.<sup class="fn"><a href="#src-4" title="Bertsche, Ch. 1 (warranty/guarantee cost as % of turnover).">4</a></sup> A well-run accelerated reliability test program is not overhead on top of the product program; it is the mechanism that protects a number that size.</p>
+<div class="seg widget" data-w="warranty"></div>
+</section>
+<section id="s3" class="">
+<h2 class="seg " >1.3 The Rule of Ten: Why <em>When</em> You Find a Problem Matters as Much as <em>Whether</em> You Find It</h2>
+<p class="seg " >The single most important economic fact in reliability engineering is what's commonly called the <strong>Rule of Ten</strong>: the cost of correcting a given defect rises by roughly an order of magnitude with every phase it survives into, moving from design (where you still have the <em>chance to act</em>) through production and into the field (where you now <em>need to react</em>).<sup class="fn"><a href="#src-5" title="Bertsche, Ch. 1, Fig. 1.5 (&quot;Rule of Ten,&quot; cost vs. product life phase).">5</a></sup></p>
+<p class="seg " >Figure 1.5 in Bertsche's <em>Reliability in Automotive and Mechanical Engineering</em> plots this literally — cost per failure on a log scale from roughly 0.10 to 100 — with a single labeled transition: <strong>Design = failure prevention / chance to act</strong>, <strong>Field = failure detection / need to react</strong>. Every chapter of this book sits somewhere on that curve, and the entire strategic argument for accelerated testing is: <strong>do the expensive discovery work on the left side of that curve, in a lab, on purpose, instead of on the right side of that curve, at a customer's site, by accident.</strong></p>
+<div class="seg widget" data-w="ruleoften"></div>
+<p class="seg " >O'Connor and Kleyner's reliability cost model makes the field-side cost concrete. For a product with a modest annual call rate, the five-year cost curve compounds across four buckets simultaneously — parts and repair labor (net of any profit recovered after warranty), the service organization itself, spares logistics, and reputational cost — and none of those four buckets exists at all if the failure mode never reaches the customer.<sup class="fn"><a href="#src-6" title="O&#x27;Connor &amp; Kleyner, Practical Reliability Engineering, 5th ed., §17.3, Fig. 17.3 (reliability cost progression example).">6</a></sup> That last bucket, reputation, is also the hardest to reverse: warranty and repair costs are line items; a reputation for unreliability shows up later as lost market share that never appears on the balance sheet as "caused by Part XR-14."</p>
+</section>
+<section id="s4" class="">
+<h2 class="seg " >1.4 The Bathtub Curve: Why One Test Strategy Is Never Enough</h2>
+<p class="seg " >If the Rule of Ten explains <em>when</em> to look for problems, the <strong>bathtub curve</strong> explains <em>what kind</em> of problem you're looking for at each stage of a product's life — and this is the single most useful mental model in the entire book, because Parts III through VI are essentially organized around its three regions.<sup class="fn"><a href="#src-7" title="Bertsche, Ch. 2, Fig. 2.20 (bathtub curve, three regions); O&#x27;Connor &amp; Kleyner, Ch. 1, §1.6–1.7, Fig. 1.6; Reliability Physics and Engineering — Time-to-Failure Modeling, Ch. 7, §4 (bathtub curve, EFR/IFR/wear-out, burn-in).">7</a></sup></p>
+<div class="seg widget" data-w="bathtub"></div>
+<div class="seg tw" ><table><tr><th>Region</th><th>Failure rate behavior</th><th>Typical causes</th><th>What finds it</th></tr><tr><td><strong>1 — Early failures (infant mortality)</strong></td><td>Decreasing</td><td>Assembly errors, production defects, material lot problems, latent design flaws</td><td>Environmental Stress Screening (ESS/HASS), burn-in, production process control</td></tr><tr><td><strong>2 — Random failures (useful life)</strong></td><td>Roughly constant</td><td>Operational misuse, maintenance errors, contamination, externally induced events</td><td>Field monitoring, FRACAS, durability/performance testing under realistic conditions</td></tr><tr><td><strong>3 — Wear-out failures</strong></td><td>Increasing</td><td>Fatigue, material aging, corrosion, wear</td><td>Accelerated Life Testing (ALT), durability testing, life-stress modeling</td></tr></table></div>
+<p class="seg " >This is why "just run a reliability test" is not a complete strategy. A test built to find Region 1 problems (short, aggressive, margin-seeking — this is what Part V's HALT chapter is built around) will not tell you anything about Region 3 wear-out behavior, and a long wear-out-focused accelerated life test (Part V's quantitative ALT chapter) is a slow, expensive way to catch a workmanship defect that a two-day HALT or a production ESS screen would have found immediately. Matching the right test type to the right region of the bathtub curve — using the failure modes surfaced by your DFMEA (Part III) to tell you which region a given failure cause actually lives in — is a recurring decision point from Chapter 9 onward.</p>
+<p class="seg " >It's also worth being honest about a nuance the rest of the book will come back to: for repairable, multi-component systems the "bathtub" is really an overlay of many components' individual hazard-rate curves, each starting its clock at a different point (initial build, last repair, last part replacement). The clean three-region picture is a simplification that holds well at the component/failure-mechanism level — which is the level this book operates at — and gets fuzzier at the whole-system level.<sup class="fn"><a href="#src-8" title="O&#x27;Connor &amp; Kleyner, Ch. 1, §1.7 (failure patterns for repairable systems: CFR/DFR/IFR).">8</a></sup></p>
+</section>
+<section id="s5" class="">
+<h2 class="seg " >1.5 Reliability Is a Life-Cycle Program, Not a Test Event</h2>
+<p class="seg " >Bertsche's reliability-methods roadmap lays out a product's reliability activities across six life-cycle stages: <strong>planning → conception → design → production → field usage → recycling</strong>, with a different toolkit — qualitative and quantitative — appropriate at each stage.<sup class="fn"><a href="#src-9" title="Bertsche, Ch. 1, Fig. 1.4 (reliability methods across the product life cycle).">9</a></sup> Planning starts with fuzzy data and accumulated know-how; conception is where target-setting and specifications happen; design is where FMEA, FTA, and Weibull/exponential life modeling do the heavy lifting; production shifts to statistical process control and quality audits; field usage is where data collection and early-warning systems take over; and end-of-life feeds recycling-potential and remaining-lifetime analysis.</p>
+<div class="seg widget" data-w="lifecycle"></div>
+<p class="seg " >This book's six parts are a direct implementation of the design-and-verification slice of that roadmap, sequenced deliberately:</p>
+<ol><li class="seg " ><strong>Part I — Requirements &amp; Functional Definition.</strong> You cannot define a failure, a duty cycle, or a test until you've defined what the product must do and where it must survive.</li><li class="seg " ><strong>Part II — Duty Cycle Development.</strong> Every acceleration factor, every DFMEA occurrence rating, and every test spec you'll ever write is only as good as the usage assumption underneath it.</li><li class="seg " ><strong>Part III — DFMEA &amp; Risk Matrices.</strong> Before you can decide what to stress and how hard, you need a disciplined, ranked list of what can actually go wrong — and <em>why</em> severity and occurrence get decided before detection (Chapter 11 makes this a central argument, not a footnote).</li><li class="seg " ><strong>Part IV — Defining Stresses.</strong> This is where duty cycle (Part II) and risk (Part III) get translated into an actual stress level, a life-stress model, and a test acceleration factor, grounded in real material properties rather than assumption.</li><li class="seg " ><strong>Part V — Test Program Design.</strong> Matching test type (functional, durability, ALT, environmental, shipping/storage, screening) to the failure mode and bathtub region it's meant to catch.</li><li class="seg " ><strong>Part VI — Closing the Loop.</strong> Field data, done right, doesn't just fix the current product — it rewrites the DFMEA, corrects the duty-cycle assumptions, and prevents the same recall statistic that opened this chapter from happening to your product.</li></ol>
+<div class="seg widget" data-w="pipeline"></div>
+<p class="seg " >Skipping a step, or doing them out of order — the single most common failure pattern this book will call out repeatedly — is how organizations end up running expensive, statistically rigorous accelerated life tests against a duty cycle nobody validated, on a failure mode the DFMEA never flagged as high-risk, verified against a requirement that was too vague to test in the first place. The test itself can be executed flawlessly and still tell you nothing useful, because the input to it was wrong three steps earlier.</p>
+</section>
+<section id="s6" class="ex">
+<h2 class="seg " >Real-World Example: The Cost of Waiting — A Resistor Tolerance Problem</h2>
+<p class="seg " >To make the Rule of Ten concrete rather than abstract, consider a documented industry scenario involving a single, unremarkable design detail: a resistor's tolerance value in a circuit, discovered to be a problem at different possible points in a program.<sup class="fn"><a href="#src-10" title="Porter (docuri), Accelerated Testing and Validation, &quot;What Not To Know&quot; (resistor tolerance / cost-of-discovery-timing scenario).">10</a></sup></p>
+<p class="seg " ><strong>The scenario.</strong> A design uses a resistor whose tolerance is tighter than the design actually needs, or — in the failure case — not tight enough, allowing an overcurrent condition under a combination of manufacturing variation and end-use conditions. The engineering fix is trivial: a different resistance value or a tighter tolerance spec. The question the case walks through is not "can this be fixed" — it obviously can — but "how does the cost of fixing it change depending on when it's caught."</p>
+<p class="seg " ><strong>The analysis, stage by stage:</strong></p>
+<div class="seg widget" data-w="resistor"></div>
+<div class="seg tw" ><table><tr><th>Stage discovered</th><th>Cost/impact of the same fix</th></tr><tr><td><strong>Feasibility</strong></td><td>No effect on feasibility at all — a different resistor value is a paper change.</td></tr><tr><td><strong>Development / design</strong></td><td>Mildly annoying; economic impact only slightly greater than catching it during feasibility.</td></tr><tr><td><strong>Design validation</strong></td><td>Not much worse than development — a few additional validation tests confirm the correction.</td></tr><tr><td><strong>Production ramp</strong></td><td>Now significant: requires revalidating the design <em>and</em> resetting production tooling/process.</td></tr><tr><td><strong>Production validation</strong></td><td>Same as ramp, plus schedule loss and a missed production start; potentially contractual penalties if it stops a downstream line that depends on the part.</td></tr><tr><td><strong>Full production</strong></td><td>Major emergency: production lines stop or every unit gets reworked, deliveries are missed.</td></tr><tr><td><strong>Field / service</strong></td><td>The product is already in customers' hands. Now add lost customers, dissatisfaction, service and repair cost — and if the overcurrent condition causes actual harm (e.g., a fire), product liability cost on top of everything else.</td></tr></table></div>
+<p class="seg " ><strong>The decision this supports.</strong> Notice what does <em>not</em> change across every row: the engineering fix. What changes by roughly an order of magnitude at each step is the blast radius of applying that fix — validation redone, tooling reset, production stopped, product recalled. This is the Rule of Ten in a single traceable defect rather than an aggregate industry statistic, and it's why Parts I–IV of this book front-load so much effort into getting the requirement, the duty cycle, and the risk ranking right <em>before</em> a single accelerated test is run: every one of those steps exists specifically to catch a "resistor tolerance"-class problem while it's still a feasibility-stage paper change, not a service-stage emergency.</p>
+<p class="seg " ><strong>The outcome.</strong> The organizations that consistently catch these problems on the left side of the curve are not the ones with the most expensive test labs — they're the ones with disciplined requirements definition, a duty cycle built from real usage data, and a DFMEA that gets used as a living document instead of a compliance artifact. That is the actual subject of this book, starting with Chapter 2.</p>
+</section>
+<section id="s7" class="pit">
+<h2 class="seg " >Common Pitfalls</h2>
+<ul><li class="seg " ><strong>Treating reliability testing as a gate at the end of the program</strong>, rather than a set of decisions that start at the requirements stage. By the time a test is running, the duty cycle and risk ranking that determine whether it's the <em>right</em> test are already locked in.</li><li class="seg " ><strong>Running one test strategy for every failure mode.</strong> A HALT campaign will not find a wear-out mechanism, and a six-month accelerated life test is an expensive way to catch a workmanship defect a two-day production screen would have caught. Match the test to the bathtub-curve region the failure cause actually lives in.</li><li class="seg " ><strong>Measuring reliability activity by test hours run, not by defects prevented before they were expensive.</strong> The Rule of Ten means a requirements review that kills a bad assumption in an afternoon can be worth more than a month of lab testing that confirms a design flaw everyone could have caught earlier.</li><li class="seg " ><strong>Forgetting that the loop has to close.</strong> A reliability program that stops at "ship it" and never feeds field and warranty data back into the DFMEA (Part VI) will keep re-discovering the same failure modes, generation after generation — which is exactly the pattern behind the recall statistic this chapter opened with.</li></ul>
+</section>
+<section id="s8" class="">
+<h2 class="seg " >Where We're Headed</h2>
+<p class="seg " >Chapter 2 starts where every real program has to start: turning a customer's vague expectation ("it should be reliable," "it should last the life of the product") into a requirement that is specific enough to design against, specific enough to disagree with, and specific enough to eventually test.</p>
+</section>
+<section id="s9" class="src">
+<h2>Sources for this chapter</h2>
+<ol><li id="src-1">Bertsche, <em>Reliability in Automotive and Mechanical Engineering</em>, Ch. 1, Fig. 1.2 (Kraftfahrt-Bundesamt recall data, 1998–2006).</li><li id="src-2">Bertsche, Ch. 1 (VDI Guideline 4001 reliability definition).</li><li id="src-3">Bertsche, Ch. 1, Fig. 1.1 (DAT-Report 2007 car purchase criteria survey).</li><li id="src-4">Bertsche, Ch. 1 (warranty/guarantee cost as % of turnover).</li><li id="src-5">Bertsche, Ch. 1, Fig. 1.5 ("Rule of Ten," cost vs. product life phase).</li><li id="src-6">O'Connor &amp; Kleyner, <em>Practical Reliability Engineering</em>, 5th ed., §17.3, Fig. 17.3 (reliability cost progression example).</li><li id="src-7">Bertsche, Ch. 2, Fig. 2.20 (bathtub curve, three regions); O'Connor &amp; Kleyner, Ch. 1, §1.6–1.7, Fig. 1.6; <em>Reliability Physics and Engineering — Time-to-Failure Modeling</em>, Ch. 7, §4 (bathtub curve, EFR/IFR/wear-out, burn-in).</li><li id="src-8">O'Connor &amp; Kleyner, Ch. 1, §1.7 (failure patterns for repairable systems: CFR/DFR/IFR).</li><li id="src-9">Bertsche, Ch. 1, Fig. 1.4 (reliability methods across the product life cycle).</li><li id="src-10">Porter (docuri), <em>Accelerated Testing and Validation</em>, "What Not To Know" (resistor tolerance / cost-of-discovery-timing scenario).</li></ol>
+</section>
+<div class="navf"><span></span><a class="btn" href="chapter-02.html">Chapter 2 →</a></div>
+</main></div>
+<div id="tips" class="ui" role="dialog" aria-label="Getting a more natural voice"><button class="btn" id="tipsx" style="float:right">Close</button>
+<b>Getting a more natural voice</b><p>The player uses the voices installed in your browser, best first. Voices marked ★ sound much closer to a human reader than Basic ones.</p>
+<p><b>Mac.</b> System Settings → Accessibility → Spoken Content → System Voice → Manage Voices. Under English, download a voice marked Premium or Enhanced (Ava, Zoe, Evan, Nathan, Allison, Samantha, Daniel, Serena). Quit and reopen the browser, then choose it in the voice list.</p>
+<p><b>iPhone / iPad.</b> Settings → Accessibility → Spoken Content → Voices → English, download a Premium or Enhanced voice, then reload this page.</p>
+<p><b>Microsoft Edge</b> (Mac or Windows) includes free Natural voices such as Aria, Jenny, Guy and Andrew, with nothing to install. They need an internet connection.</p>
+<p><b>Chrome.</b> The Google voices are a step above Basic; downloaded Mac voices also appear here.</p>
+<p>If a ★ voice still sounds rushed, set the speed to 0.9×.</p></div>
+<button class="btn amber" id="hov" title="Read aloud from here" aria-label="Read aloud from here">▶</button>
+<div class="player ui" role="region" aria-label="Audio narration">
+<button class="btn" id="pprev" aria-label="Previous passage">⏮</button><button class="btn amber pp" id="pp" aria-label="Play">▶</button><button class="btn" id="pnext" aria-label="Next passage">⏭</button>
+<span class="lbl" id="plbl">Listen to this chapter — formulas and figures are described in words</span>
+<span class="badge" id="pbadge">Browser voice</span>
+<select id="prate" aria-label="Speed"><option value="0.8">0.8×</option><option value="0.9">0.9×</option><option value="1" selected>1×</option><option value="1.1">1.1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option></select>
+<select id="pvoice" aria-label="Voice"></select><button class="btn" id="ptips" title="How to get a more natural voice">Better voice</button>
+<button class="btn" id="phere" title="Start reading at the passage on screen">Read from here</button><button class="btn" id="pscript" title="Download the narration script for studio text-to-speech">Script</button></div>
+<script>const CH={"id": "ch01", "title": "Chapter 1 \u2014 Why Accelerated Reliability Testing Matters"};const NARR=[{"s": 0, "t": "In the ten years from 1998 to 2006, the number of safety-related recall campaigns recorded by Germany's Federal Motor Vehicle Bureau (Kraftfahrt-Bundesamt) roughly tripled, from 55 to 167, and the associated cost rose by a factor of eight. Nothing about vehicles got fundamentally more dangerous in that decade. What changed was complexity: more electronics, more sensors, more software, more integration, delivered on shorter timelines and tighter budgets, the same pressures that now define product development in nearly every hardware industry, not just automotive."}, {"s": 0, "t": "Interactive figure. Two bars compare the number of safety recall campaigns: 55 in 1998 against 167 in 2006. The count tripled, and the associated cost rose eight-fold."}, {"s": 0, "t": "That single statistic captures the argument for this entire book. Reliability problems are not random bad luck. They are the predictable output of a development process that either builds reliability in deliberately, from the requirements stage forward, or discovers it by accident, in the field, at the worst possible time and the highest possible cost."}, {"s": 0, "t": "This chapter sets up why that is true, gives you the vocabulary and mental models the rest of the book builds on, and shows how the six topics you already know you need, requirements, duty cycle, D F M E A and risk, stress definition, test design, and field-failure closure, are not six separate subjects. They are one pipeline, and the pipeline only works in order."}, {"s": 1, "t": "Section 1.1. What Reliability Actually Means."}, {"s": 1, "t": "Engineers use the word reliable loosely in conversation, but the working definition this book uses is the formal one: reliability is the probability that a product does not fail under stated functional and environmental conditions during a defined period of time (VDI Guideline 4001). Every word in that sentence is load-bearing, and every one of them maps to a part of this book:"}, {"s": 1, "t": "Interactive figure. The definition is shown as one sentence with four highlighted phrases. Tapping a phrase shows which part of the book it belongs to. The list that follows explains each one."}, {"s": 1, "t": "Stated functional and environmental conditions, this is Part I. If you haven't defined what the product must do and where it will live, you cannot define what failure even means."}, {"s": 1, "t": "Defined period of time, this is Part II. Time, for a mechanical or electrical product, is almost never wall-clock hours; it's a duty cycle expressed in the units that actually damage the product (cycles, miles, switch reversals, thermal excursions)."}, {"s": 1, "t": "Does not fail, this is Part III. Before you can test for failure, you have to have systematically enumerated what failure looks like, how it happens, and how bad each mode is, which is exactly what a D F M E A and a risk matrix are for."}, {"s": 1, "t": "Probability, this is Parts IV and V. Probability of failure is driven by the stresses the product actually experiences relative to its capability, which is why stress definition and test design are inseparable."}, {"s": 1, "t": "The whole definition is a moving target, new failure modes, new usage patterns, new production variation appear after launch, which is why Part VI (field failure analysis, D F M E A updates, production feedback) closes the loop back to the beginning."}, {"s": 1, "t": "Reliability, in other words, is not a single test you run at the end of a program. It's a property that gets designed in or designed out, chapter by chapter, starting at the requirements stage, which is why this book is organized as a pipeline rather than a list of independent techniques."}, {"s": 2, "t": "Section 1.2. Why Customers, and Therefore Your Business, Care More Than You Might Assume."}, {"s": 2, "t": "It is tempting to treat reliability as a cost center that competes with schedule and features. Customer research says otherwise. In a 2007 German automotive purchase-decision survey (DAT-Report), buyers rated reliability among the single most important criteria in the decision to buy a car, tied for first place with fuel consumption, and rated as more important than price, design, standard equipment, or resale value. Only price ever edges it out, and only sometimes."}, {"s": 2, "t": "This is not an automotive-specific finding, it generalizes to any product where a failure costs the customer more than the purchase price alone (downtime, inconvenience, repair hassle, or, in safety-critical products, worse). The scale of the exposure is real money, not just goodwill: warranty and guarantee costs alone can run 8 to 12 percent of a manufacturer's annual turnover. A well-run accelerated reliability test program is not overhead on top of the product program; it is the mechanism that protects a number that size."}, {"s": 2, "t": "Interactive figure. A slider sets a manufacturer's annual turnover, and three figures show what eight percent and twelve percent of it come to. For a turnover of five hundred million dollars, warranty cost runs between forty and sixty million dollars a year."}, {"s": 3, "t": "Section 1.3. The Rule of Ten: Why When You Find a Problem Matters as Much as Whether You Find It."}, {"s": 3, "t": "The single most important economic fact in reliability engineering is what's commonly called the Rule of Ten: the cost of correcting a given defect rises by roughly an order of magnitude with every phase it survives into, moving from design (where you still have the chance to act) through production and into the field (where you now need to react)."}, {"s": 3, "t": "Figure 1.5 in Bertsche's Reliability in Automotive and Mechanical Engineering plots this literally, cost per failure on a log scale from roughly 0.10 to 100, with a single labeled transition: Design equals failure prevention or chance to act, Field equals failure detection or need to react. Every chapter of this book sits somewhere on that curve, and the entire strategic argument for accelerated testing is: do the expensive discovery work on the left side of that curve, in a lab, on purpose, instead of on the right side of that curve, at a customer's site, by accident."}, {"s": 3, "t": "Interactive figure. The chart plots the cost of correcting one defect against the phase in which it is found: design, development and validation, production, and field. The vertical axis is logarithmic, so the rule of ten appears as a straight rising line. With a cost of one hundred dollars in design and a factor of ten per phase, the same defect costs one thousand dollars in development, ten thousand in production, and one hundred thousand in the field: a thousand times more. The left half of the chart is shaded as failure prevention, the chance to act. The right half is shaded as failure detection, the need to react. Two sliders change the starting cost and the escalation factor."}, {"s": 3, "t": "O'Connor and Kleyner's reliability cost model makes the field-side cost concrete. For a product with a modest annual call rate, the five-year cost curve compounds across four buckets simultaneously, parts and repair labor (net of any profit recovered after warranty), the service organization itself, spares logistics, and reputational cost, and none of those four buckets exists at all if the failure mode never reaches the customer. That last bucket, reputation, is also the hardest to reverse: warranty and repair costs are line items; a reputation for unreliability shows up later as lost market share that never appears on the balance sheet as caused by Part XR-14."}, {"s": 4, "t": "Section 1.4. The Bathtub Curve: Why One Test Strategy Is Never Enough."}, {"s": 4, "t": "If the Rule of Ten explains when to look for problems, the bathtub curve explains what kind of problem you're looking for at each stage of a product's life, and this is the single most useful mental model in the entire book, because Parts III through VI are essentially organized around its three regions."}, {"s": 4, "t": "Interactive figure. The chart shows failure rate against product age. Three dashed curves are added together to give the solid bathtub curve. The first dashed curve, early failures, starts high and falls quickly. The second, random failures, is a flat line. The third, wear-out, is near zero for most of the life and then climbs steeply. Their sum is high at the start, flat through the middle, and rising at the end: the shape of a bathtub. Sliders change the level of each population, and hovering over the curve names the region that dominates at that age, its typical causes, and the kind of test that finds it."}, {"s": 4, "t": "The table summarises the three regions. Region one, early failures or infant mortality: the failure rate is decreasing. Typical causes are assembly errors, production defects, material lot problems and latent design flaws. It is found by environmental stress screening, burn-in, and production process control. Region two, random failures during useful life: the failure rate is roughly constant. Typical causes are operational misuse, maintenance errors, contamination, and externally induced events. It is found by field monitoring, FRACAS, and durability and performance testing under realistic conditions. Region three, wear-out failures: the failure rate is increasing. Typical causes are fatigue, material aging, corrosion and wear. It is found by accelerated life testing, durability testing, and life-stress modeling."}, {"s": 4, "t": "This is why just run a reliability test is not a complete strategy. A test built to find Region 1 problems (short, aggressive, margin-seeking, this is what Part V's HALT chapter is built around) will not tell you anything about Region 3 wear-out behavior, and a long wear-out-focused accelerated life test (Part V's quantitative A L T chapter) is a slow, expensive way to catch a workmanship defect that a two-day HALT or a production E S S screen would have found immediately. Matching the right test type to the right region of the bathtub curve, using the failure modes surfaced by your D F M E A (Part III) to tell you which region a given failure cause actually lives in, is a recurring decision point from Chapter 9 onward."}, {"s": 4, "t": "It's also worth being honest about a nuance the rest of the book will come back to: for repairable, multi-component systems the bathtub is really an overlay of many components' individual hazard-rate curves, each starting its clock at a different point (initial build, last repair, last part replacement). The clean three-region picture is a simplification that holds well at the component or failure-mechanism level, which is the level this book operates at, and gets fuzzier at the whole-system level."}, {"s": 5, "t": "Section 1.5. Reliability Is a Life-Cycle Program, Not a Test Event."}, {"s": 5, "t": "Bertsche's reliability-methods roadmap lays out a product's reliability activities across six life-cycle stages: planning, then conception, then design, then production, then field usage, then recycling, with a different toolkit, qualitative and quantitative, appropriate at each stage. Planning starts with fuzzy data and accumulated know-how; conception is where target-setting and specifications happen; design is where F M E A, FTA, and Weibull or exponential life modeling do the heavy lifting; production shifts to statistical process control and quality audits; field usage is where data collection and early-warning systems take over; and end-of-life feeds recycling-potential and remaining-lifetime analysis."}, {"s": 5, "t": "Interactive figure. A strip of six life-cycle stages: planning, conception, design, production, field usage and recycling. Tapping a stage shows the reliability toolkit used there."}, {"s": 5, "t": "This book's six parts are a direct implementation of the design-and-verification slice of that roadmap, sequenced deliberately:"}, {"s": 5, "t": "Part I, Requirements & Functional Definition. You cannot define a failure, a duty cycle, or a test until you've defined what the product must do and where it must survive."}, {"s": 5, "t": "Part II, Duty Cycle Development. Every acceleration factor, every D F M E A occurrence rating, and every test spec you'll ever write is only as good as the usage assumption underneath it."}, {"s": 5, "t": "Part III, D F M E A & Risk Matrices. Before you can decide what to stress and how hard, you need a disciplined, ranked list of what can actually go wrong, and why severity and occurrence get decided before detection (Chapter 11 makes this a central argument, not a footnote)."}, {"s": 5, "t": "Part IV, Defining Stresses. This is where duty cycle (Part II) and risk (Part III) get translated into an actual stress level, a life-stress model, and a test acceleration factor, grounded in real material properties rather than assumption."}, {"s": 5, "t": "Part V, Test Program Design. Matching test type (functional, durability, A L T, environmental, shipping or storage, screening) to the failure mode and bathtub region it's meant to catch."}, {"s": 5, "t": "Part VI, Closing the Loop. Field data, done right, doesn't just fix the current product, it rewrites the D F M E A, corrects the duty-cycle assumptions, and prevents the same recall statistic that opened this chapter from happening to your product."}, {"s": 5, "t": "Interactive figure. Six cards, one for each part of the book, in pipeline order. Tapping a card skips that part and shows what goes wrong downstream as a result."}, {"s": 5, "t": "Skipping a step, or doing them out of order, the single most common failure pattern this book will call out repeatedly, is how organizations end up running expensive, statistically rigorous accelerated life tests against a duty cycle nobody validated, on a failure mode the D F M E A never flagged as high-risk, verified against a requirement that was too vague to test in the first place. The test itself can be executed flawlessly and still tell you nothing useful, because the input to it was wrong three steps earlier."}, {"s": 6, "t": "Real-World Example: The Cost of Waiting, A Resistor Tolerance Problem."}, {"s": 6, "t": "To make the Rule of Ten concrete rather than abstract, consider a documented industry scenario involving a single, unremarkable design detail: a resistor's tolerance value in a circuit, discovered to be a problem at different possible points in a program."}, {"s": 6, "t": "The scenario. A design uses a resistor whose tolerance is tighter than the design actually needs, or, in the failure case, not tight enough, allowing an overcurrent condition under a combination of manufacturing variation and end-use conditions. The engineering fix is trivial: a different resistance value or a tighter tolerance spec. The question the case walks through is not can this be fixed, it obviously can, but how does the cost of fixing it change depending on when it's caught."}, {"s": 6, "t": "The analysis, stage by stage:"}, {"s": 6, "t": "Interactive figure. A seven-step slider moves the point of discovery from feasibility through to field service. At each step a row of labels lights up to show everything that now has to be redone: first only a paper change, then extra validation tests, then revalidation and a tooling reset, then schedule loss, a line stop, and finally service cost, lost customers and liability."}, {"s": 6, "t": "The table gives the cost of the same fix by the stage at which it is discovered. At feasibility: no effect at all, a different resistor value is a paper change. At development or design: mildly annoying, only slightly greater impact. At design validation: not much worse, a few additional validation tests confirm the correction. At production ramp: now significant, it requires revalidating the design and resetting production tooling and process. At production validation: the same as ramp, plus schedule loss and a missed production start, and potentially contractual penalties. At full production: a major emergency, production lines stop or every unit gets reworked, and deliveries are missed. In field service: the product is already in customers' hands. Add lost customers, dissatisfaction, service and repair cost, and, if the overcurrent causes actual harm such as a fire, product liability on top of everything else."}, {"s": 6, "t": "The decision this supports. Notice what does not change across every row: the engineering fix. What changes by roughly an order of magnitude at each step is the blast radius of applying that fix, validation redone, tooling reset, production stopped, product recalled. This is the Rule of Ten in a single traceable defect rather than an aggregate industry statistic, and it's why Parts one to four of this book front-load so much effort into getting the requirement, the duty cycle, and the risk ranking right before a single accelerated test is run: every one of those steps exists specifically to catch a resistor tolerance-class problem while it's still a feasibility-stage paper change, not a service-stage emergency."}, {"s": 6, "t": "The outcome. The organizations that consistently catch these problems on the left side of the curve are not the ones with the most expensive test labs, they're the ones with disciplined requirements definition, a duty cycle built from real usage data, and a D F M E A that gets used as a living document instead of a compliance artifact. That is the actual subject of this book, starting with Chapter 2."}, {"s": 7, "t": "Common Pitfalls."}, {"s": 7, "t": "Treating reliability testing as a gate at the end of the program, rather than a set of decisions that start at the requirements stage. By the time a test is running, the duty cycle and risk ranking that determine whether it's the right test are already locked in."}, {"s": 7, "t": "Running one test strategy for every failure mode. A HALT campaign will not find a wear-out mechanism, and a six-month accelerated life test is an expensive way to catch a workmanship defect a two-day production screen would have caught. Match the test to the bathtub-curve region the failure cause actually lives in."}, {"s": 7, "t": "Measuring reliability activity by test hours run, not by defects prevented before they were expensive. The Rule of Ten means a requirements review that kills a bad assumption in an afternoon can be worth more than a month of lab testing that confirms a design flaw everyone could have caught earlier."}, {"s": 7, "t": "Forgetting that the loop has to close. A reliability program that stops at ship it and never feeds field and warranty data back into the D F M E A (Part VI) will keep re-discovering the same failure modes, generation after generation, which is exactly the pattern behind the recall statistic this chapter opened with."}, {"s": 8, "t": "Where We're Headed."}, {"s": 8, "t": "Chapter 2 starts where every real program has to start: turning a customer's vague expectation (it should be reliable, it should last the life of the product) into a requirement that is specific enough to design against, specific enough to disagree with, and specific enough to eventually test."}];</script>
+<script>/* Shared helpers: DOM, formatting, charts, controls. No dependencies. */
+const W = {};
+function el(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  for (const k in (attrs || {})) {
+    if (k === 'class') e.className = attrs[k];
+    else if (k === 'html') e.innerHTML = attrs[k];
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), attrs[k]);
+    else e.setAttribute(k, attrs[k]);
+  }
+  kids.flat().forEach(c => { if (c != null) e.append(c.nodeType ? c : document.createTextNode(c)); });
+  return e;
+}
+function S(tag, attrs, text) {
+  const e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const k in (attrs || {})) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  return e;
+}
+const SUPS = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+function sci(v, d) {
+  if (!isFinite(v) || v === 0) return String(v);
+  const e = Math.floor(Math.log10(Math.abs(v)));
+  let m = (v / Math.pow(10, e)).toFixed(d == null ? 2 : d), ex = e;
+  if (+m >= 10) { m = (+m / 10).toFixed(d == null ? 2 : d); ex++; }
+  const s = String(Math.abs(ex)).split('').map(c => SUPS[+c]).join('');
+  return m + ' × 10' + (ex < 0 ? '⁻' : '') + s;
+}
+function num(v, p) {
+  if (!isFinite(v)) return '–';
+  const a = Math.abs(v);
+  if (a >= 1000) return Math.round(v).toLocaleString('en-US');
+  if (a === 0) return '0';
+  if (a < 0.001) return sci(v);
+  return String(+v.toPrecision(p || 3));
+}
+function head(root, title, hint) { root.append(el('div', { class: 'wt' }, title), el('div', { class: 'wh' }, hint || '')); }
+function slider(label, min, max, step, val, fmt, cb) {
+  const b = el('b', {}, ''), inp = el('input', { type: 'range', min, max, step, value: val, 'aria-label': label });
+  const root = el('label', { class: 'sl' }, el('span', {}, label), inp, b);
+  const show = () => { b.textContent = (fmt || num)(+inp.value); };
+  inp.addEventListener('input', () => { show(); cb && cb(+inp.value); });
+  show();
+  return { el: root, get v() { return +inp.value; }, set(v) { inp.value = v; show(); } };
+}
+function presetBar(list, label) {
+  const row = el('div', { class: 'row' }, el('span', { style: 'color:var(--mute);font-size:.85em' }, label || 'Worked examples:'));
+  const btns = list.map(([name, fn]) => {
+    const b = el('button', { class: 'btn', onclick: () => { btns.forEach(x => x.classList.remove('on')); b.classList.add('on'); fn(); } }, name);
+    row.append(b); return b;
+  });
+  row.pick = i => btns[i].click();
+  row.clear = () => btns.forEach(x => x.classList.remove('on'));
+  return row;
+}
+function stats(items) { return el('div', { class: 'stats' }, items.map(([v, l, c]) => el('div', { class: 'stat ' + (c || '') }, el('b', {}, v), el('span', {}, l)))); }
+function setStats(host, items) { host.replaceChildren(...stats(items).children); }
+function barChart(host, items, o) {
+  o = o || {};
+  const max = o.max || Math.max(...items.map(i => i.value), 1e-300);
+  host.classList.add('bars');
+  host.replaceChildren(...items.map(i => el('div', { class: 'br', title: i.note || '' },
+    el('span', {}, i.label),
+    el('div', { class: 'trk' }, el('div', { class: 'fill', style: `width:${Math.max(1, 100 * i.value / max)}%;background:${i.color || 'var(--teal)'}` })),
+    el('span', { class: 'v' }, i.text != null ? i.text : (o.fmt || num)(i.value)))));
+}
+function dotGrid(n, cols, cls) {
+  const g = el('div', { class: 'dots', style: `grid-template-columns:repeat(${cols},1fr)` });
+  for (let i = 0; i < n; i++) g.append(el('i', { class: cls(i) || '' }));
+  return g;
+}
+/* Interactive SVG line chart with hover read-out. draw({series,x:[a,b],y:[a,b],bands,marks,vlines,xticks}) */
+function lineChart(host, o) {
+  o = o || {};
+  const Wd = o.w || 680, H = o.h || 320, m = { l: 62, r: 18, t: 18, b: 46 };
+  host.classList.add('chartbox');
+  const svg = S('svg', { viewBox: `0 0 ${Wd} ${H}`, role: 'img', 'aria-label': o.aria || 'chart' });
+  const tip = el('div', { class: 'tip' });
+  host.append(svg, tip);
+  let d = null, cursor = null;
+  const fx = v => o.xlog ? Math.log10(v) : v, fy = v => o.ylog ? Math.log10(v) : v;
+  const X = v => m.l + (fx(v) - fx(d.x[0])) / (fx(d.x[1]) - fx(d.x[0])) * (Wd - m.l - m.r);
+  const Y = v => { v = Math.min(Math.max(v, d.y[0]), d.y[1]); return H - m.b - (fy(v) - fy(d.y[0])) / (fy(d.y[1]) - fy(d.y[0])) * (H - m.t - m.b); };
+  const invX = px => { const f = (px - m.l) / (Wd - m.l - m.r), v = fx(d.x[0]) + f * (fx(d.x[1]) - fx(d.x[0])); return o.xlog ? Math.pow(10, v) : v; };
+  function ticks(a, b, log) {
+    const r = [];
+    if (log) { for (let e = Math.ceil(Math.log10(a) - 1e-9); e <= Math.log10(b) + 1e-9; e++) r.push(Math.pow(10, e)); return r; }
+    const span = b - a, st = Math.pow(10, Math.floor(Math.log10(span / 5))), k = [1, 2, 5, 10].find(q => span / (st * q) <= 6) || 10, s = st * k;
+    for (let v = Math.ceil(a / s - 1e-9) * s; v <= b + 1e-9; v += s) r.push(+v.toPrecision(10));
+    return r;
+  }
+  function yAt(s, xv) {
+    const p = s.pts; if (xv < p[0][0] || xv > p[p.length - 1][0]) return null;
+    for (let i = 1; i < p.length; i++) if (xv <= p[i][0]) { const f = (xv - p[i - 1][0]) / (p[i][0] - p[i - 1][0] || 1); return p[i - 1][1] + f * (p[i][1] - p[i - 1][1]); }
+    return null;
+  }
+  function draw(nd) {
+    d = nd; svg.replaceChildren();
+    (d.bands || []).forEach(b => {
+      svg.append(S('rect', { x: X(b.x0), y: m.t, width: Math.max(0, X(b.x1) - X(b.x0)), height: H - m.t - m.b, fill: b.color, opacity: .12 }));
+      if (b.label) svg.append(S('text', { x: (X(b.x0) + X(b.x1)) / 2, y: m.t + 14, 'text-anchor': 'middle', class: 'bandl', fill: b.color }, b.label));
+    });
+    const xt = d.xticks || ticks(d.x[0], d.x[1], o.xlog).map(v => [v, (o.xfmt || num)(v)]);
+    xt.forEach(([v, l]) => svg.append(S('line', { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, class: 'grid' }), S('text', { x: X(v), y: H - m.b + 16, 'text-anchor': 'middle', class: 'tick' }, l)));
+    ticks(d.y[0], d.y[1], o.ylog).forEach(v => svg.append(S('line', { x1: m.l, x2: Wd - m.r, y1: Y(v), y2: Y(v), class: 'grid' }), S('text', { x: m.l - 8, y: Y(v) + 4, 'text-anchor': 'end', class: 'tick' }, (o.yfmt || num)(v))));
+    if (o.xlab) svg.append(S('text', { x: (m.l + Wd - m.r) / 2, y: H - 8, 'text-anchor': 'middle', class: 'axl' }, o.xlab));
+    if (o.ylab) svg.append(S('text', { x: 14, y: (m.t + H - m.b) / 2, 'text-anchor': 'middle', class: 'axl', transform: `rotate(-90 14 ${(m.t + H - m.b) / 2})` }, o.ylab));
+    d.series.forEach(s => {
+      const path = s.pts.map((p, i) => (i ? 'L' : 'M') + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1)).join('');
+      if (s.fill) svg.append(S('path', { d: path + `L${X(s.pts[s.pts.length - 1][0])} ${H - m.b}L${X(s.pts[0][0])} ${H - m.b}Z`, fill: s.color, opacity: .15 }));
+      svg.append(S('path', { d: path, fill: 'none', stroke: s.color, 'stroke-width': s.width || 2.5, 'stroke-dasharray': s.dash || '', 'stroke-linejoin': 'round' }));
+      if (s.dots) s.pts.forEach(p => svg.append(S('circle', { cx: X(p[0]), cy: Y(p[1]), r: 5, fill: s.color })));
+    });
+    (d.vlines || []).forEach(v => { svg.append(S('line', { x1: X(v.x), x2: X(v.x), y1: m.t, y2: H - m.b, stroke: v.color || 'var(--amber)', 'stroke-width': 2, 'stroke-dasharray': '5 4' })); if (v.label) svg.append(S('text', { x: X(v.x) + 5, y: m.t + 28, class: 'bandl', fill: v.color || 'var(--amber)' }, v.label)); });
+    (d.marks || []).forEach(k => { svg.append(S('circle', { cx: X(k.x), cy: Y(k.y), r: 6, fill: k.color || 'var(--amber)', stroke: 'var(--bg)', 'stroke-width': 2 })); if (k.label) svg.append(S('text', { x: X(k.x) + 9, y: Y(k.y) - 8, class: 'bandl', fill: k.color || 'var(--amber)' }, k.label)); });
+    cursor = S('line', { y1: m.t, y2: H - m.b, stroke: 'var(--ink)', 'stroke-width': 1, opacity: 0 }); svg.append(cursor);
+  }
+  function move(e) {
+    if (!d) return;
+    const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) / r.width * Wd;
+    if (px < m.l || px > Wd - m.r) return leave();
+    let xv = invX(px); if (o.snap) xv = Math.round(xv);
+    cursor.setAttribute('x1', X(xv)); cursor.setAttribute('x2', X(xv)); cursor.setAttribute('opacity', .5);
+    let h = '<b>' + (o.tipHead ? o.tipHead(xv) : (o.xlab || 'x') + ': ' + (o.xfmt || num)(xv)) + '</b>';
+    d.series.forEach(s => { if (s.noTip) return; const y = yAt(s, xv); if (y != null) h += `<br><span style="color:${s.color}">●</span> ${s.name}: ${(o.yfmt || num)(y)}`; });
+    if (o.tipExtra) h += o.tipExtra(xv);
+    tip.innerHTML = h; tip.style.display = 'block';
+    const lx = e.clientX - r.left;
+    tip.style.left = (lx > r.width * .6 ? lx - tip.offsetWidth - 12 : lx + 12) + 'px'; tip.style.top = '10px';
+  }
+  function leave() { tip.style.display = 'none'; if (cursor) cursor.setAttribute('opacity', 0); }
+  svg.addEventListener('pointermove', move); svg.addEventListener('pointerdown', move); svg.addEventListener('pointerleave', leave);
+  return { draw };
+}
+/* Reliability-budget apportionment (series system, exponential): used in chapters 2 and 3 */
+function apportion(root, cfg) {
+  const LN = -Math.log(0.9);
+  const out = el('div', {}), bars = el('div', {}), sls = el('div', {});
+  let items = [];
+  function render() {
+    const tot = items.reduce((a, i) => a + i.s.v, 0);
+    barChart(bars, items.map(i => { const lam = cfg.total * i.s.v / 100; return { label: i.name, value: i.s.v, color: i.hot ? 'var(--amber)' : 'var(--teal)', text: i.s.v > 0 ? `λ ${sci(lam)} · B10 ≈ ${num(Math.round(LN / lam / 10) * 10)} h` : 'no budget' }; }), { max: 40 });
+    const ok = Math.abs(tot - 100) < 0.05;
+    out.innerHTML = `Shares total <b class="${ok ? 'good' : 'warn'}">${tot.toFixed(1)}%</b> of the system budget λ = <b>${sci(cfg.total)}</b> failures per operating hour (system B10 ≈ ${num(Math.round(LN / cfg.total / 10) * 10)} h). ` +
+      (ok ? 'In a series system the block failure rates add up to the system rate, so every share given to one block is taken from the others.' : `<span class="warn">${tot > 100 ? 'The blocks together are allowed more failures than the system target permits — the system would miss its B10.' : 'Part of the budget is unallocated — some block could be given an easier target.'}</span>`);
+  }
+  function load(list) {
+    items = list.map(([name, share, hot]) => ({ name, hot, s: slider(name, 0, 50, 0.1, share, v => v.toFixed(1) + '%', render) }));
+    sls.replaceChildren(...items.map(i => i.s.el)); render();
+  }
+  const pb = presetBar(cfg.presets.map(p => [p.name, () => { load(p.items); p.on && p.on(); }]));
+  root.append(pb, sls, bars, el('div', { class: 'out' }, out));
+  pb.pick(cfg.start || 0);
+}
+/* inverse standard normal (Acklam) */
+function invNorm(p) {
+  const a = [-39.69683028665376, 220.9460984245205, -275.9285104469687, 138.3577518672690, -30.66479806614716, 2.506628277459239],
+    b = [-54.47609879822406, 161.5858368580409, -155.6989798598866, 66.80131188771972, -13.28068155288572],
+    c = [-0.007784894002430293, -0.3223964580411365, -2.400758277161838, -2.549732539343734, 4.374664141464968, 2.938163982698783],
+    dd = [0.007784695709041462, 0.3224671290700398, 2.445134137142996, 3.754408661907416];
+  let q, r;
+  if (p < 0.02425) { q = Math.sqrt(-2 * Math.log(p)); return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((dd[0] * q + dd[1]) * q + dd[2]) * q + dd[3]) * q + 1); }
+  if (p > 1 - 0.02425) return -invNorm(1 - p);
+  q = p - 0.5; r = q * q;
+  return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q / (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
+}
+
+/* Chapter 1 interactive elements */
+W.recall = r => {
+  head(r, 'Recall campaigns, Germany 1998 → 2006', 'Figures quoted in the chapter (Kraftfahrt-Bundesamt, via Bertsche Fig. 1.2).');
+  r.append(stats([['55', 'safety recall campaigns, 1998'], ['167', 'safety recall campaigns, 2006', 'r'], ['× 3', 'campaign count'], ['× 8', 'associated cost', 'r']]));
+  const b = el('div', {}); r.append(b);
+  barChart(b, [{ label: '1998 campaigns', value: 55, text: '55' }, { label: '2006 campaigns', value: 167, color: 'var(--rose)', text: '167' }]);
+};
+W.defmap = r => {
+  head(r, 'Every word of the definition is a part of this book', 'Tap a highlighted phrase.');
+  const D = [
+    ['the probability', 'Parts IV and V — Defining Stresses, Test Program Design', 'Probability of failure is driven by the stresses the product actually experiences relative to its capability, which is why stress definition and test design are inseparable.'],
+    ['does not fail', 'Part III — DFMEA and Risk Matrices', 'Before you can test for failure you have to enumerate what failure looks like, how it happens, and how bad each mode is.'],
+    ['stated functional and environmental conditions', 'Part I — Requirements and Functional Definition', 'If you have not defined what the product must do and where it will live, you cannot define what failure means.'],
+    ['a defined period of time', 'Part II — Duty Cycle Development', 'Time is almost never wall-clock hours; it is a duty cycle in the units that actually damage the product: cycles, miles, switch reversals, thermal excursions.']];
+  const out = el('div', { class: 'out' }, 'Reliability is a moving target after launch too — that is Part VI, closing the loop.');
+  const sp = D.map(d => el('span', { class: 'ph', onclick: e => { sp.forEach(s => s.classList.remove('on')); e.target.classList.add('on'); out.innerHTML = `<b>${d[1]}</b><br>${d[2]}`; } }, d[0]));
+  r.append(el('p', { class: 'defs', style: 'font-size:1.15em;line-height:1.9' }, 'Reliability is ', sp[0], ' that a product ', sp[1], ' under ', sp[2], ' during ', sp[3], '.'), out);
+};
+W.warranty = r => {
+  head(r, 'What 8–12% of turnover looks like', 'Move the slider to your own annual turnover.');
+  const st = el('div', {});
+  const f = v => '$' + (v >= 1000 ? (v / 1000).toFixed(v % 1000 ? 1 : 0) + ' bn' : v + ' M');
+  const up = v => setStats(st, [[f(Math.round(v * .08)), 'warranty cost at 8%'], [f(Math.round(v * .12)), 'warranty cost at 12%', 'r'], [f(Math.round(v * .04)), 'width of that range', 't']]);
+  const s = slider('Annual turnover', 10, 10000, 10, 500, f, up);
+  r.append(presetBar([['Small manufacturer, $50 M', () => { s.set(50); up(50); }], ['Mid-size, $500 M', () => { s.set(500); up(500); }], ['Large OEM, $5 bn', () => { s.set(5000); up(5000); }]], 'Examples:'), s.el, stats([]));
+  r.lastChild.replaceWith(st); st.className = 'stats'; up(500);
+};
+W.ruleoften = r => {
+  head(r, 'The Rule of Ten — cost of the same defect by the phase it is found in', 'Logarithmic cost axis. Hover the chart; change the escalation factor to see how sensitive the argument is. Illustrative model of Bertsche Fig. 1.5.');
+  const ph = ['Design', 'Development / validation', 'Production', 'Field'];
+  const c = el('div', {}), st = el('div', { class: 'stats' });
+  const ch = lineChart(c, { ylog: true, snap: true, ylab: 'Cost per defect', yfmt: v => '$' + num(v), tipHead: x => ph[x], aria: 'Rule of ten chart' });
+  let s1, s2;
+  const up = () => {
+    const base = s1.v, k = s2.v, pts = ph.map((_, i) => [i, base * Math.pow(k, i)]);
+    ch.draw({ x: [-0.3, 3.3], y: [10, 1e7], xticks: ph.map((p, i) => [i, p]), series: [{ name: 'Cost to correct', color: 'var(--amber)', pts, dots: true }], bands: [{ x0: -0.3, x1: 1.5, color: 'var(--teal)', label: 'failure prevention — chance to act' }, { x0: 1.5, x1: 3.3, color: 'var(--rose)', label: 'failure detection — need to react' }] });
+    setStats(st, [['$' + num(base), 'caught in design', 't'], ['$' + num(pts[3][1]), 'caught in the field', 'r'], ['× ' + num(Math.pow(k, 3)), 'penalty for waiting']]);
+  };
+  s1 = slider('Cost if caught in design', 50, 5000, 50, 100, v => '$' + num(v), up);
+  s2 = slider('Escalation per phase', 2, 15, 1, 10, v => '× ' + v, up);
+  const set = (a, b) => () => { s1.set(a); s2.set(b); up(); };
+  const pb = presetBar([['Rule of Ten (×10)', set(100, 10)], ['Milder escalation (×5)', set(100, 5)], ['Costly design change, ×10', set(2000, 10)]]);
+  r.append(pb, s1.el, s2.el, c, st); pb.pick(0);
+};
+W.bathtub = r => {
+  head(r, 'The bathtub curve — three failure populations added together', 'Hover the curve to see which region dominates and which kind of test finds it. Shapes are illustrative, not data.');
+  const R = [['Region 1 — early failures', 'Assembly errors, production defects, material lot problems, latent design flaws', 'ESS / HASS, burn-in, production process control', 'var(--rose)'],
+  ['Region 2 — random failures', 'Operational misuse, maintenance errors, contamination, externally induced events', 'Field monitoring, FRACAS, durability and performance testing under realistic conditions', 'var(--teal)'],
+  ['Region 3 — wear-out failures', 'Fatigue, material aging, corrosion, wear', 'Accelerated life testing, durability testing, life-stress modeling', 'var(--amber)']];
+  let a, l, n;
+  const comp = t => [a.v * 0.5 * Math.pow(t, -0.5), l.v, 4 / n.v * Math.pow(t / n.v, 3)];
+  const c = el('div', {});
+  const ch = lineChart(c, {
+    xlab: 'Product age (relative units)', ylab: 'Failure rate', yfmt: v => v.toFixed(2),
+    tipExtra: x => { const k = comp(x), i = k.indexOf(Math.max(...k)); return `<br><b style="color:${R[i][3]}">${R[i][0]}</b><br>Causes: ${R[i][1]}<br>Found by: ${R[i][2]}`; }
+  });
+  const up = () => {
+    const xs = []; for (let t = 0.05; t <= 10.001; t += 0.05) xs.push(t);
+    const mk = j => xs.map(t => [t, comp(t)[j]]);
+    ch.draw({ x: [0, 10], y: [0, 0.6], series: [{ name: 'Early failures', color: R[0][3], pts: mk(0), dash: '5 4', width: 1.5 }, { name: 'Random failures', color: R[1][3], pts: mk(1), dash: '5 4', width: 1.5 }, { name: 'Wear-out', color: R[2][3], pts: mk(2), dash: '5 4', width: 1.5 }, { name: 'Total failure rate', color: 'var(--ink)', pts: xs.map(t => [t, comp(t).reduce((p, q) => p + q, 0)]), width: 3 }] });
+  };
+  a = slider('Early-failure level', 0, 0.3, 0.01, 0.08, v => v.toFixed(2), up);
+  l = slider('Random-failure level', 0, 0.2, 0.01, 0.06, v => v.toFixed(2), up);
+  n = slider('Wear-out onset (characteristic life)', 5, 14, 0.5, 9, v => v.toFixed(1), up);
+  const set = (x, y, z) => () => { a.set(x); l.set(y); n.set(z); up(); };
+  const pb = presetBar([['Typical product', set(0.08, 0.06, 9)], ['Poor production quality', set(0.28, 0.06, 9)], ['Well screened, wears out early', set(0.01, 0.03, 6)], ['Electronics, long useful life', set(0.05, 0.04, 14)]]);
+  r.append(pb, a.el, l.el, n.el, c,
+    el('div', { class: 'cards' }, R.map((x, i) => el('div', { class: 'card', style: `border-top:3px solid ${x[3]};cursor:default` }, el('div', { class: 'n' }, 'Region ' + (i + 1)), el('h4', {}, x[0].split('— ')[1]), el('div', {}, x[1]), el('div', { style: 'margin-top:6px;color:var(--mute)' }, 'Found by: ' + x[2])))));
+  pb.pick(0);
+};
+W.pipeline = r => {
+  head(r, 'One pipeline, in order — what breaks when a step is skipped', 'Tap a part to skip it and read the consequence. Tap again to restore it.');
+  const P = [['I', 'Requirements', 'No function-based failure definition: the test can be run flawlessly and still verify a requirement too vague to pass or fail.'],
+  ['II', 'Duty cycle', 'Every acceleration factor, DFMEA occurrence rating and test specification now rests on a usage assumption nobody validated.'],
+  ['III', 'DFMEA and risk', 'No ranked list of what can go wrong: the test targets a failure mode that was never flagged as high risk, and misses the one that was.'],
+  ['IV', 'Stress definition', 'Stress level, life-stress model and acceleration factor are assumed rather than grounded in material properties.'],
+  ['V', 'Test design', 'The wrong test type for the bathtub region: a HALT asked to find wear-out, or a six-month life test asked to find a workmanship defect.'],
+  ['VI', 'Closing the loop', 'Field and warranty data never reach the DFMEA, so the same failure modes are rediscovered generation after generation.']];
+  const out = el('div', { class: 'out' }, 'All six parts in place: each step hands a validated input to the next.');
+  const cards = P.map((p, i) => el('div', { class: 'card', onclick: () => { const on = cards[i].classList.toggle('on'); cards.forEach((c, j) => { if (j !== i) c.classList.remove('on'); }); out.innerHTML = on ? `<b class="warn">Part ${p[0]} skipped.</b> ${p[2]}` : 'All six parts in place: each step hands a validated input to the next.'; } }, el('div', { class: 'n' }, 'Part ' + p[0]), el('h4', {}, p[1])));
+  r.append(el('div', { class: 'cards', style: 'grid-template-columns:repeat(auto-fit,minmax(120px,1fr))' }, cards), out);
+};
+W.lifecycle = r => {
+  head(r, 'Reliability methods across the product life cycle', 'Tap a stage to see the toolkit the chapter assigns to it (after Bertsche Fig. 1.4).');
+  const L = [['Planning', 'Fuzzy data and accumulated know-how.'], ['Conception', 'Target-setting and specifications.'], ['Design', 'FMEA, FTA, and Weibull / exponential life modeling do the heavy lifting.'], ['Production', 'Statistical process control and quality audits.'], ['Field usage', 'Data collection and early-warning systems.'], ['Recycling', 'Recycling-potential and remaining-lifetime analysis.']];
+  const out = el('div', { class: 'out' });
+  const chips = L.map((x, i) => el('button', { class: 'chip', onclick: () => { chips.forEach(c => c.classList.remove('on')); chips[i].classList.add('on'); out.innerHTML = `<b>${x[0]}.</b> ${x[1]}` + (i > 0 && i < 5 ? ' <span class="good">Covered by this book\'s design-and-verification slice.</span>' : ''); } }, (i + 1) + ' · ' + x[0]));
+  r.append(el('div', { class: 'chips' }, chips), out); chips[2].click();
+};
+W.resistor = r => {
+  head(r, 'Same fix, growing blast radius — the resistor tolerance case', 'Step through the stage at which the problem is discovered. The engineering fix never changes; what has to be redone does.');
+  const St = [['Feasibility', 'No effect on feasibility at all — a different resistor value is a paper change.'], ['Development / design', 'Mildly annoying; economic impact only slightly greater than at feasibility.'], ['Design validation', 'Not much worse than development — a few additional validation tests confirm the correction.'], ['Production ramp', 'Now significant: the design is revalidated and production tooling and process are reset.'], ['Production validation', 'Same as ramp, plus schedule loss and a missed production start; possible contractual penalties.'], ['Full production', 'Major emergency: lines stop or every unit is reworked, deliveries are missed.'], ['Field / service', 'Product is in customers\' hands: lost customers, service and repair cost — and product liability if the overcurrent causes harm.']];
+  const C = ['Change the resistor value', 'Extra validation tests', 'Revalidate the design', 'Reset tooling / process', 'Schedule loss, penalties', 'Line stop or 100% rework', 'Service, lost customers, liability'];
+  const out = el('div', { class: 'out' }), chips = el('div', { class: 'chips' });
+  const up = v => { out.innerHTML = `<b>Discovered at: ${St[v][0]}.</b> ${St[v][1]}`; chips.replaceChildren(...C.map((c, i) => el('span', { class: 'chip ' + (i === 0 ? 'ok' : i <= v && (i !== 1 || v >= 2) ? 'bad' : 'off'), style: 'cursor:default' }, c))); };
+  const s = slider('Stage discovered', 0, 6, 1, 0, v => (v + 1) + ' of 7', up);
+  r.append(presetBar([['Caught at feasibility', () => { s.set(0); up(0); }], ['Caught at production ramp', () => { s.set(3); up(3); }], ['Escaped to the field', () => { s.set(6); up(6); }]]), s.el, out, el('div', { class: 'wh' }, 'What applying the fix now involves:'), chips); up(0);
+};
+
+/* Reader shell: table of contents, progress, theme, and hybrid narration (MP3 if present, browser voice otherwise). */
+(function () {
+  const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+  const LS = { get(k, d) { try { const v = localStorage.getItem('alt.' + k); return v == null ? d : v; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem('alt.' + k, v); } catch (e) { } } };
+
+  // widgets
+  $$('.widget[data-w]').forEach(r => { try { W[r.dataset.w](r); } catch (e) { r.append('Interactive element failed to load: ' + e.message); console.error(e); } });
+
+  // theme + font size
+  const setTheme = t => { document.documentElement.classList.toggle('light', t === 'light'); LS.set('theme', t); };
+  setTheme(LS.get('theme', 'dark'));
+  $('#theme').onclick = () => setTheme(document.documentElement.classList.contains('light') ? 'dark' : 'light');
+  let fs = +LS.get('fs', 18);
+  const setFs = v => { fs = Math.min(24, Math.max(14, v)); document.documentElement.style.setProperty('--fs', fs + 'px'); LS.set('fs', fs); };
+  setFs(fs); $('#fminus').onclick = () => setFs(fs - 1); $('#fplus').onclick = () => setFs(fs + 1);
+  $('#menu').onclick = () => $('.toc').classList.toggle('open');
+
+  // table of contents + scroll progress
+  const secs = $$('main section'), toc = $('.toc');
+  secs.forEach((s, i) => { const h = s.querySelector('h2'); const a = el('a', { href: '#' + s.id, onclick: () => toc.classList.remove('open') }, h ? h.textContent : 'Opening'); toc.append(a); s._a = a; });
+  function onScroll() {
+    const h = document.documentElement, p = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight);
+    $('#bar').style.width = (100 * p) + '%'; LS.set('pct.' + CH.id, Math.round(100 * p));
+    let c = secs[0]; secs.forEach(s => { if (s.getBoundingClientRect().top < 140) c = s; });
+    secs.forEach(s => s._a.classList.toggle('cur', s === c));
+  }
+  addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+  // ---------- narration ----------
+  const segs = $$('.seg'), N = NARR.length, synth = window.speechSynthesis;
+  const bPlay = $('#pp'), lbl = $('#plbl'), badge = $('#pbadge'), selV = $('#pvoice'), selR = $('#prate');
+  let cur = -1, playing = false, token = 0, mode = 'tts', audio = null, chunks = [], ci = 0, rate = +LS.get('rate', 1);
+  selR.value = String(rate); selR.onchange = () => { rate = +selR.value; LS.set('rate', rate); if (audio) audio.playbackRate = rate; if (playing && mode === 'tts') { token++; synth.cancel(); playing = true; speakChunk(); } };
+  const secSegs = {}; NARR.forEach((n, i) => (secSegs[n.s] = secSegs[n.s] || []).push(i));
+  const mp3 = {};
+  function probe(sec) {
+    if (mp3[sec] !== undefined) return Promise.resolve(mp3[sec]);
+    return new Promise(res => {
+      const a = new Audio(); let done = false;
+      const fin = ok => { if (done) return; done = true; mp3[sec] = ok ? a : false; res(mp3[sec]); };
+      a.preload = 'metadata'; a.addEventListener('loadedmetadata', () => fin(true)); a.addEventListener('error', () => fin(false)); setTimeout(() => fin(false), 2500);
+      a.src = 'audio/' + CH.id + '/s' + String(sec).padStart(2, '0') + '.mp3';
+    });
+  }
+  const NOVELTY = /^(albert|bad news|bahh|bells|boing|bubbles|cellos|deranged|good news|hysterical|jester|organ|pipe organ|superstar|trinoids|whisper|wobble|zarvox|fred|junior|kathy|ralph|eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley|princess)\b/i;
+  const tier = v => /natural|neural|online/i.test(v.name) ? 4 : /premium/i.test(v.name) ? 3 : /enhanced|google/i.test(v.name) ? 2 : 1;
+  const TIER = { 4: 'Natural', 3: 'Premium', 2: 'Enhanced', 1: 'Basic' };
+  let best = 0;
+  function voices() {
+    if (!synth) return;
+    const vs = synth.getVoices().filter(v => /^en/i.test(v.lang) && !NOVELTY.test(v.name));
+    const score = v => tier(v) * 10 + (/samantha|ava|zoe|evan|nathan|allison|daniel|serena|aria|jenny|guy|andrew|emma|brian/i.test(v.name) ? 4 : 0) + (/en[-_](US|GB)/i.test(v.lang) ? 2 : 0) + (v.default ? 1 : 0);
+    vs.sort((a, b) => score(b) - score(a));
+    best = vs.length ? tier(vs[0]) : 0;
+    const saved = LS.get('voice', '');
+    selV.replaceChildren(...vs.map(v => el('option', { value: v.name }, (tier(v) > 1 ? '★ ' : '') + v.name.replace(/Microsoft |Online |\(Natural\) ?|- English.*$|\((Premium|Enhanced)\)/g, '').trim() + ' · ' + TIER[tier(v)] + ' · ' + v.lang.replace('_', '-'))));
+    if (vs.some(v => v.name === saved)) selV.value = saved;
+    const tb = $('#ptips'); if (tb) tb.classList.toggle('amber', best < 2);
+  }
+  if (synth) { voices(); synth.onvoiceschanged = voices; }
+  selV.onchange = () => { LS.set('voice', selV.value); if (playing && mode === 'tts') { token++; synth.cancel(); playing = true; speakChunk(); } };
+  function split(t) {
+    const out = [];
+    t.replace(/([.!?]["')\]]*)\s+(?=[A-Z0-9(])/g, '$1\u0001').split('\u0001').forEach(sn => {
+      if (sn.length <= 240) return out.push(sn);
+      let b = ''; sn.replace(/([,;:])\s/g, '$1\u0001').split('\u0001').forEach(p => { if ((b + ' ' + p).length > 200 && b) { out.push(b); b = p; } else b = b ? b + ' ' + p : p; }); if (b) out.push(b);
+    });
+    const m = []; out.forEach(x => { if (m.length && (m[m.length - 1] + ' ' + x).length < 60) m[m.length - 1] += ' ' + x; else m.push(x); });
+    return m.filter(x => x.trim());
+  }
+  function mark(scroll) {
+    segs.forEach((s, i) => s.classList.toggle('now', i === cur));
+    if (cur < 0) return;
+    const sec = secs[NARR[cur].s], h = sec && sec.querySelector('h2');
+    lbl.textContent = (h ? h.textContent : 'Opening') + ' · ' + (cur + 1) + ' / ' + N;
+    if (scroll !== false) segs[cur].scrollIntoView({ block: 'center', behavior: 'smooth' });
+    LS.set('seg.' + CH.id, cur);
+  }
+  function ui() { bPlay.textContent = playing ? '❚❚' : '▶'; bPlay.setAttribute('aria-label', playing ? 'Pause' : 'Play'); badge.textContent = mode === 'mp3' ? 'Studio audio' : 'Browser voice'; badge.classList.toggle('s', mode === 'mp3'); selV.style.display = mode === 'mp3' ? 'none' : ''; }
+  function halt() { token++; if (audio) { audio.pause(); audio.ontimeupdate = audio.onended = null; } if (synth) synth.cancel(); }
+  function stop() { halt(); playing = false; ui(); }
+  function playFrom(i) {
+    if (i < 0 || i >= N) return stop();
+    halt(); cur = i; playing = true; mark(); const my = token, sec = NARR[i].s;
+    probe(sec).then(a => {
+      if (my !== token) return;
+      if (a) {
+        mode = 'mp3'; audio = a; ui();
+        const idx = secSegs[sec], len = idx.map(k => NARR[k].t.length), tot = len.reduce((x, y) => x + y, 0);
+        let before = 0; for (const k of idx) { if (k === i) break; before += NARR[k].t.length; }
+        a.playbackRate = rate; a.currentTime = a.duration * before / tot;
+        a.ontimeupdate = () => { let f = a.currentTime / a.duration * tot, k = 0; while (k < idx.length - 1 && f > len[k]) { f -= len[k]; k++; } if (idx[k] !== cur) { cur = idx[k]; mark(); } };
+        a.onended = () => { const nx = idx[idx.length - 1] + 1; nx < N ? playFrom(nx) : stop(); };
+        a.play().catch(() => { mp3[sec] = false; playFrom(i); });
+      } else {
+        mode = 'tts'; ui();
+        if (!synth) { lbl.textContent = 'This browser has no built-in voice. Add MP3 files to the audio folder to enable narration.'; playing = false; ui(); return; }
+        chunks = split(NARR[i].t); ci = 0; speakChunk();
+      }
+    });
+  }
+  function speakChunk() {
+    if (ci >= chunks.length) { const my2 = token, hd = /^H\d$/.test(segs[cur].tagName); return setTimeout(() => { if (my2 === token && playing) playFrom(cur + 1); }, hd ? 650 : 380); }
+    const u = new SpeechSynthesisUtterance(chunks[ci]), my = token;
+    const v = synth.getVoices().find(x => x.name === selV.value); if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'en-US';
+    u.rate = rate; u.pitch = 1;
+    const t0 = Date.now(), fail = () => { stop(); lbl.textContent = 'The browser voice is not available here. Try another voice, or add MP3 files to the audio folder.'; };
+    u.onend = () => { if (my !== token || !playing) return; if (Date.now() - t0 < 80 && chunks[ci].length > 40) return fail(); ci++; speakChunk(); };
+    u.onerror = e => { if (my !== token) return; if (e.error === 'interrupted' || e.error === 'canceled') return; fail(); };
+    window._u = u; synth.speak(u);
+  }
+  function firstVisible() { const i = segs.findIndex(s => s.getBoundingClientRect().top > 60); return i < 0 ? 0 : i; }
+  bPlay.onclick = () => {
+    if (playing) { halt(); playing = false; ui(); return; }
+    if (cur < 0) return playFrom(firstVisible());
+    if (mode === 'mp3' || !chunks.length) return playFrom(cur);
+    playing = true; ui(); speakChunk();
+  };
+  $('#pprev').onclick = () => playFrom(Math.max(0, (cur < 0 ? firstVisible() : cur) - 1));
+  $('#pnext').onclick = () => playFrom(Math.min(N - 1, (cur < 0 ? firstVisible() : cur) + 1));
+  const tips = $('#tips'); $('#ptips').onclick = () => { tips.style.display = tips.style.display === 'block' ? 'none' : 'block'; }; $('#tipsx').onclick = () => { tips.style.display = 'none'; };
+  $('#phere').onclick = () => playFrom(firstVisible());
+  $('#pscript').onclick = () => {
+    let t = CH.title + ' — narration script\nOne block per audio file. Save each as MP3 with the file name shown and upload to the audio folder.\n';
+    Object.keys(secSegs).forEach(s => { const h = secs[s] && secs[s].querySelector('h2'); t += '\n\n===== audio/' + CH.id + '/s' + String(s).padStart(2, '0') + '.mp3 — ' + (h ? h.textContent : 'Opening') + ' =====\n\n' + secSegs[s].map(k => NARR[k].t).join('\n\n'); });
+    const a = el('a', { href: URL.createObjectURL(new Blob([t], { type: 'text/plain' })), download: CH.id + '-narration.txt' }); document.body.append(a); a.click(); a.remove();
+  };
+  // start reading from any paragraph: hover button or double-click
+  const hov = $('#hov'); let hi = -1;
+  segs.forEach((s, i) => {
+    s.addEventListener('mouseenter', () => { hi = i; const r = s.getBoundingClientRect(); hov.style.display = 'block'; hov.style.top = (r.top + scrollY + 2) + 'px'; hov.style.left = Math.max(2, r.left + scrollX - 36) + 'px'; });
+    s.addEventListener('dblclick', e => { if (e.target.closest('.widget')) return; playFrom(i); });
+  });
+  hov.onclick = () => { if (hi >= 0) playFrom(hi); };
+  addEventListener('keydown', e => { if (e.target.matches('input,select,textarea,button')) return; if (e.code === 'Space') { e.preventDefault(); bPlay.click(); } });
+  addEventListener('beforeunload', () => { if (synth) synth.cancel(); });
+  ui();
+})();
+</script></body></html>

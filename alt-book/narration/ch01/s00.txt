@@ -1,0 +1,7 @@
+In the ten years from 1998 to 2006, the number of safety-related recall campaigns recorded by Germany's Federal Motor Vehicle Bureau (Kraftfahrt-Bundesamt) roughly tripled, from 55 to 167, and the associated cost rose by a factor of eight. Nothing about vehicles got fundamentally more dangerous in that decade. What changed was complexity: more electronics, more sensors, more software, more integration, delivered on shorter timelines and tighter budgets, the same pressures that now define product development in nearly every hardware industry, not just automotive.
+
+Interactive figure. Two bars compare the number of safety recall campaigns: 55 in 1998 against 167 in 2006. The count tripled, and the associated cost rose eight-fold.
+
+That single statistic captures the argument for this entire book. Reliability problems are not random bad luck. They are the predictable output of a development process that either builds reliability in deliberately, from the requirements stage forward, or discovers it by accident, in the field, at the worst possible time and the highest possible cost.
+
+This chapter sets up why that is true, gives you the vocabulary and mental models the rest of the book builds on, and shows how the six topics you already know you need, requirements, duty cycle, D F M E A and risk, stress definition, test design, and field-failure closure, are not six separate subjects. They are one pipeline, and the pipeline only works in order.

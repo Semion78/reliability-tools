@@ -1,0 +1,9 @@
+Common Pitfalls.
+
+Treating reliability testing as a gate at the end of the program, rather than a set of decisions that start at the requirements stage. By the time a test is running, the duty cycle and risk ranking that determine whether it's the right test are already locked in.
+
+Running one test strategy for every failure mode. A HALT campaign will not find a wear-out mechanism, and a six-month accelerated life test is an expensive way to catch a workmanship defect a two-day production screen would have caught. Match the test to the bathtub-curve region the failure cause actually lives in.
+
+Measuring reliability activity by test hours run, not by defects prevented before they were expensive. The Rule of Ten means a requirements review that kills a bad assumption in an afternoon can be worth more than a month of lab testing that confirms a design flaw everyone could have caught earlier.
+
+Forgetting that the loop has to close. A reliability program that stops at ship it and never feeds field and warranty data back into the D F M E A (Part VI) will keep re-discovering the same failure modes, generation after generation, which is exactly the pattern behind the recall statistic this chapter opened with.

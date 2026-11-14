@@ -1,0 +1,15 @@
+Section 2.2. What a Reliability Specification Must Actually Contain.
+
+A reliability specification that will hold up has four components, and all four have to be present or the specification has a hole that will surface later, usually during a dispute about whether something counts as a failure.
+
+Interactive figure. Four cards name the four components of a reliability specification: failure definition, environments, the reliability requirement, and the verification method. Tapping a card shows what it must contain and which later part of the book depends on it.
+
+1. A definition of failure, tied to function. This sounds trivial and isn't. Consider a leaking seal: is it a failure? The honest answer is it depends, on the leak rate, on whether it can be corrected by a routine adjustment, on whether it affects function under normal conditions versus some other condition the product will also see. A diode installed to clip voltage transients can fail without affecting any functional test you'd normally run, and only matters the one time a transient actually occurs. The specification's job is to remove this ambiguity in advance, in writing, rather than let it get argued out later, usually during a warranty dispute, which is the single worst time to be defining terms for the first time.
+
+2. A full description of the environments the product will face, not just in service, but storage, transport, handling, maintenance, and foreseeable misuse. Automotive and defense programs often use a named standard for this (GMW3172 for automotive validation, UK Defence Standard 00-40 for reliability specifications generally) precisely because writing a complete environmental description from a blank page is easy to get wrong by omission. If the designer isn't told about a condition, the designer isn't designing against it, no matter how obvious that condition seems to someone who's used the product for years.
+
+3. A stated reliability requirement, in a verifiable form, which is the subject of section 2.3 below.
+
+4. A verification method, how the requirement will actually be confirmed: test bench conditions, test duration, sample size, pass or fail criteria. A requirement with no verification method attached is really just an aspiration.
+
+Put together, these four elements form what a usable requirements document actually looks like in practice, not prose, but a structured catalogue: functional and environmental conditions, then failure definition, then the reliability requirement itself (expressed as a failure rate, a B ten life, or similar), then the verification method. Every chapter of this book from here forward assumes a requirement built this way exists, Part III's D F M E A work depends on failure being already defined; Part IV's stress work depends on the environmental description being complete; Part V's test design depends on the verification method being specified up front rather than improvised later.

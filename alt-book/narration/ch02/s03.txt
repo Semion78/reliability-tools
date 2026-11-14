@@ -1,0 +1,17 @@
+Section 2.3. Choosing the Right Currency for the Requirement.
+
+A reliability requirement has to be stated in units that actually match how the product accumulates damage and how its use will actually be measured. Getting this wrong is one of the most common, and most avoidable, mistakes in requirements writing: specifying a time-between-failures for a product whose usage will only ever be measured in distance traveled, or specifying hours for a component whose life is really governed by switch reversals, sequencing operations, or record or playback cycles. A switch doesn't wear out on a clock; it wears out on operations. Say hours instead of cycles and you've written a requirement nobody can actually verify against the way the product is used.
+
+The common reliability metrics and when each one fits:
+
+R of t: the probability of survival to time, distance or cycles t. The most general form. A specification might read: R of 5 years is at least 0.98.
+
+B ten life (or more generally B X life), the life at which X percent of the population is expected to have failed (B ten equals 90 percent reliability point). Popular because it's intuitive to non-specialists and maps cleanly onto warranty-period thinking.
+
+MTBF or MTTF, mean time between or to failure, valid for constant-failure-rate (exponential) behavior. Frequently misused, MTBF is often read by non-specialists as how long until it breaks, when it's actually a population-average statistic that says nothing about any individual unit's expected life, especially once wear-out (Chapter 1's bathtub curve, Region 3) starts to dominate.
+
+PPM (parts per million failed by time t), more common in production quality contexts, but usable as a time-dependent reliability metric too.
+
+These forms convert into each other under a stated distribution assumption. A worked conversion. Suppose a product's initial requirement is stated as a B ten life of 5 years, and failures are assumed exponentially distributed, meaning a constant failure rate. Then the reliability at 5 years is 0.90, and that equals e to the power of minus 5 divided by the M T T F. Solving gives an M T T F of about 47.5 years. The failure rate lambda is one divided by 47.5, about 0.021 failures per year. Assuming 24-hour-per-day operation, lambda is about 2.4 times ten to the minus 6 failures per hour. Notice the buried assumption in that last step: 24-hour-per-day operation. That assumption is fine for a server or an always-on appliance. It is wrong, sometimes by two orders of magnitude, for anything that spends most of its calendar life switched off, in a customer's garage, in a drawer, or idling. The main worked example below exists specifically to show what happens when that assumption gets made correctly versus carelessly.
+
+Interactive figure. A converter between the forms of a reliability requirement. You enter a B-life percentage, a life, and how many hours per year the product is powered. It returns the mean time to failure and the failure rate per calendar year and per operating hour, and draws the survival curve: reliability starts at one and decays exponentially, passing through 0.90 at the B ten life. Three worked examples are preloaded. The first reproduces the conversion just described: B ten of 5 years, always on, giving 47.5 years and 2.4 times ten to the minus 6 per hour. The second is this chapter's control unit: B ten of 12 years at 400 powered hours per year. The third is the infusion pump of chapter 3, stated directly as 5,000 operating hours.

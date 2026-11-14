@@ -1,0 +1,7 @@
+Section 1.2. Why Customers, and Therefore Your Business, Care More Than You Might Assume.
+
+It is tempting to treat reliability as a cost center that competes with schedule and features. Customer research says otherwise. In a 2007 German automotive purchase-decision survey (DAT-Report), buyers rated reliability among the single most important criteria in the decision to buy a car, tied for first place with fuel consumption, and rated as more important than price, design, standard equipment, or resale value. Only price ever edges it out, and only sometimes.
+
+This is not an automotive-specific finding, it generalizes to any product where a failure costs the customer more than the purchase price alone (downtime, inconvenience, repair hassle, or, in safety-critical products, worse). The scale of the exposure is real money, not just goodwill: warranty and guarantee costs alone can run 8 to 12 percent of a manufacturer's annual turnover. A well-run accelerated reliability test program is not overhead on top of the product program; it is the mechanism that protects a number that size.
+
+Interactive figure. A slider sets a manufacturer's annual turnover, and three figures show what eight percent and twelve percent of it come to. For a turnover of five hundred million dollars, warranty cost runs between forty and sixty million dollars a year.

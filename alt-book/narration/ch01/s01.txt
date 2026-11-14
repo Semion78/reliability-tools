@@ -1,0 +1,17 @@
+Section 1.1. What Reliability Actually Means.
+
+Engineers use the word reliable loosely in conversation, but the working definition this book uses is the formal one: reliability is the probability that a product does not fail under stated functional and environmental conditions during a defined period of time (VDI Guideline 4001). Every word in that sentence is load-bearing, and every one of them maps to a part of this book:
+
+Interactive figure. The definition is shown as one sentence with four highlighted phrases. Tapping a phrase shows which part of the book it belongs to. The list that follows explains each one.
+
+Stated functional and environmental conditions, this is Part I. If you haven't defined what the product must do and where it will live, you cannot define what failure even means.
+
+Defined period of time, this is Part II. Time, for a mechanical or electrical product, is almost never wall-clock hours; it's a duty cycle expressed in the units that actually damage the product (cycles, miles, switch reversals, thermal excursions).
+
+Does not fail, this is Part III. Before you can test for failure, you have to have systematically enumerated what failure looks like, how it happens, and how bad each mode is, which is exactly what a D F M E A and a risk matrix are for.
+
+Probability, this is Parts IV and V. Probability of failure is driven by the stresses the product actually experiences relative to its capability, which is why stress definition and test design are inseparable.
+
+The whole definition is a moving target, new failure modes, new usage patterns, new production variation appear after launch, which is why Part VI (field failure analysis, D F M E A updates, production feedback) closes the loop back to the beginning.
+
+Reliability, in other words, is not a single test you run at the end of a program. It's a property that gets designed in or designed out, chapter by chapter, starting at the requirements stage, which is why this book is organized as a pipeline rather than a list of independent techniques.

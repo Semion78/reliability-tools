@@ -1,0 +1,3 @@
+Where We're Headed.
+
+The apportionment table above assumed a functional structure, five named subsystems in series, without actually justifying where those boundaries come from or what happens at the interfaces between them. Chapter 3 builds that structure properly: the system or subassembly or component decomposition, the reliability block diagram, and why the interfaces between blocks deserve as much attention as the blocks themselves.

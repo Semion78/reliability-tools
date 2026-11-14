@@ -1,0 +1,71 @@
+Real-World Example: Industrial Machinery, Gearbox Boundary Diagram and P-Diagram.
+
+Background.
+
+Consider an industrial gearbox subassembly, a single-reduction-stage gearbox transmitting power from an electric motor to a driven load (a conveyor, a pump, or similar rotating equipment) in a factory environment. The gearbox sits inside the equipment's overall functional architecture the same way the infusion pump's subsystems sat inside its architecture in Chapter 3: as one node in a reliability block diagram, with its own allocated reliability target from the system-level apportionment.
+
+The design team's first instinct, consistent with many industrial-equipment programs, was to treat the gearbox validation plan as a single fixed-torque endurance test: run the gearbox at its rated nominal torque and speed for a specified number of hours, and pass or fail against tooth wear and bearing condition at teardown. This is a control-factor verification test, it checks whether the gearbox, as designed and built, survives its own rated nominal operating point. It says nothing about how the gearbox behaves when the inputs to that operating point vary, which is exactly the gap a properly built P-diagram exposes.
+
+Step 1, Boundary diagram.
+
+Before building the P-diagram, the team drew a boundary diagram around the gearbox, listing every physical and functional interface crossing that boundary, the same interface-first discipline introduced in Chapter 3's infusion-pump example, now applied at the component level:
+
+The table lists five interfaces crossing the gearbox boundary. The input shaft and coupling connects to the motor output shaft, transferring torque and rotational speed. The output shaft and coupling connects to the driven load, also transferring torque and speed. The mounting feet and bolts connect to the machine frame: a structural load path that also transmits vibration. The breather or vent connects to the ambient atmosphere: it equalises pressure, and is a path for moisture and contaminants to get in. The lubricant fill and drain ports connect to maintenance access, and govern lubricant condition and level.
+
+Interactive figure. The boundary diagram drawn as a picture: the gearbox in the centre inside a dashed boundary, with five lines running out to the five things it connects to: the motor shaft on the left, the driven load on the right, the machine frame below, and the atmosphere and maintenance access above. Tapping any of the five shows what crosses the boundary there.
+
+Drawing this diagram explicitly, with the same team that would later run the D F M E A rather than a single design engineer working alone, immediately raised a question that the fixed-torque endurance test had not addressed: what happens at the input and output couplings when the driven load does not present a smooth, constant torque?
+
+Step 2, P-diagram.
+
+The team then built the full P-diagram for the gearbox:
+
+Signal or Intent: Input rotational speed and torque at the motor coupling, at a specified gear ratio, producing a corresponding output rotational speed and torque at the load coupling.
+
+Control Factors (what the design specifies):
+
+Gear material and heat treatment (case hardness, core hardness)
+
+Tooth profile and module (gear geometry)
+
+Bearing type and preload
+
+Lubricant type and fill level
+
+Housing wall thickness and stiffness
+
+Seal design and material
+
+Manufacturing tolerances on gear and shaft dimensions
+
+Noise Factors (what the design must survive but cannot fully control):
+
+Torque spikes and shock loading from the driven equipment (a conveyor jam, a pump running dry and then re-priming, a load side impact)
+
+Ambient temperature range at the installation site
+
+Contamination ingress (dust, moisture) through the breather or seals over the equipment's service life
+
+Lubricant degradation and contamination over time between maintenance intervals
+
+Manufacturing variation in tooth profile from unit to unit
+
+Installation misalignment between the gearbox and the motor or driven equipment
+
+Output, Ideal Function: Accurate torque and speed transfer at the specified ratio, with low noise and vibration and stable operating temperature.
+
+Output, Error States: Tooth pitting or tooth breakage, bearing spalling, seal leakage, backlash growth (loss of positioning accuracy), and overheating.
+
+Interactive figure. The P-diagram drawn in its usual layout. The gearbox sits in the middle. The signal enters from the left. The seven control factors sit above it and the six noise factors below it. On the right are the outputs: the ideal function, and the five error states. Every factor is coloured by whether the test plan covers it. Under the original plan, one fixed-torque endurance test, all seven control factors are green and all six noise factors are red: none of them is bounded by a test. Switching to the revised plan turns three noise factors green, torque spikes, contamination ingress and lubricant degradation, because two test segments were added. Three noise factors remain uncovered by those two segments and carry forward into the duty-cycle work of Part II.
+
+Step 3, What the noise-factor identification changed.
+
+Once the noise factors were listed explicitly and reviewed by the same cross-functional group that would later run the D F M E A, two gaps in the original test plan became obvious that had not been visible when the plan was built around control factors alone:
+
+Torque spikes and shock loading from the driven equipment were not represented anywhere in a constant-nominal-torque endurance test. The team added a cyclic and shock-overload test segment, superimposing repeated torque transients above the nominal rating onto the endurance run, to verify that the gear teeth and bearings, sized against the noise factor's worst case rather than only the signal's nominal value, would survive the actual field loading rather than only the idealized loading the original plan assumed.
+
+Contamination ingress and lubricant degradation were not represented at all. The original endurance test ran with fresh lubricant in a clean laboratory environment, the opposite of the noise factor it needed to bound. The team added a combined dust or moisture ingress and degraded-lubricant test, deliberately contaminating and aging the lubricant charge partway through the endurance run, to verify the seal design and gear surface finish remained robust against the contamination levels expected over a realistic maintenance interval.
+
+Neither gap would have been caught by a design review of the control factors alone, because both control factors, gear material, tooth profile, bearing preload, were fully and correctly specified on the drawing. The gearbox was not under-designed against its own nominal signal. It was under-tested against noise factors nobody had written down. This is the same lesson Chapter 3 drew from the infusion pump's missed drive-to-fluidics interface, applied one level down: the failure to find a problem earlier was a failure of scope in the definition tool, not a failure of engineering competence in the design itself.
+
+The correlation-matrix logic from the Q F D House of Quality also appeared here in miniature: increasing housing wall thickness to improve stiffness (helping resist the newly identified shock-loading noise factor) directly conflicts with the equipment's weight and cost requirements, the same kind of roof-of-the-house trade-off O'Connor's electric-motor Q F D example makes explicit. The P-diagram exercise did not resolve that trade-off, but it made sure the trade-off was visible and deliberate rather than accidental.

@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chapter 4 — Tools for Requirements Definition | Designing Accelerated Reliability Tests for New Hardware</title>
+<style>:root{--bg:#0b1426;--panel:#121f3a;--panel2:#18294a;--ink:#e6ecf7;--mute:#93a3bf;--amber:#f5a524;--teal:#2dd4bf;--rose:#fb7185;--blue:#7aa2ff;--line:#263a63;--fs:18px}
+html.light{--bg:#f7f5ef;--panel:#ffffff;--panel2:#f0ede3;--ink:#1a2336;--mute:#5b6880;--amber:#b86e00;--teal:#0b8577;--rose:#c8334f;--blue:#2f55c8;--line:#dcd7c8}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:var(--fs)/1.7 Georgia,"Iowan Old Style","Times New Roman",serif}
+a{color:var(--teal)}button,select,input{font:inherit}
+.ui,.top,.toc,.player,.widget,table,.tick,.chips,.cards,h1,h2,h3,.kicker{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.top{position:sticky;top:0;z-index:30;display:flex;gap:10px;align-items:center;padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--line);font-size:14px}
+.top .ttl{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--mute)}.top .ttl b{color:var(--ink)}
+.btn{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 11px;cursor:pointer;font-size:14px;text-decoration:none;display:inline-block}
+.btn:hover{border-color:var(--teal)}.btn.on{background:var(--teal);color:#06231f;border-color:var(--teal);font-weight:600}
+.btn.amber{background:var(--amber);color:#201400;border-color:var(--amber);font-weight:700}
+#bar{position:fixed;top:0;left:0;height:3px;background:var(--amber);z-index:40;width:0}
+.wrap{display:flex;max-width:1240px;margin:0 auto}
+.toc{width:270px;flex:none;position:sticky;top:48px;height:calc(100vh - 48px);overflow:auto;padding:18px 12px 120px;font-size:14px;border-right:1px solid var(--line)}
+.toc a{display:block;padding:6px 10px;border-radius:8px;color:var(--mute);text-decoration:none;line-height:1.35;margin:2px 0}
+.toc a:hover{color:var(--ink);background:var(--panel)}.toc a.cur{color:var(--ink);background:var(--panel2);border-left:3px solid var(--amber)}
+main{flex:1;min-width:0;padding:26px 34px 170px;max-width:860px}
+.kicker{color:var(--teal);text-transform:uppercase;letter-spacing:.12em;font-size:13px;font-weight:700}
+h1{font-size:2.1em;line-height:1.15;margin:.2em 0 .7em}
+h2{font-size:1.45em;line-height:1.25;margin:2.2em 0 .6em;padding-top:.6em;border-top:1px solid var(--line)}
+h3{font-size:1.12em;margin:1.6em 0 .4em;color:var(--teal)}
+p,li{margin:.7em 0}ul,ol{padding-left:1.3em}
+.seg{border-radius:6px;transition:background .2s,box-shadow .2s;scroll-margin-top:90px}
+.seg.now{background:color-mix(in srgb,var(--amber) 14%,transparent);box-shadow:-6px 0 0 color-mix(in srgb,var(--amber) 14%,transparent),-9px 0 0 var(--amber)}
+section.ex{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:14px;padding:4px 24px 14px;margin:2.2em 0}
+section.pit{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--rose);border-radius:14px;padding:4px 24px 14px;margin:2.2em 0}
+section.ex h2,section.pit h2{border:0;margin-top:.8em}section.src{font-size:.85em;color:var(--mute)}
+sup.fn a{text-decoration:none;font-family:sans-serif;font-size:.72em;background:var(--panel2);border-radius:9px;padding:1px 5px;margin-left:1px}
+.tw{overflow-x:auto;margin:1.2em 0;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:.84em;line-height:1.45}
+th{background:var(--panel2);color:var(--teal);text-align:left;padding:10px 12px;font-size:.9em;text-transform:uppercase;letter-spacing:.04em}
+td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:top}tr:hover td{background:color-mix(in srgb,var(--teal) 6%,transparent)}
+td:first-child{font-weight:600}
+.formula{font-family:"Cambria Math",Cambria,Georgia,serif;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:10px;padding:12px 18px;margin:1em 0;overflow-x:auto;font-size:1.02em}
+.note{font-family:sans-serif;font-size:.8em;color:var(--mute);border:1px dashed var(--line);border-radius:10px;padding:8px 12px;margin:.8em 0}
+.widget{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin:1.6em 0;font-size:15px;line-height:1.5}
+.widget .wt{font-weight:700;font-size:1.02em;margin-bottom:2px}.widget .wh{color:var(--mute);font-size:.88em;margin-bottom:10px}
+.wt:before{content:"◆ ";color:var(--amber)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+.sl{display:grid;grid-template-columns:minmax(120px,210px) 1fr 96px;gap:10px;align-items:center;margin:6px 0;font-size:.9em}
+.sl b{color:var(--amber);text-align:right;font-variant-numeric:tabular-nums}input[type=range]{width:100%;accent-color:var(--teal)}
+input[type=number],select{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 8px}
+.chartbox{position:relative}.chartbox svg{width:100%;height:auto;display:block;touch-action:pan-y}
+.grid{stroke:var(--line);stroke-width:1}.tick{fill:var(--mute);font-size:11px}.axl{fill:var(--mute);font-size:12px}.bandl{font-size:11px;font-weight:700}
+.tip{position:absolute;pointer-events:none;background:var(--bg);border:1px solid var(--teal);border-radius:10px;padding:8px 10px;font-size:12.5px;line-height:1.4;max-width:260px;display:none;z-index:5;box-shadow:0 6px 20px #0006}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:10px 0}
+.stat{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px}.stat b{display:block;font-size:1.5em;color:var(--amber);font-variant-numeric:tabular-nums;line-height:1.2}.stat span{color:var(--mute);font-size:.82em}
+.stat.t b{color:var(--teal)}.stat.r b{color:var(--rose)}
+.bars .br{display:grid;grid-template-columns:minmax(110px,200px) 1fr minmax(90px,auto);gap:10px;align-items:center;margin:5px 0;font-size:.88em}
+.bars .trk{height:16px;background:var(--bg);border-radius:8px;overflow:hidden}.bars .fill{height:100%;border-radius:8px;transition:width .3s}
+.bars .v{font-variant-numeric:tabular-nums;color:var(--mute);white-space:nowrap}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:10px 0}
+.card{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;font-size:.9em;transition:transform .15s,border-color .15s}
+.card:hover{transform:translateY(-2px);border-color:var(--teal)}.card.on{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber)}
+.card .n{font-size:.75em;color:var(--teal);font-weight:700;text-transform:uppercase;letter-spacing:.08em}.card h4{margin:.2em 0;font-size:1em}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.chip{border:1px solid var(--line);background:var(--bg);border-radius:20px;padding:4px 11px;font-size:.84em;cursor:pointer}
+.chip.on{border-color:var(--amber);color:var(--amber)}.chip.ok{border-color:var(--teal);color:var(--teal)}.chip.bad{border-color:var(--rose);color:var(--rose)}.chip.off{opacity:.35}
+.out{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:.92em;min-height:44px}
+.out b{color:var(--amber)}.warn{color:var(--rose)}.good{color:var(--teal)}
+.defs span.ph{border-bottom:2px dashed var(--teal);cursor:pointer;padding:0 2px;border-radius:4px}.defs span.ph.on{background:var(--amber);color:#201400;border-color:var(--amber)}
+.dots{display:grid;gap:5px;max-width:330px}.dots i{aspect-ratio:1;border-radius:50%;background:var(--line);display:block}.dots i.a{background:var(--amber)}.dots i.t{background:var(--teal)}
+.hoq td,.hoq th{text-align:center;padding:6px 4px;font-size:.8em}.hoq td:first-child,.hoq th:first-child{text-align:left}
+.hoq td.c{cursor:pointer;font-weight:700;user-select:none}.hoq td.c9{background:color-mix(in srgb,var(--amber) 45%,transparent)}.hoq td.c3{background:color-mix(in srgb,var(--amber) 22%,transparent)}.hoq td.c1{background:color-mix(in srgb,var(--amber) 8%,transparent)}
+.hoq tr.tot td{font-weight:700;color:var(--teal);border-top:2px solid var(--teal)}
+details.tree{margin:4px 0 4px 16px;border-left:2px solid var(--line);padding-left:10px}details.tree summary{cursor:pointer}details.tree .lv{font-size:.72em;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;margin-right:6px}
+.pd{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:10px;align-items:stretch}.pd .bx{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px}.pd .bx h5{margin:0 0 6px;font-size:.78em;text-transform:uppercase;letter-spacing:.08em;color:var(--teal)}
+.pd .mid{display:flex;align-items:center;justify-content:center;text-align:center;font-weight:700;border:2px solid var(--amber);min-height:80px}
+.player{position:fixed;left:0;right:0;bottom:0;z-index:35;background:var(--panel);border-top:1px solid var(--line);padding:8px 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px}
+.player .pp{width:44px;height:44px;border-radius:50%;font-size:18px;padding:0}.player .lbl{flex:1;min-width:140px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.player select{max-width:190px;font-size:13px}.badge{border:1px solid var(--teal);color:var(--teal);border-radius:12px;padding:2px 9px;font-size:12px}.badge.s{border-color:var(--amber);color:var(--amber)}
+#hov{position:absolute;display:none;z-index:20;width:28px;height:28px;border-radius:50%;padding:0;font-size:12px}
+.navf{display:flex;justify-content:space-between;gap:10px;margin-top:3em;font-family:sans-serif}
+@media(max-width:900px){.toc{position:fixed;left:0;top:48px;background:var(--bg);z-index:25;transform:translateX(-100%);transition:transform .2s}.toc.open{transform:none}main{padding:18px 16px 190px}.pd{grid-template-columns:1fr}.sl{grid-template-columns:1fr 1fr 80px}}
+@media print{.top,.toc,.player,#bar,#hov{display:none}body{background:#fff;color:#000}}
+
+#tips{display:none;position:fixed;right:14px;bottom:76px;z-index:36;width:min(460px,calc(100vw - 28px));max-height:70vh;overflow:auto;background:var(--panel);border:1px solid var(--teal);border-radius:14px;padding:14px 16px;font-size:13.5px;line-height:1.5;box-shadow:0 10px 40px #0008}#tips p{margin:.5em 0}
+</style></head><body>
+<div id="bar"></div>
+<header class="top"><button class="btn" id="menu" aria-label="Contents">☰</button><a class="btn" href="index.html">Library</a>
+<span class="ttl"><b>Chapter 4</b> · Tools for Requirements Definition</span>
+<button class="btn" id="fminus" aria-label="Smaller text">A−</button><button class="btn" id="fplus" aria-label="Larger text">A+</button><button class="btn" id="theme" aria-label="Light or dark">◐</button></header>
+<div class="wrap"><nav class="toc" aria-label="Sections"></nav><main>
+<div class="kicker">Part I · Requirements &amp; Functional Definition</div><h1>Chapter 4 — Tools for Requirements Definition</h1>
+<section id="s0" class="">
+</section>
+<section id="s1" class="">
+<h2 class="seg " >From "What" to "How Important" and "What Could Go Wrong"</h2>
+<p class="seg " >Chapter 2 turned a vague customer expectation ("the ECU should last the life of the vehicle") into a testable reliability requirement. Chapter 3 took that single number and apportioned it across a functional architecture, using reliability block diagrams and an interface review to make sure nothing important was hiding between subsystems.</p>
+<p class="seg " >Both chapters assumed something this chapter has to supply: a way to decide which requirements matter most when trade-offs are unavoidable, and a structured way to separate what the design controls from what it merely has to survive. Every real design has more candidate requirements than budget, and every real product operates in an environment the designer does not fully control. Two tools carry most of the weight here: Quality Function Deployment (QFD), which turns the customer's voice into a ranked, traceable set of engineering requirements, and the parameter diagram (P-diagram), which draws the boundary around a design and sorts everything crossing it into what is controlled, what is merely known, and what is a source of unwanted variation. A third, less glamorous set of tools — design reviews and checklists — is what actually catches whether the requirements the first two tools produced were met before the design leaves the drawing board.</p>
+<p class="seg " >All three tools are qualitative or semi-quantitative. They do not replace the quantitative apportionment work of Chapter 3; they feed it. QFD tells you where to spend apportionment effort. The P-diagram tells you what the DFMEA (Chapter 9) and the duty cycle (Part II) need to characterize. Design reviews tell you whether the organization actually did what these tools said it should.</p>
+</section>
+<section id="s2" class="">
+<h2 class="seg " >4.1 Quality Function Deployment: Weighting Requirements the Way Customers Actually Would</h2>
+<h3 class="seg " >The problem QFD solves</h3>
+<p class="seg " >By the time a design team has a requirements document, a DFMEA, and a test plan, dozens of individual requirements are competing for the same finite engineering hours, tooling budget, and calendar time. Engineers have to decide, for example, whether an extra 2 dB of noise reduction is worth more design effort than an extra 500 hours of durability life, or whether a bearing upgrade that adds cost is justified by a reliability requirement that customers may or may not actually care about as much as the requirements document implies.</p>
+<p class="seg " >Quality Function Deployment, developed by Yoji Akao in Japan and popularized in the West through the "House of Quality" matrix, exists to answer exactly this kind of question with data instead of opinion. It converts customer requirements — expressed the way customers actually talk about a product, not the way engineers do — into a ranked, weighted set of engineering characteristics, and it does so by building an explicit, auditable matrix rather than relying on a design team's unstated assumptions about what matters.</p>
+<h3 class="seg " >The structure of the House of Quality</h3>
+<p class="seg " >O'Connor and Kleyner's RAMS (Reliability, Availability, Maintainability, Safety) program task list places QFD among the earliest tasks in a development program, immediately after the customer and market requirements have been gathered and before detailed design work begins — reinforcing that QFD is a front-end requirements tool, not a design-verification tool. The House of Quality matrix, as O'Connor illustrates it with a small electric motor example, has a consistent shape regardless of the product:</p>
+<ul><li class="seg " ><strong>The customer requirements ("Whats")</strong> are listed down the left side, in the customer's own language, each with an <strong>importance rating</strong> — typically a 1–5 or 1–10 scale reflecting how much the customer cares about that requirement relative to the others. For the electric motor example, the customer requirements include: adequate starting torque, low noise (under 40 dB), low cost (under $15), 5,000-hour durability, high reliability, low weight (under 0.3 kg), and short replacement time (under 10 minutes).</li><li class="seg " ><strong>The engineering characteristics ("Hows")</strong> are listed across the top — these are the design or process features the team can actually control: magnet material, bearing type, brush spring pressure, housing construction, stator winding design, terminal attachment method, and mounting design.</li><li class="seg " ><strong>The relationship matrix</strong> in the body of the house scores how strongly each engineering characteristic affects each customer requirement, typically on a scale such as 9 (strong relationship), 3 (moderate), 1 (weak), or 0 (none).</li><li class="seg " ><strong>The roof of the house</strong> captures correlations between engineering characteristics themselves — where improving one characteristic helps or hurts another (for example, increasing housing wall thickness for stiffness and noise control typically increases weight and cost, a direct conflict with two other customer requirements).</li><li class="seg " ><strong>A benchmarking row or column</strong> compares the design against competitor products on each customer requirement, so the team can see not just "what does the customer want" but "where are we already ahead or behind."</li></ul>
+<p class="seg " >The team then multiplies each importance rating by each relationship score and sums down each engineering-characteristic column, producing a total score for each characteristic. In O'Connor's worked electric-motor example, this arithmetic identifies bearing selection, housing construction, and mounting design as the highest-scoring engineering characteristics — the ones that most strongly influence the requirements the customer rated most important — with totals in the 44–65 range compared with roughly half that for lower-priority characteristics such as terminal attachment method. That ranking is the actionable output of QFD: it tells the design team where to spend engineering effort, where to spend test budget, and which characteristics deserve the most rigorous DFMEA and DVP&amp;R coverage later in the program, rather than treating every design decision as equally important by default.</p>
+<div class="seg widget" data-w="hoq"></div>
+<h3 class="seg " >Why QFD matters for accelerated testing specifically</h3>
+<p class="seg " >It is tempting to treat QFD as a marketing or industrial-design tool with no bearing on reliability test planning. The apportionment work in Chapter 3 shows why that is wrong: apportioning a single system-level reliability target across subsystems requires a defensible basis for giving one subsystem a tighter allocation than another. QFD's importance-weighted requirement list is one of the most defensible bases available, because it ties the allocation decision back to data about what the customer actually values, rather than to whichever engineer argues most persuasively in the apportionment meeting. A subsystem whose engineering characteristics score highest in the House of Quality is a natural candidate for a tighter reliability allocation and a more aggressive accelerated test plan, because a failure there does more damage to the requirements the customer cares about most.</p>
+<p class="seg " >QFD also cascades. A single top-level House of Quality does not stop at the system level — the highest-scoring engineering characteristics at the system level become the customer requirements ("Whats") of a second-level House of Quality at the subsystem or component level. This is the same "system → subassembly → component" decomposition from Chapter 3's tree structure, but driven by customer importance rather than by functional architecture alone.</p>
+</section>
+<section id="s3" class="">
+<h2 class="seg " >4.2 The P-Diagram: Separating What You Control From What You Merely Survive</h2>
+<h3 class="seg " >Why a boundary tool is needed</h3>
+<p class="seg " >QFD answers "which requirements matter most." It does not answer a different, equally important question: for a given design element, what actually determines whether it will meet those requirements in the field? The parameter diagram — P-diagram — is the tool that answers that question, and it is the single most important bridge between requirements definition and the DFMEA and duty-cycle work that follows in Parts II and III of this book.</p>
+<p class="seg " >A P-diagram forces a design team to draw a boundary around a system, subsystem, or component and then classify everything that crosses that boundary into exactly four categories:</p>
+<ul><li class="seg " ><strong>Signal / Intent (Input):</strong> what the design element is supposed to receive or respond to — the intended input.</li><li class="seg " ><strong>Control Factors:</strong> the parameters the design team can specify and control — material selection, geometry, tolerances, surface treatment, process parameters. These are the "knobs" a design engineer actually turns.</li><li class="seg " ><strong>Noise Factors:</strong> everything that affects the output but that the design team cannot fully control — environmental variation, customer usage variation, manufacturing variation, wear/degradation over time, and interactions between adjacent systems. Taguchi's framework, as O'Connor presents it, treats these noise factors as unavoidable sources of variation that a robust design must be insensitive to, rather than variation the team can simply specify away.</li><li class="seg " ><strong>Output / Response:</strong> what the design element actually produces, split into the <strong>Ideal Function</strong> (what it is supposed to do) and the <strong>Error States</strong> (the ways it can fail to do that).</li></ul>
+<p class="seg " >Porter's treatment of this structure — presented as an IPCO diagram (Inputs, Noise Factors/Assumptions, Controls, Output) — applies the same four-box logic to test methods and to the DFMEA process itself, not only to hardware designs. That generality is worth noting here because it previews exactly how the P-diagram is used later in the book: Part III (Chapters 8–9) uses the same control/noise split to structure DFMEA cause analysis, and Part IV uses the noise-factor list as the starting inventory of stresses that accelerated tests must reproduce.</p>
+<h3 class="seg " >Why the control/noise split changes what gets tested</h3>
+<p class="seg " >The reason a P-diagram belongs in the requirements chapter, rather than waiting for the DFMEA chapter, is that the classification decision — is this a control factor or a noise factor? — determines what kind of verification activity is appropriate long before a DFMEA session ever convenes.</p>
+<p class="seg " >A control factor is something the design specifies. Verification of a control factor is fundamentally a design-review and drawing-check activity (Section 4.3): did the design actually implement the specified material, tolerance, or geometry? A noise factor is something the design cannot specify away and must instead be made robust against, or, when robustness is insufficient, must be explicitly tested against. Verification of a noise factor requires a test that reproduces or bounds that noise — which is precisely the accelerated test planning this book exists to teach. Taguchi's robustness framing, illustrated in O'Connor's signal-to-noise examples, makes the same point quantitatively: a design's quality is measured not by its output at one nominal condition but by how little its output varies as noise factors vary around that nominal condition. A gap in the noise-factor list at the P-diagram stage is therefore not a paperwork gap — it is a gap in the test plan that will not be discovered until a field failure forces the team to ask "why didn't we test for that?"</p>
+<p class="seg " >This is the mechanism behind the chapter's real-world example below: a P-diagram exercise conducted properly, with the right people in the room, finds noise factors that a test plan built from control factors alone would never surface.</p>
+</section>
+<section id="s4" class="">
+<h2 class="seg " >4.3 Design Reviews and Checklists: Verifying the Requirement Was Actually Met</h2>
+<h3 class="seg " >Where qualitative methods fit</h3>
+<p class="seg " >Bertsche's overview of reliability methods (Fig. 11.6) places design reviews and checklists among the qualitative methods available to a reliability program, distinct from the quantitative methods (block diagrams, life-stress models, statistical test planning) that occupy most of this book. Qualitative methods are not a lesser substitute for quantitative rigor — they are what confirms, at defined checkpoints, that the quantitative work is actually being carried into the design rather than living only in a requirements document that nobody rechecks.</p>
+<h3 class="seg " >What makes a design review effective rather than ceremonial</h3>
+<p class="seg " >O'Connor describes an effective design review as a team-based technical exercise, not a status meeting. The review team should include people who did not write the design — reliability engineers, manufacturing and quality representatives, and, where relevant, service and field personnel — precisely because the people closest to a design are the least likely to see its blind spots. A design review that consists only of the design team presenting to itself tends to confirm what the team already believes rather than surface what it has missed.</p>
+<p class="seg " >O'Connor also warns explicitly against the checklist becoming "a stolid march through a list of questions" that substitutes for genuine engineering judgment. A checklist is a memory aid for an engineer who is already thinking critically about the design, not a replacement for that thinking. Three practical rules keep a checklist in the first category:</p>
+<ol><li class="seg " ><strong>Use checklists as working tools in the design office, not as items to be formally addressed only in review meetings.</strong> A checklist that only appears at the review meeting arrives too late to influence the design it is meant to check.</li><li class="seg " ><strong>Keep checklists relevant and current.</strong> A checklist copied unchanged from a previous, different program accumulates irrelevant items and loses credibility, and stops being updated when it stops matching the product actually being designed.</li><li class="seg " ><strong>Avoid vague, generic questions in favor of specific ones.</strong> O'Connor's own example contrasts "Has maintenance been considered?" — a question any designer can answer "yes" to without having considered anything specific — with "What access is provided for lubrication?", which forces a concrete answer that can be checked against the actual drawing.</li></ol>
+<p class="seg " >A typical hardware program runs design reviews at a small number of defined milestones rather than continuously: an initial design review before detailed design is released, a review at the completion of development testing, and a final review of production-standard drawings before tooling commitment. Each of these checkpoints is a natural place to re-verify that the P-diagram's control factors were actually implemented as specified and that the noise factors identified earlier still match the design's intended use.</p>
+<div class="seg widget" data-w="review"></div>
+<h3 class="seg " >Design Review Based on Failure Modes (DRBFM)</h3>
+<p class="seg " >For evolutionary designs — a new part derived from a proven one, rather than a clean-sheet design — a related technique, Design Review Based on Failure Modes (DRBFM), focuses the review specifically on what changed relative to the proven baseline and what new failure modes that specific change could introduce. DRBFM is a natural complement to the P-diagram approach: a change to a control factor (a new material, a tightened tolerance) or a change in the noise environment (a new duty cycle, a new mounting location) is exactly the kind of change DRBFM asks a team to interrogate before assuming the proven baseline's reliability history still applies.</p>
+</section>
+<section id="s5" class="ex">
+<h2 class="seg " >Real-World Example: Industrial Machinery — Gearbox Boundary Diagram and P-Diagram</h2>
+<h3 class="seg " >Background</h3>
+<p class="seg " >Consider an industrial gearbox subassembly — a single-reduction-stage gearbox transmitting power from an electric motor to a driven load (a conveyor, a pump, or similar rotating equipment) in a factory environment. The gearbox sits inside the equipment's overall functional architecture the same way the infusion pump's subsystems sat inside its architecture in Chapter 3: as one node in a reliability block diagram, with its own allocated reliability target from the system-level apportionment.</p>
+<p class="seg " >The design team's first instinct, consistent with many industrial-equipment programs, was to treat the gearbox validation plan as a single fixed-torque endurance test: run the gearbox at its rated nominal torque and speed for a specified number of hours, and pass/fail against tooth wear and bearing condition at teardown. This is a control-factor verification test — it checks whether the gearbox, as designed and built, survives its own rated nominal operating point. It says nothing about how the gearbox behaves when the <em>inputs</em> to that operating point vary, which is exactly the gap a properly built P-diagram exposes.</p>
+<h3 class="seg " >Step 1 — Boundary diagram</h3>
+<p class="seg " >Before building the P-diagram, the team drew a boundary diagram around the gearbox, listing every physical and functional interface crossing that boundary — the same interface-first discipline introduced in Chapter 3's infusion-pump example, now applied at the component level:</p>
+<div class="seg tw" ><table><tr><th>Interface</th><th>Connects to</th><th>Nature of interface</th></tr><tr><td>Input shaft / coupling</td><td>Motor output shaft</td><td>Torque and rotational speed transfer</td></tr><tr><td>Output shaft / coupling</td><td>Driven load (conveyor, pump, etc.)</td><td>Torque and rotational speed transfer</td></tr><tr><td>Mounting feet / bolts</td><td>Machine frame</td><td>Structural load path, vibration transmission</td></tr><tr><td>Breather / vent</td><td>Ambient atmosphere</td><td>Pressure equalization, moisture/contaminant ingress path</td></tr><tr><td>Lubricant fill and drain ports</td><td>Maintenance access</td><td>Lubricant condition and level</td></tr></table></div>
+<div class="seg widget" data-w="boundary"></div>
+<p class="seg " >Drawing this diagram explicitly, with the same team that would later run the DFMEA rather than a single design engineer working alone, immediately raised a question that the fixed-torque endurance test had not addressed: what happens at the input and output couplings when the driven load does not present a smooth, constant torque?</p>
+<h3 class="seg " >Step 2 — P-diagram</h3>
+<p class="seg " >The team then built the full P-diagram for the gearbox:</p>
+<p class="seg " ><strong>Signal / Intent:</strong> Input rotational speed and torque at the motor coupling, at a specified gear ratio, producing a corresponding output rotational speed and torque at the load coupling.</p>
+<p class="seg " ><strong>Control Factors</strong> (what the design specifies):</p>
+<ul><li class="seg " >Gear material and heat treatment (case hardness, core hardness)</li><li class="seg " >Tooth profile and module (gear geometry)</li><li class="seg " >Bearing type and preload</li><li class="seg " >Lubricant type and fill level</li><li class="seg " >Housing wall thickness and stiffness</li><li class="seg " >Seal design and material</li><li class="seg " >Manufacturing tolerances on gear and shaft dimensions</li></ul>
+<p class="seg " ><strong>Noise Factors</strong> (what the design must survive but cannot fully control):</p>
+<ul><li class="seg " >Torque spikes and shock loading from the driven equipment (a conveyor jam, a pump running dry and then re-priming, a load side impact)</li><li class="seg " >Ambient temperature range at the installation site</li><li class="seg " >Contamination ingress (dust, moisture) through the breather or seals over the equipment's service life</li><li class="seg " >Lubricant degradation and contamination over time between maintenance intervals</li><li class="seg " >Manufacturing variation in tooth profile from unit to unit</li><li class="seg " >Installation misalignment between the gearbox and the motor or driven equipment</li></ul>
+<p class="seg " ><strong>Output — Ideal Function:</strong> Accurate torque and speed transfer at the specified ratio, with low noise and vibration and stable operating temperature.</p>
+<p class="seg " ><strong>Output — Error States:</strong> Tooth pitting or tooth breakage, bearing spalling, seal leakage, backlash growth (loss of positioning accuracy), and overheating.</p>
+<div class="seg widget" data-w="pdiag"></div>
+<h3 class="seg " >Step 3 — What the noise-factor identification changed</h3>
+<p class="seg " >Once the noise factors were listed explicitly and reviewed by the same cross-functional group that would later run the DFMEA, two gaps in the original test plan became obvious that had not been visible when the plan was built around control factors alone:</p>
+<ol><li class="seg " ><strong>Torque spikes and shock loading from the driven equipment</strong> were not represented anywhere in a constant-nominal-torque endurance test. The team added a cyclic and shock-overload test segment — superimposing repeated torque transients above the nominal rating onto the endurance run — to verify that the gear teeth and bearings, sized against the <em>noise factor's</em> worst case rather than only the <em>signal's</em> nominal value, would survive the actual field loading rather than only the idealized loading the original plan assumed.</li><li class="seg " ><strong>Contamination ingress and lubricant degradation</strong> were not represented at all. The original endurance test ran with fresh lubricant in a clean laboratory environment — the opposite of the noise factor it needed to bound. The team added a combined dust/moisture ingress and degraded-lubricant test, deliberately contaminating and aging the lubricant charge partway through the endurance run, to verify the seal design and gear surface finish remained robust against the contamination levels expected over a realistic maintenance interval.</li></ol>
+<p class="seg " >Neither gap would have been caught by a design review of the control factors alone, because both control factors — gear material, tooth profile, bearing preload — were fully and correctly specified on the drawing. The gearbox was not under-designed against its own nominal signal. It was under-tested against noise factors nobody had written down. This is the same lesson Chapter 3 drew from the infusion pump's missed drive-to-fluidics interface, applied one level down: the failure to find a problem earlier was a failure of scope in the definition tool, not a failure of engineering competence in the design itself.</p>
+<p class="seg " >The correlation-matrix logic from the QFD House of Quality also appeared here in miniature: increasing housing wall thickness to improve stiffness (helping resist the newly identified shock-loading noise factor) directly conflicts with the equipment's weight and cost requirements, the same kind of roof-of-the-house trade-off O'Connor's electric-motor QFD example makes explicit. The P-diagram exercise did not resolve that trade-off, but it made sure the trade-off was visible and deliberate rather than accidental.</p>
+</section>
+<section id="s6" class="pit">
+<h2 class="seg " >Common Pitfalls</h2>
+<p class="seg " ><strong>QFD done once at kickoff and never revisited.</strong> A House of Quality built during concept selection reflects the customer requirements and competitive landscape as they existed at that moment. Requirements change as a program matures — a customer adds a requirement, a competitor releases a product that resets the benchmarking row, or a cost target tightens — and the engineering-characteristic rankings that were correct at kickoff can become stale well before the design freezes. Teams that treat QFD as a one-time kickoff deliverable rather than a living document lose the ability to explain, later in the program, why a given subsystem received the reliability allocation and test rigor it did — and lose the early warning that a requirement's importance has shifted enough to justify revisiting that allocation.</p>
+<p class="seg " ><strong>P-diagrams drawn without engineering input from the team that will run the DFMEA.</strong> A P-diagram built by a single design engineer, or by a systems engineer working from a specification document without the component-level design and manufacturing engineers in the room, systematically under-populates the noise-factor list — exactly the failure mode narrowly avoided in the gearbox example above by including the DFMEA team early. The people who understand how a part is actually manufactured, installed, and maintained in the field are the people most likely to know which noise factors matter, and they are frequently not the people who default to owning the P-diagram exercise. Because the DFMEA (Chapters 8–9) will inherit this same noise-factor list as its starting point for cause analysis, a thin P-diagram produces a thin DFMEA downstream, compounding the gap rather than catching it.</p>
+<p class="seg " ><strong>Checklists substituting for engineering judgment.</strong> As O'Connor warns, a checklist item marked "complete" is not the same as the underlying question having been genuinely thought through. A checklist with vague, generic items ("has reliability been considered?") gives a false sense of verification coverage precisely because every item can be checked off without engaging with the specific design. The fix is the same one given in Section 4.3: keep checklist items specific enough that answering them requires looking at the actual drawing or the actual noise-factor list, not just recalling that the topic was mentioned in a meeting.</p>
+</section>
+<section id="s7" class="">
+<h2 class="seg " >Where We're Headed</h2>
+<p class="seg " >This chapter's P-diagram exercise produced a noise-factor list for the gearbox — torque spikes, ambient temperature range, contamination ingress, lubricant degradation, manufacturing variation, and installation misalignment. Those noise factors are not yet a test plan. They are raw ingredients: qualitative statements that a source of variation exists, without yet a magnitude, a frequency, a duration, or a statistical distribution attached to any of them.</p>
+<p class="seg " >Part II of this book (Chapters 5–7) takes exactly this kind of noise-factor list and turns it into a quantified duty cycle: how often does the torque spike occur and how large is it, what is the actual ambient temperature distribution at the installation sites the product will see, how does contamination accumulate over a real maintenance interval. Chapter 5 begins that process by defining what a duty cycle is and what data sources — field data, standards, physical testing, and engineering judgment — are available to build one from scratch when, as is common, no field data yet exists for a new design.</p>
+</section>
+<section id="s8" class="src">
+<h2>Sources</h2>
+<ol><li id="src-1">O'Connor, P.D.T. &amp; Kleyner, A., <em>Practical Reliability Engineering</em>, Appendix 6 — RAMS program task list (QFD placement in early program tasks).</li><li id="src-2">O'Connor &amp; Kleyner, <em>Practical Reliability Engineering</em>, Fig. 7.4 — House of Quality worked example (electric motor: customer requirements, engineering characteristics, relationship matrix, importance-weighted totals).</li><li id="src-3">O'Connor &amp; Kleyner, <em>Practical Reliability Engineering</em>, §7.4 — team-based design review process; review team composition; program milestone reviews (initial design, post-development-test, production-standard drawings).</li><li id="src-4">O'Connor &amp; Kleyner, <em>Practical Reliability Engineering</em> — checklist "golden rules" (working-tool use, relevance/currency, specific vs. vague questions) and warning against checklists as a "stolid march" substituting for engineering judgment.</li><li id="src-5">O'Connor &amp; Kleyner, <em>Practical Reliability Engineering</em>, Figs. 11.4–11.5 — Taguchi robustness framework: control factors, noise factors, signal-to-noise ratio, centering illustration.</li><li id="src-6">Porter, A., <em>Accelerated Testing and Validation</em> — IPCO (Inputs, Noise Factors/Assumptions, Controls, Output) diagram structure applied to test methods and to the DFMEA process.</li><li id="src-7">Bertsche, B., <em>Reliability in Automotive and Mechanical Engineering</em>, Fig. 11.6 — placement of design reviews and checklists among qualitative reliability methods.</li><li id="src-8">"Good and Bad DFMEA" reference — Quality Objective #4 (interface failure modes), carried forward from Chapter 3 and reapplied to the gearbox boundary diagram.</li><li id="src-9">Design Review Based on Failure Modes (DRBFM) — Toyota-originated method for evolutionary design changes, as referenced in program-level design-review practice.</li><li id="src-10">Chapter 3 of this book — functional decomposition, reliability block diagrams, and the infusion-pump interface example, providing the apportionment context that QFD and the P-diagram feed into.</li></ol>
+</section>
+<div class="navf"><a class="btn" href="chapter-03.html">← Chapter 3</a><span></span></div>
+</main></div>
+<div id="tips" class="ui" role="dialog" aria-label="Getting a more natural voice"><button class="btn" id="tipsx" style="float:right">Close</button>
+<b>Getting a more natural voice</b><p>The player uses the voices installed in your browser, best first. Voices marked ★ sound much closer to a human reader than Basic ones.</p>
+<p><b>Mac.</b> System Settings → Accessibility → Spoken Content → System Voice → Manage Voices. Under English, download a voice marked Premium or Enhanced (Ava, Zoe, Evan, Nathan, Allison, Samantha, Daniel, Serena). Quit and reopen the browser, then choose it in the voice list.</p>
+<p><b>iPhone / iPad.</b> Settings → Accessibility → Spoken Content → Voices → English, download a Premium or Enhanced voice, then reload this page.</p>
+<p><b>Microsoft Edge</b> (Mac or Windows) includes free Natural voices such as Aria, Jenny, Guy and Andrew, with nothing to install. They need an internet connection.</p>
+<p><b>Chrome.</b> The Google voices are a step above Basic; downloaded Mac voices also appear here.</p>
+<p>If a ★ voice still sounds rushed, set the speed to 0.9×.</p></div>
+<button class="btn amber" id="hov" title="Read aloud from here" aria-label="Read aloud from here">▶</button>
+<div class="player ui" role="region" aria-label="Audio narration">
+<button class="btn" id="pprev" aria-label="Previous passage">⏮</button><button class="btn amber pp" id="pp" aria-label="Play">▶</button><button class="btn" id="pnext" aria-label="Next passage">⏭</button>
+<span class="lbl" id="plbl">Listen to this chapter — formulas and figures are described in words</span>
+<span class="badge" id="pbadge">Browser voice</span>
+<select id="prate" aria-label="Speed"><option value="0.8">0.8×</option><option value="0.9">0.9×</option><option value="1" selected>1×</option><option value="1.1">1.1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option></select>
+<select id="pvoice" aria-label="Voice"></select><button class="btn" id="ptips" title="How to get a more natural voice">Better voice</button>
+<button class="btn" id="phere" title="Start reading at the passage on screen">Read from here</button><button class="btn" id="pscript" title="Download the narration script for studio text-to-speech">Script</button></div>
+<script>const CH={"id": "ch04", "title": "Chapter 4 \u2014 Tools for Requirements Definition"};const NARR=[{"s": 1, "t": "From What to How Important and What Could Go Wrong."}, {"s": 1, "t": "Chapter 2 turned a vague customer expectation (the E C U should last the life of the vehicle) into a testable reliability requirement. Chapter 3 took that single number and apportioned it across a functional architecture, using reliability block diagrams and an interface review to make sure nothing important was hiding between subsystems."}, {"s": 1, "t": "Both chapters assumed something this chapter has to supply: a way to decide which requirements matter most when trade-offs are unavoidable, and a structured way to separate what the design controls from what it merely has to survive. Every real design has more candidate requirements than budget, and every real product operates in an environment the designer does not fully control. Two tools carry most of the weight here: Quality Function Deployment (Q F D), which turns the customer's voice into a ranked, traceable set of engineering requirements, and the parameter diagram (P-diagram), which draws the boundary around a design and sorts everything crossing it into what is controlled, what is merely known, and what is a source of unwanted variation. A third, less glamorous set of tools, design reviews and checklists, is what actually catches whether the requirements the first two tools produced were met before the design leaves the drawing board."}, {"s": 1, "t": "All three tools are qualitative or semi-quantitative. They do not replace the quantitative apportionment work of Chapter 3; they feed it. Q F D tells you where to spend apportionment effort. The P-diagram tells you what the D F M E A (Chapter 9) and the duty cycle (Part II) need to characterize. Design reviews tell you whether the organization actually did what these tools said it should."}, {"s": 2, "t": "Section 4.1. Quality Function Deployment: Weighting Requirements the Way Customers Actually Would."}, {"s": 2, "t": "The problem Q F D solves."}, {"s": 2, "t": "By the time a design team has a requirements document, a D F M E A, and a test plan, dozens of individual requirements are competing for the same finite engineering hours, tooling budget, and calendar time. Engineers have to decide, for example, whether an extra 2 decibels of noise reduction is worth more design effort than an extra 500 hours of durability life, or whether a bearing upgrade that adds cost is justified by a reliability requirement that customers may or may not actually care about as much as the requirements document implies."}, {"s": 2, "t": "Quality Function Deployment, developed by Yoji Akao in Japan and popularized in the West through the House of Quality matrix, exists to answer exactly this kind of question with data instead of opinion. It converts customer requirements, expressed the way customers actually talk about a product, not the way engineers do, into a ranked, weighted set of engineering characteristics, and it does so by building an explicit, auditable matrix rather than relying on a design team's unstated assumptions about what matters."}, {"s": 2, "t": "The structure of the House of Quality."}, {"s": 2, "t": "O'Connor and Kleyner's RAMS (Reliability, Availability, Maintainability, Safety) program task list places Q F D among the earliest tasks in a development program, immediately after the customer and market requirements have been gathered and before detailed design work begins, reinforcing that Q F D is a front-end requirements tool, not a design-verification tool. The House of Quality matrix, as O'Connor illustrates it with a small electric motor example, has a consistent shape regardless of the product:"}, {"s": 2, "t": "The customer requirements (Whats) are listed down the left side, in the customer's own language, each with an importance rating, typically a 1 to 5 or 1 to 10 scale reflecting how much the customer cares about that requirement relative to the others. For the electric motor example, the customer requirements include: adequate starting torque, low noise (under 40 decibels), low cost (under 15 dollars), 5,000-hour durability, high reliability, low weight (under 0.3 kilograms), and short replacement time (under 10 minutes)."}, {"s": 2, "t": "The engineering characteristics (Hows) are listed across the top, these are the design or process features the team can actually control: magnet material, bearing type, brush spring pressure, housing construction, stator winding design, terminal attachment method, and mounting design."}, {"s": 2, "t": "The relationship matrix in the body of the house scores how strongly each engineering characteristic affects each customer requirement, typically on a scale such as 9 (strong relationship), 3 (moderate), 1 (weak), or 0 (none)."}, {"s": 2, "t": "The roof of the house captures correlations between engineering characteristics themselves, where improving one characteristic helps or hurts another (for example, increasing housing wall thickness for stiffness and noise control typically increases weight and cost, a direct conflict with two other customer requirements)."}, {"s": 2, "t": "A benchmarking row or column compares the design against competitor products on each customer requirement, so the team can see not just what does the customer want but where are we already ahead or behind."}, {"s": 2, "t": "The team then multiplies each importance rating by each relationship score and sums down each engineering-characteristic column, producing a total score for each characteristic. In O'Connor's worked electric-motor example, this arithmetic identifies bearing selection, housing construction, and mounting design as the highest-scoring engineering characteristics, the ones that most strongly influence the requirements the customer rated most important, with totals in the 44 to 65 range compared with roughly half that for lower-priority characteristics such as terminal attachment method. That ranking is the actionable output of Q F D: it tells the design team where to spend engineering effort, where to spend test budget, and which characteristics deserve the most rigorous D F M E A and D V P and R coverage later in the program, rather than treating every design decision as equally important by default."}, {"s": 2, "t": "Interactive figure. A House of Quality matrix for the small electric motor. Seven customer requirements run down the left, each with an importance rating from one to five. Seven engineering characteristics run across the top. Each cell holds a relationship score of zero, one, three or nine. The arithmetic for one column works like this: take each customer requirement's importance, multiply it by the score in that column, and add the seven products together. For bearing type, with the balanced customer, low noise at importance four times a score of nine gives 36; durability at four times nine gives another 36; reliability at five times nine gives 45; and cost at three times three gives 9; the total is 126, the highest in the table. A bar chart below ranks all seven characteristics, with bearing type, housing construction and mounting design on top, as in the chapter. Changing the importance ratings to a noise-sensitive, cost-driven or service-driven customer reorders the ranking. The scores in this figure are illustrative; they are not the numbers printed in the source."}, {"s": 2, "t": "Why Q F D matters for accelerated testing specifically."}, {"s": 2, "t": "It is tempting to treat Q F D as a marketing or industrial-design tool with no bearing on reliability test planning. The apportionment work in Chapter 3 shows why that is wrong: apportioning a single system-level reliability target across subsystems requires a defensible basis for giving one subsystem a tighter allocation than another. Q F D's importance-weighted requirement list is one of the most defensible bases available, because it ties the allocation decision back to data about what the customer actually values, rather than to whichever engineer argues most persuasively in the apportionment meeting. A subsystem whose engineering characteristics score highest in the House of Quality is a natural candidate for a tighter reliability allocation and a more aggressive accelerated test plan, because a failure there does more damage to the requirements the customer cares about most."}, {"s": 2, "t": "Q F D also cascades. A single top-level House of Quality does not stop at the system level, the highest-scoring engineering characteristics at the system level become the customer requirements (Whats) of a second-level House of Quality at the subsystem or component level. This is the same system, then subassembly, then component decomposition from Chapter 3's tree structure, but driven by customer importance rather than by functional architecture alone."}, {"s": 3, "t": "Section 4.2. The P-Diagram: Separating What You Control From What You Merely Survive."}, {"s": 3, "t": "Why a boundary tool is needed."}, {"s": 3, "t": "Q F D answers which requirements matter most. It does not answer a different, equally important question: for a given design element, what actually determines whether it will meet those requirements in the field? The parameter diagram, P-diagram, is the tool that answers that question, and it is the single most important bridge between requirements definition and the D F M E A and duty-cycle work that follows in Parts II and III of this book."}, {"s": 3, "t": "A P-diagram forces a design team to draw a boundary around a system, subsystem, or component and then classify everything that crosses that boundary into exactly four categories:"}, {"s": 3, "t": "Signal or Intent (Input): what the design element is supposed to receive or respond to, the intended input."}, {"s": 3, "t": "Control Factors: the parameters the design team can specify and control, material selection, geometry, tolerances, surface treatment, process parameters. These are the knobs a design engineer actually turns."}, {"s": 3, "t": "Noise Factors: everything that affects the output but that the design team cannot fully control, environmental variation, customer usage variation, manufacturing variation, wear or degradation over time, and interactions between adjacent systems. Taguchi's framework, as O'Connor presents it, treats these noise factors as unavoidable sources of variation that a robust design must be insensitive to, rather than variation the team can simply specify away."}, {"s": 3, "t": "Output or Response: what the design element actually produces, split into the Ideal Function (what it is supposed to do) and the Error States (the ways it can fail to do that)."}, {"s": 3, "t": "Porter's treatment of this structure, presented as an IPCO diagram (Inputs, Noise Factors or Assumptions, Controls, Output), applies the same four-box logic to test methods and to the D F M E A process itself, not only to hardware designs. That generality is worth noting here because it previews exactly how the P-diagram is used later in the book: Part III (Chapters 8 to 9) uses the same control or noise split to structure D F M E A cause analysis, and Part IV uses the noise-factor list as the starting inventory of stresses that accelerated tests must reproduce."}, {"s": 3, "t": "Why the control or noise split changes what gets tested."}, {"s": 3, "t": "The reason a P-diagram belongs in the requirements chapter, rather than waiting for the D F M E A chapter, is that the classification decision, is this a control factor or a noise factor?, determines what kind of verification activity is appropriate long before a D F M E A session ever convenes."}, {"s": 3, "t": "A control factor is something the design specifies. Verification of a control factor is fundamentally a design-review and drawing-check activity (Section 4.3): did the design actually implement the specified material, tolerance, or geometry? A noise factor is something the design cannot specify away and must instead be made robust against, or, when robustness is insufficient, must be explicitly tested against. Verification of a noise factor requires a test that reproduces or bounds that noise, which is precisely the accelerated test planning this book exists to teach. Taguchi's robustness framing, illustrated in O'Connor's signal-to-noise examples, makes the same point quantitatively: a design's quality is measured not by its output at one nominal condition but by how little its output varies as noise factors vary around that nominal condition. A gap in the noise-factor list at the P-diagram stage is therefore not a paperwork gap, it is a gap in the test plan that will not be discovered until a field failure forces the team to ask why didn't we test for that?"}, {"s": 3, "t": "This is the mechanism behind the chapter's real-world example below: a P-diagram exercise conducted properly, with the right people in the room, finds noise factors that a test plan built from control factors alone would never surface."}, {"s": 4, "t": "Section 4.3. Design Reviews and Checklists: Verifying the Requirement Was Actually Met."}, {"s": 4, "t": "Where qualitative methods fit."}, {"s": 4, "t": "Bertsche's overview of reliability methods (Figure 11.6) places design reviews and checklists among the qualitative methods available to a reliability program, distinct from the quantitative methods (block diagrams, life-stress models, statistical test planning) that occupy most of this book. Qualitative methods are not a lesser substitute for quantitative rigor, they are what confirms, at defined checkpoints, that the quantitative work is actually being carried into the design rather than living only in a requirements document that nobody rechecks."}, {"s": 4, "t": "What makes a design review effective rather than ceremonial."}, {"s": 4, "t": "O'Connor describes an effective design review as a team-based technical exercise, not a status meeting. The review team should include people who did not write the design, reliability engineers, manufacturing and quality representatives, and, where relevant, service and field personnel, precisely because the people closest to a design are the least likely to see its blind spots. A design review that consists only of the design team presenting to itself tends to confirm what the team already believes rather than surface what it has missed."}, {"s": 4, "t": "O'Connor also warns explicitly against the checklist becoming a stolid march through a list of questions that substitutes for genuine engineering judgment. A checklist is a memory aid for an engineer who is already thinking critically about the design, not a replacement for that thinking. Three practical rules keep a checklist in the first category:"}, {"s": 4, "t": "Use checklists as working tools in the design office, not as items to be formally addressed only in review meetings. A checklist that only appears at the review meeting arrives too late to influence the design it is meant to check."}, {"s": 4, "t": "Keep checklists relevant and current. A checklist copied unchanged from a previous, different program accumulates irrelevant items and loses credibility, and stops being updated when it stops matching the product actually being designed."}, {"s": 4, "t": "Avoid vague, generic questions in favor of specific ones. O'Connor's own example contrasts Has maintenance been considered?, a question any designer can answer yes to without having considered anything specific, with What access is provided for lubrication?, which forces a concrete answer that can be checked against the actual drawing."}, {"s": 4, "t": "A typical hardware program runs design reviews at a small number of defined milestones rather than continuously: an initial design review before detailed design is released, a review at the completion of development testing, and a final review of production-standard drawings before tooling commitment. Each of these checkpoints is a natural place to re-verify that the P-diagram's control factors were actually implemented as specified and that the noise factors identified earlier still match the design's intended use."}, {"s": 4, "t": "Interactive figure. A card that flips between a vague checklist question, has maintenance been considered, and a specific one, what access is provided for lubrication. Below it are the three checklist rules and a strip of the three design-review milestones: initial design review, review after development testing, and final review of production-standard drawings."}, {"s": 4, "t": "Design Review Based on Failure Modes (D R B F M)."}, {"s": 4, "t": "For evolutionary designs, a new part derived from a proven one, rather than a clean-sheet design, a related technique, Design Review Based on Failure Modes (D R B F M), focuses the review specifically on what changed relative to the proven baseline and what new failure modes that specific change could introduce. D R B F M is a natural complement to the P-diagram approach: a change to a control factor (a new material, a tightened tolerance) or a change in the noise environment (a new duty cycle, a new mounting location) is exactly the kind of change D R B F M asks a team to interrogate before assuming the proven baseline's reliability history still applies."}, {"s": 5, "t": "Real-World Example: Industrial Machinery, Gearbox Boundary Diagram and P-Diagram."}, {"s": 5, "t": "Background."}, {"s": 5, "t": "Consider an industrial gearbox subassembly, a single-reduction-stage gearbox transmitting power from an electric motor to a driven load (a conveyor, a pump, or similar rotating equipment) in a factory environment. The gearbox sits inside the equipment's overall functional architecture the same way the infusion pump's subsystems sat inside its architecture in Chapter 3: as one node in a reliability block diagram, with its own allocated reliability target from the system-level apportionment."}, {"s": 5, "t": "The design team's first instinct, consistent with many industrial-equipment programs, was to treat the gearbox validation plan as a single fixed-torque endurance test: run the gearbox at its rated nominal torque and speed for a specified number of hours, and pass or fail against tooth wear and bearing condition at teardown. This is a control-factor verification test, it checks whether the gearbox, as designed and built, survives its own rated nominal operating point. It says nothing about how the gearbox behaves when the inputs to that operating point vary, which is exactly the gap a properly built P-diagram exposes."}, {"s": 5, "t": "Step 1, Boundary diagram."}, {"s": 5, "t": "Before building the P-diagram, the team drew a boundary diagram around the gearbox, listing every physical and functional interface crossing that boundary, the same interface-first discipline introduced in Chapter 3's infusion-pump example, now applied at the component level:"}, {"s": 5, "t": "The table lists five interfaces crossing the gearbox boundary. The input shaft and coupling connects to the motor output shaft, transferring torque and rotational speed. The output shaft and coupling connects to the driven load, also transferring torque and speed. The mounting feet and bolts connect to the machine frame: a structural load path that also transmits vibration. The breather or vent connects to the ambient atmosphere: it equalises pressure, and is a path for moisture and contaminants to get in. The lubricant fill and drain ports connect to maintenance access, and govern lubricant condition and level."}, {"s": 5, "t": "Interactive figure. The boundary diagram drawn as a picture: the gearbox in the centre inside a dashed boundary, with five lines running out to the five things it connects to: the motor shaft on the left, the driven load on the right, the machine frame below, and the atmosphere and maintenance access above. Tapping any of the five shows what crosses the boundary there."}, {"s": 5, "t": "Drawing this diagram explicitly, with the same team that would later run the D F M E A rather than a single design engineer working alone, immediately raised a question that the fixed-torque endurance test had not addressed: what happens at the input and output couplings when the driven load does not present a smooth, constant torque?"}, {"s": 5, "t": "Step 2, P-diagram."}, {"s": 5, "t": "The team then built the full P-diagram for the gearbox:"}, {"s": 5, "t": "Signal or Intent: Input rotational speed and torque at the motor coupling, at a specified gear ratio, producing a corresponding output rotational speed and torque at the load coupling."}, {"s": 5, "t": "Control Factors (what the design specifies):"}, {"s": 5, "t": "Gear material and heat treatment (case hardness, core hardness)"}, {"s": 5, "t": "Tooth profile and module (gear geometry)"}, {"s": 5, "t": "Bearing type and preload"}, {"s": 5, "t": "Lubricant type and fill level"}, {"s": 5, "t": "Housing wall thickness and stiffness"}, {"s": 5, "t": "Seal design and material"}, {"s": 5, "t": "Manufacturing tolerances on gear and shaft dimensions"}, {"s": 5, "t": "Noise Factors (what the design must survive but cannot fully control):"}, {"s": 5, "t": "Torque spikes and shock loading from the driven equipment (a conveyor jam, a pump running dry and then re-priming, a load side impact)"}, {"s": 5, "t": "Ambient temperature range at the installation site"}, {"s": 5, "t": "Contamination ingress (dust, moisture) through the breather or seals over the equipment's service life"}, {"s": 5, "t": "Lubricant degradation and contamination over time between maintenance intervals"}, {"s": 5, "t": "Manufacturing variation in tooth profile from unit to unit"}, {"s": 5, "t": "Installation misalignment between the gearbox and the motor or driven equipment"}, {"s": 5, "t": "Output, Ideal Function: Accurate torque and speed transfer at the specified ratio, with low noise and vibration and stable operating temperature."}, {"s": 5, "t": "Output, Error States: Tooth pitting or tooth breakage, bearing spalling, seal leakage, backlash growth (loss of positioning accuracy), and overheating."}, {"s": 5, "t": "Interactive figure. The P-diagram drawn in its usual layout. The gearbox sits in the middle. The signal enters from the left. The seven control factors sit above it and the six noise factors below it. On the right are the outputs: the ideal function, and the five error states. Every factor is coloured by whether the test plan covers it. Under the original plan, one fixed-torque endurance test, all seven control factors are green and all six noise factors are red: none of them is bounded by a test. Switching to the revised plan turns three noise factors green, torque spikes, contamination ingress and lubricant degradation, because two test segments were added. Three noise factors remain uncovered by those two segments and carry forward into the duty-cycle work of Part II."}, {"s": 5, "t": "Step 3, What the noise-factor identification changed."}, {"s": 5, "t": "Once the noise factors were listed explicitly and reviewed by the same cross-functional group that would later run the D F M E A, two gaps in the original test plan became obvious that had not been visible when the plan was built around control factors alone:"}, {"s": 5, "t": "Torque spikes and shock loading from the driven equipment were not represented anywhere in a constant-nominal-torque endurance test. The team added a cyclic and shock-overload test segment, superimposing repeated torque transients above the nominal rating onto the endurance run, to verify that the gear teeth and bearings, sized against the noise factor's worst case rather than only the signal's nominal value, would survive the actual field loading rather than only the idealized loading the original plan assumed."}, {"s": 5, "t": "Contamination ingress and lubricant degradation were not represented at all. The original endurance test ran with fresh lubricant in a clean laboratory environment, the opposite of the noise factor it needed to bound. The team added a combined dust or moisture ingress and degraded-lubricant test, deliberately contaminating and aging the lubricant charge partway through the endurance run, to verify the seal design and gear surface finish remained robust against the contamination levels expected over a realistic maintenance interval."}, {"s": 5, "t": "Neither gap would have been caught by a design review of the control factors alone, because both control factors, gear material, tooth profile, bearing preload, were fully and correctly specified on the drawing. The gearbox was not under-designed against its own nominal signal. It was under-tested against noise factors nobody had written down. This is the same lesson Chapter 3 drew from the infusion pump's missed drive-to-fluidics interface, applied one level down: the failure to find a problem earlier was a failure of scope in the definition tool, not a failure of engineering competence in the design itself."}, {"s": 5, "t": "The correlation-matrix logic from the Q F D House of Quality also appeared here in miniature: increasing housing wall thickness to improve stiffness (helping resist the newly identified shock-loading noise factor) directly conflicts with the equipment's weight and cost requirements, the same kind of roof-of-the-house trade-off O'Connor's electric-motor Q F D example makes explicit. The P-diagram exercise did not resolve that trade-off, but it made sure the trade-off was visible and deliberate rather than accidental."}, {"s": 6, "t": "Common Pitfalls."}, {"s": 6, "t": "Q F D done once at kickoff and never revisited. A House of Quality built during concept selection reflects the customer requirements and competitive landscape as they existed at that moment. Requirements change as a program matures, a customer adds a requirement, a competitor releases a product that resets the benchmarking row, or a cost target tightens, and the engineering-characteristic rankings that were correct at kickoff can become stale well before the design freezes. Teams that treat Q F D as a one-time kickoff deliverable rather than a living document lose the ability to explain, later in the program, why a given subsystem received the reliability allocation and test rigor it did, and lose the early warning that a requirement's importance has shifted enough to justify revisiting that allocation."}, {"s": 6, "t": "P-diagrams drawn without engineering input from the team that will run the D F M E A. A P-diagram built by a single design engineer, or by a systems engineer working from a specification document without the component-level design and manufacturing engineers in the room, systematically under-populates the noise-factor list, exactly the failure mode narrowly avoided in the gearbox example above by including the D F M E A team early. The people who understand how a part is actually manufactured, installed, and maintained in the field are the people most likely to know which noise factors matter, and they are frequently not the people who default to owning the P-diagram exercise. Because the D F M E A (Chapters 8 to 9) will inherit this same noise-factor list as its starting point for cause analysis, a thin P-diagram produces a thin D F M E A downstream, compounding the gap rather than catching it."}, {"s": 6, "t": "Checklists substituting for engineering judgment. As O'Connor warns, a checklist item marked complete is not the same as the underlying question having been genuinely thought through. A checklist with vague, generic items (has reliability been considered?) gives a false sense of verification coverage precisely because every item can be checked off without engaging with the specific design. The fix is the same one given in Section 4.3: keep checklist items specific enough that answering them requires looking at the actual drawing or the actual noise-factor list, not just recalling that the topic was mentioned in a meeting."}, {"s": 7, "t": "Where We're Headed."}, {"s": 7, "t": "This chapter's P-diagram exercise produced a noise-factor list for the gearbox, torque spikes, ambient temperature range, contamination ingress, lubricant degradation, manufacturing variation, and installation misalignment. Those noise factors are not yet a test plan. They are raw ingredients: qualitative statements that a source of variation exists, without yet a magnitude, a frequency, a duration, or a statistical distribution attached to any of them."}, {"s": 7, "t": "Part II of this book (Chapters 5 to 7) takes exactly this kind of noise-factor list and turns it into a quantified duty cycle: how often does the torque spike occur and how large is it, what is the actual ambient temperature distribution at the installation sites the product will see, how does contamination accumulate over a real maintenance interval. Chapter 5 begins that process by defining what a duty cycle is and what data sources, field data, standards, physical testing, and engineering judgment, are available to build one from scratch when, as is common, no field data yet exists for a new design."}];</script>
+<script>/* Shared helpers: DOM, formatting, charts, controls. No dependencies. */
+const W = {};
+function el(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  for (const k in (attrs || {})) {
+    if (k === 'class') e.className = attrs[k];
+    else if (k === 'html') e.innerHTML = attrs[k];
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), attrs[k]);
+    else e.setAttribute(k, attrs[k]);
+  }
+  kids.flat().forEach(c => { if (c != null) e.append(c.nodeType ? c : document.createTextNode(c)); });
+  return e;
+}
+function S(tag, attrs, text) {
+  const e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const k in (attrs || {})) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  return e;
+}
+const SUPS = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+function sci(v, d) {
+  if (!isFinite(v) || v === 0) return String(v);
+  const e = Math.floor(Math.log10(Math.abs(v)));
+  let m = (v / Math.pow(10, e)).toFixed(d == null ? 2 : d), ex = e;
+  if (+m >= 10) { m = (+m / 10).toFixed(d == null ? 2 : d); ex++; }
+  const s = String(Math.abs(ex)).split('').map(c => SUPS[+c]).join('');
+  return m + ' × 10' + (ex < 0 ? '⁻' : '') + s;
+}
+function num(v, p) {
+  if (!isFinite(v)) return '–';
+  const a = Math.abs(v);
+  if (a >= 1000) return Math.round(v).toLocaleString('en-US');
+  if (a === 0) return '0';
+  if (a < 0.001) return sci(v);
+  return String(+v.toPrecision(p || 3));
+}
+function head(root, title, hint) { root.append(el('div', { class: 'wt' }, title), el('div', { class: 'wh' }, hint || '')); }
+function slider(label, min, max, step, val, fmt, cb) {
+  const b = el('b', {}, ''), inp = el('input', { type: 'range', min, max, step, value: val, 'aria-label': label });
+  const root = el('label', { class: 'sl' }, el('span', {}, label), inp, b);
+  const show = () => { b.textContent = (fmt || num)(+inp.value); };
+  inp.addEventListener('input', () => { show(); cb && cb(+inp.value); });
+  show();
+  return { el: root, get v() { return +inp.value; }, set(v) { inp.value = v; show(); } };
+}
+function presetBar(list, label) {
+  const row = el('div', { class: 'row' }, el('span', { style: 'color:var(--mute);font-size:.85em' }, label || 'Worked examples:'));
+  const btns = list.map(([name, fn]) => {
+    const b = el('button', { class: 'btn', onclick: () => { btns.forEach(x => x.classList.remove('on')); b.classList.add('on'); fn(); } }, name);
+    row.append(b); return b;
+  });
+  row.pick = i => btns[i].click();
+  row.clear = () => btns.forEach(x => x.classList.remove('on'));
+  return row;
+}
+function stats(items) { return el('div', { class: 'stats' }, items.map(([v, l, c]) => el('div', { class: 'stat ' + (c || '') }, el('b', {}, v), el('span', {}, l)))); }
+function setStats(host, items) { host.replaceChildren(...stats(items).children); }
+function barChart(host, items, o) {
+  o = o || {};
+  const max = o.max || Math.max(...items.map(i => i.value), 1e-300);
+  host.classList.add('bars');
+  host.replaceChildren(...items.map(i => el('div', { class: 'br', title: i.note || '' },
+    el('span', {}, i.label),
+    el('div', { class: 'trk' }, el('div', { class: 'fill', style: `width:${Math.max(1, 100 * i.value / max)}%;background:${i.color || 'var(--teal)'}` })),
+    el('span', { class: 'v' }, i.text != null ? i.text : (o.fmt || num)(i.value)))));
+}
+function dotGrid(n, cols, cls) {
+  const g = el('div', { class: 'dots', style: `grid-template-columns:repeat(${cols},1fr)` });
+  for (let i = 0; i < n; i++) g.append(el('i', { class: cls(i) || '' }));
+  return g;
+}
+/* Interactive SVG line chart with hover read-out. draw({series,x:[a,b],y:[a,b],bands,marks,vlines,xticks}) */
+function lineChart(host, o) {
+  o = o || {};
+  const Wd = o.w || 680, H = o.h || 320, m = { l: 62, r: 18, t: 18, b: 46 };
+  host.classList.add('chartbox');
+  const svg = S('svg', { viewBox: `0 0 ${Wd} ${H}`, role: 'img', 'aria-label': o.aria || 'chart' });
+  const tip = el('div', { class: 'tip' });
+  host.append(svg, tip);
+  let d = null, cursor = null;
+  const fx = v => o.xlog ? Math.log10(v) : v, fy = v => o.ylog ? Math.log10(v) : v;
+  const X = v => m.l + (fx(v) - fx(d.x[0])) / (fx(d.x[1]) - fx(d.x[0])) * (Wd - m.l - m.r);
+  const Y = v => { v = Math.min(Math.max(v, d.y[0]), d.y[1]); return H - m.b - (fy(v) - fy(d.y[0])) / (fy(d.y[1]) - fy(d.y[0])) * (H - m.t - m.b); };
+  const invX = px => { const f = (px - m.l) / (Wd - m.l - m.r), v = fx(d.x[0]) + f * (fx(d.x[1]) - fx(d.x[0])); return o.xlog ? Math.pow(10, v) : v; };
+  function ticks(a, b, log) {
+    const r = [];
+    if (log) { for (let e = Math.ceil(Math.log10(a) - 1e-9); e <= Math.log10(b) + 1e-9; e++) r.push(Math.pow(10, e)); return r; }
+    const span = b - a, st = Math.pow(10, Math.floor(Math.log10(span / 5))), k = [1, 2, 5, 10].find(q => span / (st * q) <= 6) || 10, s = st * k;
+    for (let v = Math.ceil(a / s - 1e-9) * s; v <= b + 1e-9; v += s) r.push(+v.toPrecision(10));
+    return r;
+  }
+  function yAt(s, xv) {
+    const p = s.pts; if (xv < p[0][0] || xv > p[p.length - 1][0]) return null;
+    for (let i = 1; i < p.length; i++) if (xv <= p[i][0]) { const f = (xv - p[i - 1][0]) / (p[i][0] - p[i - 1][0] || 1); return p[i - 1][1] + f * (p[i][1] - p[i - 1][1]); }
+    return null;
+  }
+  function draw(nd) {
+    d = nd; svg.replaceChildren();
+    (d.bands || []).forEach(b => {
+      svg.append(S('rect', { x: X(b.x0), y: m.t, width: Math.max(0, X(b.x1) - X(b.x0)), height: H - m.t - m.b, fill: b.color, opacity: .12 }));
+      if (b.label) svg.append(S('text', { x: (X(b.x0) + X(b.x1)) / 2, y: m.t + 14, 'text-anchor': 'middle', class: 'bandl', fill: b.color }, b.label));
+    });
+    const xt = d.xticks || ticks(d.x[0], d.x[1], o.xlog).map(v => [v, (o.xfmt || num)(v)]);
+    xt.forEach(([v, l]) => svg.append(S('line', { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, class: 'grid' }), S('text', { x: X(v), y: H - m.b + 16, 'text-anchor': 'middle', class: 'tick' }, l)));
+    ticks(d.y[0], d.y[1], o.ylog).forEach(v => svg.append(S('line', { x1: m.l, x2: Wd - m.r, y1: Y(v), y2: Y(v), class: 'grid' }), S('text', { x: m.l - 8, y: Y(v) + 4, 'text-anchor': 'end', class: 'tick' }, (o.yfmt || num)(v))));
+    if (o.xlab) svg.append(S('text', { x: (m.l + Wd - m.r) / 2, y: H - 8, 'text-anchor': 'middle', class: 'axl' }, o.xlab));
+    if (o.ylab) svg.append(S('text', { x: 14, y: (m.t + H - m.b) / 2, 'text-anchor': 'middle', class: 'axl', transform: `rotate(-90 14 ${(m.t + H - m.b) / 2})` }, o.ylab));
+    d.series.forEach(s => {
+      const path = s.pts.map((p, i) => (i ? 'L' : 'M') + X(p[0]).toFixed(1) + ' ' + Y(p[1]).toFixed(1)).join('');
+      if (s.fill) svg.append(S('path', { d: path + `L${X(s.pts[s.pts.length - 1][0])} ${H - m.b}L${X(s.pts[0][0])} ${H - m.b}Z`, fill: s.color, opacity: .15 }));
+      svg.append(S('path', { d: path, fill: 'none', stroke: s.color, 'stroke-width': s.width || 2.5, 'stroke-dasharray': s.dash || '', 'stroke-linejoin': 'round' }));
+      if (s.dots) s.pts.forEach(p => svg.append(S('circle', { cx: X(p[0]), cy: Y(p[1]), r: 5, fill: s.color })));
+    });
+    (d.vlines || []).forEach(v => { svg.append(S('line', { x1: X(v.x), x2: X(v.x), y1: m.t, y2: H - m.b, stroke: v.color || 'var(--amber)', 'stroke-width': 2, 'stroke-dasharray': '5 4' })); if (v.label) svg.append(S('text', { x: X(v.x) + 5, y: m.t + 28, class: 'bandl', fill: v.color || 'var(--amber)' }, v.label)); });
+    (d.marks || []).forEach(k => { svg.append(S('circle', { cx: X(k.x), cy: Y(k.y), r: 6, fill: k.color || 'var(--amber)', stroke: 'var(--bg)', 'stroke-width': 2 })); if (k.label) svg.append(S('text', { x: X(k.x) + 9, y: Y(k.y) - 8, class: 'bandl', fill: k.color || 'var(--amber)' }, k.label)); });
+    cursor = S('line', { y1: m.t, y2: H - m.b, stroke: 'var(--ink)', 'stroke-width': 1, opacity: 0 }); svg.append(cursor);
+  }
+  function move(e) {
+    if (!d) return;
+    const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) / r.width * Wd;
+    if (px < m.l || px > Wd - m.r) return leave();
+    let xv = invX(px); if (o.snap) xv = Math.round(xv);
+    cursor.setAttribute('x1', X(xv)); cursor.setAttribute('x2', X(xv)); cursor.setAttribute('opacity', .5);
+    let h = '<b>' + (o.tipHead ? o.tipHead(xv) : (o.xlab || 'x') + ': ' + (o.xfmt || num)(xv)) + '</b>';
+    d.series.forEach(s => { if (s.noTip) return; const y = yAt(s, xv); if (y != null) h += `<br><span style="color:${s.color}">●</span> ${s.name}: ${(o.yfmt || num)(y)}`; });
+    if (o.tipExtra) h += o.tipExtra(xv);
+    tip.innerHTML = h; tip.style.display = 'block';
+    const lx = e.clientX - r.left;
+    tip.style.left = (lx > r.width * .6 ? lx - tip.offsetWidth - 12 : lx + 12) + 'px'; tip.style.top = '10px';
+  }
+  function leave() { tip.style.display = 'none'; if (cursor) cursor.setAttribute('opacity', 0); }
+  svg.addEventListener('pointermove', move); svg.addEventListener('pointerdown', move); svg.addEventListener('pointerleave', leave);
+  return { draw };
+}
+/* Reliability-budget apportionment (series system, exponential): used in chapters 2 and 3 */
+function apportion(root, cfg) {
+  const LN = -Math.log(0.9);
+  const out = el('div', {}), bars = el('div', {}), sls = el('div', {});
+  let items = [];
+  function render() {
+    const tot = items.reduce((a, i) => a + i.s.v, 0);
+    barChart(bars, items.map(i => { const lam = cfg.total * i.s.v / 100; return { label: i.name, value: i.s.v, color: i.hot ? 'var(--amber)' : 'var(--teal)', text: i.s.v > 0 ? `λ ${sci(lam)} · B10 ≈ ${num(Math.round(LN / lam / 10) * 10)} h` : 'no budget' }; }), { max: 40 });
+    const ok = Math.abs(tot - 100) < 0.05;
+    out.innerHTML = `Shares total <b class="${ok ? 'good' : 'warn'}">${tot.toFixed(1)}%</b> of the system budget λ = <b>${sci(cfg.total)}</b> failures per operating hour (system B10 ≈ ${num(Math.round(LN / cfg.total / 10) * 10)} h). ` +
+      (ok ? 'In a series system the block failure rates add up to the system rate, so every share given to one block is taken from the others.' : `<span class="warn">${tot > 100 ? 'The blocks together are allowed more failures than the system target permits — the system would miss its B10.' : 'Part of the budget is unallocated — some block could be given an easier target.'}</span>`);
+  }
+  function load(list) {
+    items = list.map(([name, share, hot]) => ({ name, hot, s: slider(name, 0, 50, 0.1, share, v => v.toFixed(1) + '%', render) }));
+    sls.replaceChildren(...items.map(i => i.s.el)); render();
+  }
+  const pb = presetBar(cfg.presets.map(p => [p.name, () => { load(p.items); p.on && p.on(); }]));
+  root.append(pb, sls, bars, el('div', { class: 'out' }, out));
+  pb.pick(cfg.start || 0);
+}
+/* inverse standard normal (Acklam) */
+function invNorm(p) {
+  const a = [-39.69683028665376, 220.9460984245205, -275.9285104469687, 138.3577518672690, -30.66479806614716, 2.506628277459239],
+    b = [-54.47609879822406, 161.5858368580409, -155.6989798598866, 66.80131188771972, -13.28068155288572],
+    c = [-0.007784894002430293, -0.3223964580411365, -2.400758277161838, -2.549732539343734, 4.374664141464968, 2.938163982698783],
+    dd = [0.007784695709041462, 0.3224671290700398, 2.445134137142996, 3.754408661907416];
+  let q, r;
+  if (p < 0.02425) { q = Math.sqrt(-2 * Math.log(p)); return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((dd[0] * q + dd[1]) * q + dd[2]) * q + dd[3]) * q + 1); }
+  if (p > 1 - 0.02425) return -invNorm(1 - p);
+  q = p - 0.5; r = q * q;
+  return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q / (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
+}
+
+/* Chapter 4 interactive elements */
+W.hoq = r => {
+  head(r, 'House of Quality — small electric motor', 'Change an importance rating, or tap a cell to cycle the relationship score 0 → 1 → 3 → 9. Customer requirements and engineering characteristics are those named in the chapter; the scores are illustrative, not the figures printed in the source.');
+  const WH = ['Adequate starting torque', 'Low noise (under 40 dB)', 'Low cost (under $15)', '5,000-hour durability', 'High reliability', 'Low weight (under 0.3 kg)', 'Short replacement time (under 10 min)'];
+  const HW = ['Magnet material', 'Bearing type', 'Brush spring pressure', 'Housing construction', 'Stator winding design', 'Terminal attachment', 'Mounting design'];
+  const M0 = [[9, 0, 1, 0, 9, 0, 0], [0, 9, 3, 9, 0, 0, 9], [3, 3, 0, 3, 3, 1, 1], [0, 9, 9, 1, 0, 1, 0], [0, 9, 3, 3, 3, 3, 3], [3, 0, 0, 9, 1, 0, 3], [0, 0, 0, 3, 0, 3, 9]];
+  let M, imp;
+  const tw = el('div', { class: 'tw' }), bars = el('div', {}), out = el('div', { class: 'out' });
+  const render = () => {
+    const tot = HW.map((_, j) => WH.reduce((a, _, i) => a + imp[i] * M[i][j], 0));
+    const t = el('table', { class: 'hoq' }, el('tr', {}, el('th', {}, 'Customer requirement'), el('th', {}, 'Imp.'), HW.map(h => el('th', {}, h))),
+      WH.map((w, i) => el('tr', {}, el('td', {}, w), el('td', {}, (() => { const s = el('select', { onchange: e => { imp[i] = +e.target.value; pb.clear(); render(); } }, [1, 2, 3, 4, 5].map(v => el('option', Object.assign({ value: v }, v === imp[i] ? { selected: '' } : {}), v))); return s; })()),
+        HW.map((_, j) => el('td', { class: 'c c' + M[i][j], onclick: () => { M[i][j] = { 0: 1, 1: 3, 3: 9, 9: 0 }[M[i][j]]; render(); } }, M[i][j] || '·')))),
+      el('tr', { class: 'tot' }, el('td', {}, 'Importance-weighted total'), el('td', {}, ''), tot.map(v => el('td', {}, v))));
+    tw.replaceChildren(t);
+    const rk = HW.map((h, j) => ({ label: h, value: tot[j] })).sort((a, b) => b.value - a.value);
+    rk.forEach((k, i) => k.color = i < 3 ? 'var(--amber)' : 'var(--teal)');
+    barChart(bars, rk);
+    out.innerHTML = `Highest-scoring characteristics: <b>${rk.slice(0, 3).map(k => k.label).join(', ')}</b>. These are where to spend engineering effort and test budget, and the natural candidates for a tighter reliability allocation. <span style="color:var(--mute)">Roof conflict to keep in view: a thicker housing wall helps stiffness and noise but costs weight and money.</span>`;
+  };
+  const set = v => () => { imp = v.slice(); M = M0.map(x => x.slice()); render(); };
+  const pb = presetBar([['Balanced customer', set([5, 4, 3, 4, 5, 2, 2])], ['Noise-sensitive customer', set([3, 5, 2, 3, 3, 2, 1])], ['Cost-driven customer', set([4, 2, 5, 2, 3, 3, 1])], ['Service-driven customer', set([3, 2, 2, 3, 4, 1, 5])]]);
+  r.append(pb, tw, bars, out); pb.pick(0);
+};
+W.boundary = r => {
+  head(r, 'Gearbox boundary diagram — five interfaces crossing the boundary', 'Tap an interface.');
+  const I = [['Input shaft / coupling', 'Motor output shaft', 'Torque and rotational speed transfer'], ['Output shaft / coupling', 'Driven load (conveyor, pump)', 'Torque and rotational speed transfer'], ['Mounting feet / bolts', 'Machine frame', 'Structural load path, vibration transmission'], ['Breather / vent', 'Ambient atmosphere', 'Pressure equalization; moisture and contaminant ingress path'], ['Lubricant fill and drain ports', 'Maintenance access', 'Lubricant condition and level']];
+  const svg = S('svg', { viewBox: '0 0 600 300', style: 'width:100%;max-width:600px;display:block' }), out = el('div', { class: 'out' });
+  const P = [[90, 150], [510, 150], [300, 270], [190, 34], [410, 34]], gs = [];
+  svg.append(S('rect', { x: 215, y: 105, width: 170, height: 90, rx: 12, fill: 'var(--bg)', stroke: 'var(--amber)', 'stroke-width': 3, 'stroke-dasharray': '8 5' }), S('text', { x: 300, y: 155, 'text-anchor': 'middle', fill: 'var(--ink)', 'font-size': 16, 'font-weight': 700 }, 'Gearbox'));
+  I.forEach((x, i) => {
+    const [px, py] = P[i], g = S('g', { style: 'cursor:pointer' });
+    g.append(S('line', { x1: px, y1: py, x2: 300 + (px - 300) * 0.32, y2: 150 + (py - 150) * 0.42, stroke: 'var(--teal)', 'stroke-width': 2 }), S('rect', { x: px - 82, y: py - 18, width: 164, height: 36, rx: 8, fill: 'var(--panel2)', stroke: 'var(--teal)', 'stroke-width': 1.5 }), S('text', { x: px, y: py + 5, 'text-anchor': 'middle', fill: 'var(--ink)', 'font-size': 12 }, x[1]));
+    g.addEventListener('click', () => { gs.forEach(k => k.querySelector('rect').setAttribute('stroke', 'var(--teal)')); g.querySelector('rect').setAttribute('stroke', 'var(--amber)'); out.innerHTML = `<b>${x[0]}</b> connects to <b>${x[1]}</b>.<br>${x[2]}.`; });
+    gs.push(g); svg.append(g);
+  });
+  r.append(svg, out); gs[0].dispatchEvent(new Event('click'));
+};
+W.pdiag = r => {
+  head(r, 'Gearbox P-diagram — and what each test plan actually covers', 'Switch between the original and the revised test plan; tap any factor to see how it is verified.');
+  const CF = ['Gear material and heat treatment', 'Tooth profile and module', 'Bearing type and preload', 'Lubricant type and fill level', 'Housing wall thickness and stiffness', 'Seal design and material', 'Manufacturing tolerances'];
+  const NF = [['Torque spikes and shock loading from driven equipment', 1, 'Cyclic and shock-overload segment: repeated torque transients above nominal, superimposed on the endurance run.'], ['Contamination ingress (dust, moisture)', 2, 'Combined dust/moisture ingress test during the endurance run.'], ['Lubricant degradation between maintenance intervals', 2, 'Lubricant charge deliberately contaminated and aged partway through the endurance run.'], ['Ambient temperature range at the site', 0, ''], ['Unit-to-unit tooth-profile variation', 0, ''], ['Installation misalignment', 0, '']];
+  const ES = ['Tooth pitting or breakage', 'Bearing spalling', 'Seal leakage', 'Backlash growth', 'Overheating'];
+  let rev = false; const out = el('div', { class: 'out' }), grid = el('div', { class: 'pd' }), st = el('div', { class: 'stats' });
+  const up = () => {
+    const chip = (t, cls, msg) => el('span', { class: 'chip ' + cls, onclick: () => { out.innerHTML = msg; } }, t);
+    const bx = (h, kids, style) => el('div', { class: 'bx', style: style || '' }, el('h5', {}, h), el('div', { class: 'chips' }, kids));
+    grid.replaceChildren(
+      bx('Signal / intent', [chip('Input speed and torque at the motor coupling, at the specified ratio', 'ok', '<b>Signal.</b> The fixed-torque endurance test exercises exactly this nominal operating point — and only this.')]),
+      el('div', { style: 'display:grid;gap:10px' },
+        bx('Control factors — what the design specifies', CF.map(c => chip(c, 'ok', `<b>${c}</b> is a control factor. Verification is a design-review and drawing-check activity: was it implemented as specified? The nominal endurance test then confirms the as-built unit survives its rated point.`))),
+        el('div', { class: 'bx mid' }, 'Gearbox'),
+        bx('Noise factors — what the design must survive', NF.map(n => { const cov = rev && n[1] > 0; return chip(n[0], cov ? 'ok' : 'bad', cov ? `<b>${n[0]}</b> — now bounded. ${n[2]}` : n[1] ? `<b>${n[0]}</b> — not represented anywhere in a constant-nominal-torque test run with fresh lubricant in a clean laboratory.` : `<b>${n[0]}</b> — listed on the P-diagram but not addressed by ${rev ? 'the two added test segments' : 'the original test'}. It carries forward as an input to the duty-cycle work in Part II.`); }))),
+      el('div', { style: 'display:grid;gap:10px' },
+        bx('Ideal function', [chip('Accurate torque and speed transfer, low noise and vibration, stable temperature', 'ok', '<b>Ideal function.</b> What the gearbox is supposed to do.')]),
+        bx('Error states', ES.map(e => chip(e, 'on', `<b>${e}</b> — an error state: one of the ways the gearbox can fail to deliver the ideal function. Each becomes a failure mode in the DFMEA.`)))));
+    const cov = rev ? NF.filter(n => n[1]).length : 0;
+    setStats(st, [[cov + ' of ' + NF.length, 'noise factors bounded by a test', cov ? 't' : 'r'], [rev ? '3' : '1', 'test segments in the plan'], [CF.length + ' of ' + CF.length, 'control factors correctly specified on the drawing', 't']]);
+    out.innerHTML = rev ? 'Revised plan: the endurance run now carries a shock-overload segment and a contamination / degraded-lubricant segment.' : 'Original plan: one fixed-torque endurance test. The gearbox is not under-designed against its nominal signal — it is under-tested against noise factors nobody had written down.';
+  };
+  const pb = presetBar([['Original plan: fixed-torque endurance only', () => { rev = false; up(); }], ['Revised plan: after the P-diagram review', () => { rev = true; up(); }]], 'Test plan:');
+  r.append(pb, grid, st, out); pb.pick(0);
+};
+W.review = r => {
+  head(r, 'Design reviews — vague question versus specific question, and when reviews happen', 'Tap the question card to flip it; tap a milestone.');
+  let f = false;
+  const card = el('div', { class: 'card', style: 'font-size:1.05em;padding:16px' });
+  const flip = () => { card.innerHTML = f ? '<div class="n" style="color:var(--teal)">Specific — forces a checkable answer</div><h4>"What access is provided for lubrication?"</h4>The answer can be checked against the actual drawing.' : '<div class="n" style="color:var(--rose)">Vague — anyone can answer yes</div><h4>"Has maintenance been considered?"</h4>Can be ticked off without having considered anything specific.'; f = !f; };
+  card.onclick = flip; flip();
+  const Ms = [['Initial design review', 'Before detailed design is released.'], ['Post-development-test review', 'At the completion of development testing.'], ['Final review', 'Production-standard drawings, before tooling commitment.']];
+  const out = el('div', { class: 'out' });
+  const chips = Ms.map((m, i) => el('button', { class: 'chip', onclick: () => { chips.forEach(c => c.classList.remove('on')); chips[i].classList.add('on'); out.innerHTML = `<b>${m[0]}.</b> ${m[1]} A natural point to re-verify that the P-diagram's control factors were implemented as specified and that the noise factors still match the intended use.`; } }, (i + 1) + ' · ' + m[0]));
+  r.append(card, el('div', { class: 'cards' }, ['Use checklists as working tools in the design office, not only in review meetings.', 'Keep checklists relevant and current.', 'Ask specific questions, not vague generic ones.'].map((t, i) => el('div', { class: 'card', style: 'cursor:default' }, el('div', { class: 'n' }, 'Rule ' + (i + 1)), t))), el('div', { class: 'chips' }, chips), out); chips[0].click();
+};
+
+/* Reader shell: table of contents, progress, theme, and hybrid narration (MP3 if present, browser voice otherwise). */
+(function () {
+  const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+  const LS = { get(k, d) { try { const v = localStorage.getItem('alt.' + k); return v == null ? d : v; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem('alt.' + k, v); } catch (e) { } } };
+
+  // widgets
+  $$('.widget[data-w]').forEach(r => { try { W[r.dataset.w](r); } catch (e) { r.append('Interactive element failed to load: ' + e.message); console.error(e); } });
+
+  // theme + font size
+  const setTheme = t => { document.documentElement.classList.toggle('light', t === 'light'); LS.set('theme', t); };
+  setTheme(LS.get('theme', 'dark'));
+  $('#theme').onclick = () => setTheme(document.documentElement.classList.contains('light') ? 'dark' : 'light');
+  let fs = +LS.get('fs', 18);
+  const setFs = v => { fs = Math.min(24, Math.max(14, v)); document.documentElement.style.setProperty('--fs', fs + 'px'); LS.set('fs', fs); };
+  setFs(fs); $('#fminus').onclick = () => setFs(fs - 1); $('#fplus').onclick = () => setFs(fs + 1);
+  $('#menu').onclick = () => $('.toc').classList.toggle('open');
+
+  // table of contents + scroll progress
+  const secs = $$('main section'), toc = $('.toc');
+  secs.forEach((s, i) => { const h = s.querySelector('h2'); const a = el('a', { href: '#' + s.id, onclick: () => toc.classList.remove('open') }, h ? h.textContent : 'Opening'); toc.append(a); s._a = a; });
+  function onScroll() {
+    const h = document.documentElement, p = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight);
+    $('#bar').style.width = (100 * p) + '%'; LS.set('pct.' + CH.id, Math.round(100 * p));
+    let c = secs[0]; secs.forEach(s => { if (s.getBoundingClientRect().top < 140) c = s; });
+    secs.forEach(s => s._a.classList.toggle('cur', s === c));
+  }
+  addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+  // ---------- narration ----------
+  const segs = $$('.seg'), N = NARR.length, synth = window.speechSynthesis;
+  const bPlay = $('#pp'), lbl = $('#plbl'), badge = $('#pbadge'), selV = $('#pvoice'), selR = $('#prate');
+  let cur = -1, playing = false, token = 0, mode = 'tts', audio = null, chunks = [], ci = 0, rate = +LS.get('rate', 1);
+  selR.value = String(rate); selR.onchange = () => { rate = +selR.value; LS.set('rate', rate); if (audio) audio.playbackRate = rate; if (playing && mode === 'tts') { token++; synth.cancel(); playing = true; speakChunk(); } };
+  const secSegs = {}; NARR.forEach((n, i) => (secSegs[n.s] = secSegs[n.s] || []).push(i));
+  const mp3 = {};
+  function probe(sec) {
+    if (mp3[sec] !== undefined) return Promise.resolve(mp3[sec]);
+    return new Promise(res => {
+      const a = new Audio(); let done = false;
+      const fin = ok => { if (done) return; done = true; mp3[sec] = ok ? a : false; res(mp3[sec]); };
+      a.preload = 'metadata'; a.addEventListener('loadedmetadata', () => fin(true)); a.addEventListener('error', () => fin(false)); setTimeout(() => fin(false), 2500);
+      a.src = 'audio/' + CH.id + '/s' + String(sec).padStart(2, '0') + '.mp3';
+    });
+  }
+  const NOVELTY = /^(albert|bad news|bahh|bells|boing|bubbles|cellos|deranged|good news|hysterical|jester|organ|pipe organ|superstar|trinoids|whisper|wobble|zarvox|fred|junior|kathy|ralph|eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley|princess)\b/i;
+  const tier = v => /natural|neural|online/i.test(v.name) ? 4 : /premium/i.test(v.name) ? 3 : /enhanced|google/i.test(v.name) ? 2 : 1;
+  const TIER = { 4: 'Natural', 3: 'Premium', 2: 'Enhanced', 1: 'Basic' };
+  let best = 0;
+  function voices() {
+    if (!synth) return;
+    const vs = synth.getVoices().filter(v => /^en/i.test(v.lang) && !NOVELTY.test(v.name));
+    const score = v => tier(v) * 10 + (/samantha|ava|zoe|evan|nathan|allison|daniel|serena|aria|jenny|guy|andrew|emma|brian/i.test(v.name) ? 4 : 0) + (/en[-_](US|GB)/i.test(v.lang) ? 2 : 0) + (v.default ? 1 : 0);
+    vs.sort((a, b) => score(b) - score(a));
+    best = vs.length ? tier(vs[0]) : 0;
+    const saved = LS.get('voice', '');
+    selV.replaceChildren(...vs.map(v => el('option', { value: v.name }, (tier(v) > 1 ? '★ ' : '') + v.name.replace(/Microsoft |Online |\(Natural\) ?|- English.*$|\((Premium|Enhanced)\)/g, '').trim() + ' · ' + TIER[tier(v)] + ' · ' + v.lang.replace('_', '-'))));
+    if (vs.some(v => v.name === saved)) selV.value = saved;
+    const tb = $('#ptips'); if (tb) tb.classList.toggle('amber', best < 2);
+  }
+  if (synth) { voices(); synth.onvoiceschanged = voices; }
+  selV.onchange = () => { LS.set('voice', selV.value); if (playing && mode === 'tts') { token++; synth.cancel(); playing = true; speakChunk(); } };
+  function split(t) {
+    const out = [];
+    t.replace(/([.!?]["')\]]*)\s+(?=[A-Z0-9(])/g, '$1\u0001').split('\u0001').forEach(sn => {
+      if (sn.length <= 240) return out.push(sn);
+      let b = ''; sn.replace(/([,;:])\s/g, '$1\u0001').split('\u0001').forEach(p => { if ((b + ' ' + p).length > 200 && b) { out.push(b); b = p; } else b = b ? b + ' ' + p : p; }); if (b) out.push(b);
+    });
+    const m = []; out.forEach(x => { if (m.length && (m[m.length - 1] + ' ' + x).length < 60) m[m.length - 1] += ' ' + x; else m.push(x); });
+    return m.filter(x => x.trim());
+  }
+  function mark(scroll) {
+    segs.forEach((s, i) => s.classList.toggle('now', i === cur));
+    if (cur < 0) return;
+    const sec = secs[NARR[cur].s], h = sec && sec.querySelector('h2');
+    lbl.textContent = (h ? h.textContent : 'Opening') + ' · ' + (cur + 1) + ' / ' + N;
+    if (scroll !== false) segs[cur].scrollIntoView({ block: 'center', behavior: 'smooth' });
+    LS.set('seg.' + CH.id, cur);
+  }
+  function ui() { bPlay.textContent = playing ? '❚❚' : '▶'; bPlay.setAttribute('aria-label', playing ? 'Pause' : 'Play'); badge.textContent = mode === 'mp3' ? 'Studio audio' : 'Browser voice'; badge.classList.toggle('s', mode === 'mp3'); selV.style.display = mode === 'mp3' ? 'none' : ''; }
+  function halt() { token++; if (audio) { audio.pause(); audio.ontimeupdate = audio.onended = null; } if (synth) synth.cancel(); }
+  function stop() { halt(); playing = false; ui(); }
+  function playFrom(i) {
+    if (i < 0 || i >= N) return stop();
+    halt(); cur = i; playing = true; mark(); const my = token, sec = NARR[i].s;
+    probe(sec).then(a => {
+      if (my !== token) return;
+      if (a) {
+        mode = 'mp3'; audio = a; ui();
+        const idx = secSegs[sec], len = idx.map(k => NARR[k].t.length), tot = len.reduce((x, y) => x + y, 0);
+        let before = 0; for (const k of idx) { if (k === i) break; before += NARR[k].t.length; }
+        a.playbackRate = rate; a.currentTime = a.duration * before / tot;
+        a.ontimeupdate = () => { let f = a.currentTime / a.duration * tot, k = 0; while (k < idx.length - 1 && f > len[k]) { f -= len[k]; k++; } if (idx[k] !== cur) { cur = idx[k]; mark(); } };
+        a.onended = () => { const nx = idx[idx.length - 1] + 1; nx < N ? playFrom(nx) : stop(); };
+        a.play().catch(() => { mp3[sec] = false; playFrom(i); });
+      } else {
+        mode = 'tts'; ui();
+        if (!synth) { lbl.textContent = 'This browser has no built-in voice. Add MP3 files to the audio folder to enable narration.'; playing = false; ui(); return; }
+        chunks = split(NARR[i].t); ci = 0; speakChunk();
+      }
+    });
+  }
+  function speakChunk() {
+    if (ci >= chunks.length) { const my2 = token, hd = /^H\d$/.test(segs[cur].tagName); return setTimeout(() => { if (my2 === token && playing) playFrom(cur + 1); }, hd ? 650 : 380); }
+    const u = new SpeechSynthesisUtterance(chunks[ci]), my = token;
+    const v = synth.getVoices().find(x => x.name === selV.value); if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'en-US';
+    u.rate = rate; u.pitch = 1;
+    const t0 = Date.now(), fail = () => { stop(); lbl.textContent = 'The browser voice is not available here. Try another voice, or add MP3 files to the audio folder.'; };
+    u.onend = () => { if (my !== token || !playing) return; if (Date.now() - t0 < 80 && chunks[ci].length > 40) return fail(); ci++; speakChunk(); };
+    u.onerror = e => { if (my !== token) return; if (e.error === 'interrupted' || e.error === 'canceled') return; fail(); };
+    window._u = u; synth.speak(u);
+  }
+  function firstVisible() { const i = segs.findIndex(s => s.getBoundingClientRect().top > 60); return i < 0 ? 0 : i; }
+  bPlay.onclick = () => {
+    if (playing) { halt(); playing = false; ui(); return; }
+    if (cur < 0) return playFrom(firstVisible());
+    if (mode === 'mp3' || !chunks.length) return playFrom(cur);
+    playing = true; ui(); speakChunk();
+  };
+  $('#pprev').onclick = () => playFrom(Math.max(0, (cur < 0 ? firstVisible() : cur) - 1));
+  $('#pnext').onclick = () => playFrom(Math.min(N - 1, (cur < 0 ? firstVisible() : cur) + 1));
+  const tips = $('#tips'); $('#ptips').onclick = () => { tips.style.display = tips.style.display === 'block' ? 'none' : 'block'; }; $('#tipsx').onclick = () => { tips.style.display = 'none'; };
+  $('#phere').onclick = () => playFrom(firstVisible());
+  $('#pscript').onclick = () => {
+    let t = CH.title + ' — narration script\nOne block per audio file. Save each as MP3 with the file name shown and upload to the audio folder.\n';
+    Object.keys(secSegs).forEach(s => { const h = secs[s] && secs[s].querySelector('h2'); t += '\n\n===== audio/' + CH.id + '/s' + String(s).padStart(2, '0') + '.mp3 — ' + (h ? h.textContent : 'Opening') + ' =====\n\n' + secSegs[s].map(k => NARR[k].t).join('\n\n'); });
+    const a = el('a', { href: URL.createObjectURL(new Blob([t], { type: 'text/plain' })), download: CH.id + '-narration.txt' }); document.body.append(a); a.click(); a.remove();
+  };
+  // start reading from any paragraph: hover button or double-click
+  const hov = $('#hov'); let hi = -1;
+  segs.forEach((s, i) => {
+    s.addEventListener('mouseenter', () => { hi = i; const r = s.getBoundingClientRect(); hov.style.display = 'block'; hov.style.top = (r.top + scrollY + 2) + 'px'; hov.style.left = Math.max(2, r.left + scrollX - 36) + 'px'; });
+    s.addEventListener('dblclick', e => { if (e.target.closest('.widget')) return; playFrom(i); });
+  });
+  hov.onclick = () => { if (hi >= 0) playFrom(hi); };
+  addEventListener('keydown', e => { if (e.target.matches('input,select,textarea,button')) return; if (e.code === 'Space') { e.preventDefault(); bPlay.click(); } });
+  addEventListener('beforeunload', () => { if (synth) synth.cancel(); });
+  ui();
+})();
+</script></body></html>
